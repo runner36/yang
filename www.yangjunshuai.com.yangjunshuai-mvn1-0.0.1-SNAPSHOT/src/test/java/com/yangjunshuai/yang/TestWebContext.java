@@ -9,7 +9,7 @@ public class TestWebContext {
     ApplicationContext context;
     @Before
     public void loadSpringContext(){
-        context = new ClassPathXmlApplicationContext("/ApplicationContext.xml");
+        context = new ClassPathXmlApplicationContext("ApplicationContext.xml");
     }
     
     @Test

@@ -7,7 +7,7 @@ public class MainTest {
 
 	
 	public static void main(String[] args) {
-		ApplicationContext  cxt = new ClassPathXmlApplicationContext("Application.xml");
+		ApplicationContext  cxt = new ClassPathXmlApplicationContext("ApplicationContext.xml");
 		System.out.println(cxt.getBean("appBean").toString());
 	}
 }
