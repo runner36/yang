@@ -1,4 +1,4 @@
-package www.yangjunshuai.com.yang;
+package com.yangjunshuai.yang;
 
 /**
  * Hello world!
@@ -6,6 +6,10 @@ package www.yangjunshuai.com.yang;
  */
 public class App 
 {
+	
+	
+	
+	
     public static void main( String[] args )
     {
         System.out.println( "Hello World!" ); 

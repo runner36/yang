@@ -1,4 +1,4 @@
-package www.yangjunshuai.com.yangjunshuai_mvn1;
+package com.yangjunshuai.yang;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
