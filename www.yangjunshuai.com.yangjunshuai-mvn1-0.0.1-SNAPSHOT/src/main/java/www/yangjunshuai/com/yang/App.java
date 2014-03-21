@@ -1,4 +1,4 @@
-package www.yangjunshuai.com.yangjunshuai_mvn1;
+package www.yangjunshuai.com.yang;
 
 /**
  * Hello world!
