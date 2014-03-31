@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee 
+	http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+	<display-name>winchannel</display-name>
+   <context-param>
+     <param-name>webAppRootKey</param-name>
+     <param-value>cofcoEorder</param-value>
+ 	</context-param>
+
+	<!-- Spring ApplicationContext配置文件的路径,可使用通配符,多个路径用,号分隔,此参数用于后面的Spring Context 
+		Loader -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>
+			classpath:spring/*.xml,
+			classpath*:/spring/applicationContext-base.xml,
+			classpath*:/spring/applicationContext-mdm.xml,			
+			classpath*:/spring/applicationContext-server.xml,
+			classpath*:/spring/applicationContext.xml,
+			classpath*:/spring/applicationContext-sms.xml,
+			classpath*:/spring/applicationContext-order.xml
+		</param-value>
+	</context-param>
+	<!-- 默认i18n资源文件 -->
+	<context-param>
+		<param-name>javax.servlet.jsp.jstl.fmt.localizationContext</param-name>
+		<param-value>i18n/messages</param-value>
+	</context-param>
+	<!-- ExtremeTable 表格标签的Properties文件 -->
+	<context-param>
+		<param-name>extremecomponentsPreferencesLocation</param-name>
+		<param-value>/config/extremetable.properties</param-value>
+	</context-param>
+
+	<!-- log4j configuration -->
+	<context-param>
+		<param-name>log4jConfigLocation</param-name>
+		<param-value>WEB-INF/log4j.properties</param-value>
+	</context-param>
+
+	<context-param>
+		<param-name>log4jRefreshInterval</param-name>
+		<param-value>600000</param-value>
+	</context-param>
+
+	<listener>
+		<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+	</listener>
+	<!-- log4j configuration -->
+
+	<!-- Character Encoding filter -->
+	<filter>
+		<filter-name>encodingFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+	</filter>
+	<!-- Security filter -->
+	<filter>
+		<filter-name>securityFilter</filter-name>
+		<filter-class>com.winchannel.base.web.SecurityFilter</filter-class>
+		<init-param>
+			<param-name>loginUri</param-name>
+			<param-value>/login.jsp</param-value>
+		</init-param>
+		<init-param>
+			<param-name>ignoreUri</param-name>
+			<param-value>/login.do,/login.jsp,/changePass.do,/changePass.jsp,/commons/image.jsp</param-value>
+		</init-param>
+	</filter>
+	<!-- Extremecomponents Export filter -->
+	<filter>
+		<filter-name>eXtremeExport</filter-name>
+		<filter-class>com.winchannel.base.web.EctableExportFilter</filter-class>
+		<init-param>
+			<param-name>responseHeadersSetBeforeDoFilter</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	<!-- Hibernate Open Session In View filter -->
+	<filter>
+		<filter-name>openSessionInViewFilter</filter-name>
+		<filter-class>org.springframework.orm.hibernate3.support.OpenSessionInViewFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>encodingFilter</filter-name>
+		<url-pattern>*.do</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>encodingFilter</filter-name>
+		<url-pattern>*.jsp</url-pattern>
+	</filter-mapping>
+
+	<filter-mapping>
+		<filter-name>securityFilter</filter-name>
+		<url-pattern>*.do</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>securityFilter</filter-name>
+		<url-pattern>*.jsp</url-pattern>
+	</filter-mapping>
+
+	<filter-mapping>
+		<filter-name>eXtremeExport</filter-name>
+		<url-pattern>*.do</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>openSessionInViewFilter</filter-name>
+		<url-pattern>*.do</url-pattern>
+	</filter-mapping>
+
+	<!-- Struts Action Mapping -->
+	<servlet>
+		<servlet-name>action</servlet-name>
+		<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>
+		<init-param>
+			<param-name>config</param-name>
+			<param-value>
+				/WEB-INF/struts-config.xml,
+				/WEB-INF/modules/struts-config-base.xml,
+				/WEB-INF/modules/struts-config-mdm.xml,
+				/WEB-INF/modules/struts-config-server.xml,
+				/WEB-INF/modules/struts-config-order.xml
+				
+			</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>action</servlet-name>
+		<url-pattern>*.do</url-pattern>
+	</servlet-mapping>
+	
+	<listener>
+		<listener-class>
+			com.winchannel.base.web.EOrderActionListener
+		</listener-class>
+	</listener>
+	
+	<!--Spring ApplicationContext 载入 -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+	<!-- Spring 刷新Introspector防止内存泄露 -->
+	<listener>
+		<listener-class>org.springframework.web.util.IntrospectorCleanupListener</listener-class>
+	</listener>
+
+	<!-- 支持session scope的Spring bean -->
+	<listener>
+		<listener-class>org.springframework.web.context.request.RequestContextListener</listener-class>
+	</listener>
+
+	<session-config>
+		<session-timeout>40</session-timeout>
+	</session-config>
+
+	<welcome-file-list>
+		<welcome-file>login.jsp</welcome-file>
+	</welcome-file-list>
+
+	<error-page>
+		<error-code>500</error-code>
+		<location>/commons/error.jsp</location>
+	</error-page>
+	<error-page>
+		<error-code>404</error-code>
+		<location>/commons/404.jsp</location>
+	</error-page>
+	<error-page>
+		<error-code>403</error-code>
+		<location>/commons/403.jsp</location>
+	</error-page>
+</web-app>

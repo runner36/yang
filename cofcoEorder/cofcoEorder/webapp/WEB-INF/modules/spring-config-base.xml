@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+<!-- 管理后台的Spring Servlet配置文件 -->
+<beans default-autowire="byName" default-lazy-init="true">
+	<bean name="/base/baseOrg" class="com.winchannel.base.web.BaseOrgAction"/>
+	<bean name="/base/baseEmployee" class="com.winchannel.base.web.BaseEmployeeAction"/>
+	<bean name="/base/baseDict" class="com.winchannel.base.web.BaseDictAction"/>
+	<bean name="/base/baseResource" class="com.winchannel.base.web.BaseResourceAction"/>
+	<bean name="/base/baseRole" class="com.winchannel.base.web.BaseRoleAction"/>
+	<bean name="/base/baseUser" class="com.winchannel.base.web.BaseUserAction"/>
+	<bean name="/base/baseMenu" class="com.winchannel.base.web.BaseMenuAction"/>
+	<bean name="/base/baseLog" class="com.winchannel.base.web.BaseLogAction"/>
+	<bean name="/base/baseDataLog" class="com.winchannel.base.web.BaseDataLogAction"/>
+	<bean name="/base/baseJobLog" class="com.winchannel.base.web.BaseJobLogAction"/>
+	<bean name="/base/selectEmployee" class="com.winchannel.base.web.SelectEmployeeAction"/>
+	<bean name="/base/baseMessRes" class="com.winchannel.base.web.BaseMessResAction"/>
+	<bean name="/base/baseMessages" class="com.winchannel.message.web.BaseMessageAction"/>
+	<bean name="/base/baseOpinions" class="com.winchannel.message.web.BaseOpinionAction"/>
+	<bean name="/base/invalidateSession" class="com.winchannel.base.web.InvalidateSessionAction"/>
+	
+	<bean name="/login" class="com.winchannel.base.web.LoginAction"/>
+	<bean name="/changePass" class="com.winchannel.base.web.ChangePassAction"/>
+	<bean name="/logout" class="com.winchannel.base.web.LogoutAction"/>
+	<bean name="/tree/baseTree" class="com.winchannel.base.web.BaseTreeAction"/>
+	<bean name="/report/treeReport" class="com.winchannel.base.web.TreeReportAction"/>
+	<bean name="/report/listReport" class="com.winchannel.base.web.ListReportAction"/>
+	<bean name="/imp/import" class="com.winchannel.base.web.ImportAction"/>
+	
+	<!--
+	<bean name="/dynamicTree" class="com.winchannel.examples.web.DynamicTreeAction"/>
+	-->
+</beans>

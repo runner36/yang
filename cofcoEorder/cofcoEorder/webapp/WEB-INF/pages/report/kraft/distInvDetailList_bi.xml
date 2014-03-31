@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="true">
+	<title>BI实时库存报告</title>
+
+	<header>
+		<column property="0" title="管理大区"/>
+		<column property="1" title="管理地区"/>
+		<column property="2" title="管理单元"/>
+		<column property="3" title="经销商省份"/>
+		<column property="4" title="经销商地级市"/>
+		<column property="5" title="经销商县级市"/>
+		<column property="6" title="经销商代码"/>
+		<column property="7" title="经销商名称"/>
+		<column property="8" title="产品代码"/>
+		<column property="9" title="产品名称"/>
+		<column property="10" title="日　期" cell="date" format="yyyy-MM-dd"/> 
+		<column property="11" title="箱　数" cell="number" format="0.0000" style="text-align:right"/>
+		<column property="12" title="吨　数" cell="number" format="0.0000" style="text-align:right"/>
+        <column property="13" title="卡夫毛销售额" cell="number" format="0.0000" style="text-align:right"/>
+	</header>
+
+	<content>
+		<param id="stockDate"  template=" data.STOCK_DATE >= '$stockDate$' and data.STOCK_DATE  &lt;= '$stockDate$ 23:59:59'">$stockDate$</param>
+	    <param id="orgId"      template=" and distOrg.ORG_ID  in ( $orgId$ ) ">$orgId$</param>
+	    <param id="geoId"      template=" and dist.GEO_ID in ($geoId$) ">$geoId$</param>
+	    <!-- 经销商名称 -->
+		<param id="distId"     template=" and dist.DIST_ID in ($distId$) ">$distId$</param>
+		<!-- 经销商代码 -->
+		<param id="distCode"   template=" and dist.DIST_CODE like '%$distCode$%' ">$distCode$</param>
+		<!-- 产品描述 -->
+		<param id="prodName"   template=" and prod.PROD_NAME like '%$prodName$%' ">$prodName$</param>
+		<!-- 产品代码 -->
+		<param id="prodCode"   template=" and prod.PROD_CODE like '%$prodCode$%' ">$prodCode$</param>
+		<!-- 产品品类 -->
+		<param id="categoryId" template=" and prod.TYPE_ID in ($categoryId$) ">$categoryId$</param>
+		<!-- 品牌 -->
+		<param id="brandId"    template=" and prod.BRAND_ID in ($brandId$) ">$brandId$</param>
+
+		<sql>
+			<![CDATA[
+
+					
+			WITH stock AS (
+				SELECT 	distOrg.pn2 AS region, distOrg.pn3 AS area, distOrg.pn4 AS unit, 
+						geo.PN2 AS province, geo.PN3 AS city, geo.PN4 AS district,
+						dist.DIST_CODE AS distCode, dist.DIST_NAME AS distName, 
+						prod.PROD_CODE AS prodCode, prod.PROD_NAME AS prodName,
+						data.STOCK_DATE AS stockDate, 
+						sum(case when data.BOX<0 then 0 else data.BOX end) AS box, 
+						sum(case when data.TON<0 then 0 else data.TON end) AS ton, 
+						sum(case when data.GROSS_SALES<0 then 0 else data.GROSS_SALES end) AS grossSale
+				
+				FROM 	RPT_DATA_STOCK data
+						inner join dms_client client on data.CLIENT_ID=client.CLIENT_ID
+						inner join mdm_distributor dist on client.DIST_ID=dist.DIST_ID
+						left join base_org distOrg on distOrg.ORG_ID=dist.ORG_ID
+						left join base_dict_item geo ON geo.DICT_ITEM_ID=dist.GEO_ID AND geo.DICT_ID='geography'
+						inner join MDM_PRODUCT prod ON prod.PROD_CODE=data.TARGET_PROD_CODE 
+
+				WHERE 	$stockDate$ $orgId$ $geoId$ $distId$ $distCode$ $prodName$ $prodCode$ $categoryId$ $brandId$  
+						AND data.PROD_QUANTITY IS NOT NULL 
+	
+				GROUP BY distOrg.pn2, distOrg.pn3, distOrg.pn4, geo.PN2, geo.PN3, geo.PN4, dist.DIST_CODE, dist.DIST_NAME, prod.PROD_CODE, prod.PROD_NAME, data.STOCK_DATE
+			)
+
+			
+			SELECT 	a.region, a.area, a.unit, a.province, a.city, a.district,
+					a.distCode, a.distName, a.prodCode, a.prodName, 
+					a.stockDate, a.box, a.ton, a.grossSale
+			FROM 	stock a
+
+		
+			UNION ALL 
+
+			
+			SELECT 	distOrg.pn2, distOrg.pn3, distOrg.pn4, 
+					geo.PN1, geo.PN2, geo.PN3, dist.DIST_CODE, dist.DIST_NAME, 
+					'No data', 'No data', null, 0, 0, 0
+			
+			from 	mdm_distributor dist
+					inner join dms_client client on client.DIST_ID=dist.DIST_ID
+					left join base_org distOrg on distOrg.ORG_ID=dist.ORG_ID
+					left join base_dict_item geo ON geo.DICT_ITEM_ID=dist.GEO_ID AND geo.DICT_ID='geography'
+					
+			where 	dist.DIST_CODE NOT IN (SELECT DISTINCT a.distCode FROM stock a)   
+			
+			GROUP BY distOrg.pn2, distOrg.pn3, distOrg.pn4, geo.PN1, geo.PN2, geo.PN3, dist.DIST_CODE, dist.DIST_NAME
+
+
+			]]>
+		</sql>
+	</content>
+</config>

@@ -1,0 +1,86 @@
+@charset "utf-8";
+* { font-size:12px; font-family: Arial, "宋体"; }
+html { scrollbar-face-color: #f3f3f3; scrollbar-highlight-color: #b9b9b9; scrollbar-shadow-color: #b9b9b9; scrollbar-arrow-color: #a2a2a2; scrollbar-track-color: #fcfcfc; scrollbar-3dlight-color: #ffffff; scrollbar-darkshadow-color: #ffffff; }
+body { background: #F7F7F7; margin: 0px; }
+img{ border:none}
+/*header*/
+.header { background: url(../images/HeadBgImages.jpg) bottom repeat-x; height: 50px; position: relative; }
+.head_left { background: url(../images/HeadLeftImg.jpg) no-repeat left bottom; height: 100%; width: 100%; position: absolute; left: 0px; top: 0px; z-index: 2; }
+.head_right { background: url(../images/HeadRightImg.jpg) right bottom no-repeat; height: 100%; position: absolute; top: 0px; right: 0px; z-index: 1; width: 100%; }
+.head_menu { position: absolute; z-index: 3; right: 8px; color: #FFFFFF; line-height: 30px; }
+.head_menu a { color: #FFFFFF; text-decoration: none; }
+.head_menu a:hover { color: #ff0000; }
+.head_che { position: absolute; z-index: 4; color: #FFFFFF; top: 28px; left: 450px; }
+.head_wrap { background: url(../images/MenuBgImages.gif) repeat-x; height: 35px; width: 100%; }
+.head_wrap span { line-height: 30px; color: #FFFFFF; margin-left: 10px; }
+#StarFlash { position: absolute; z-index: 1000; left: 4px; top: -60px; }
+/*header*/
+/*top_menu*/
+.menu_top { float: right; height: 30px; padding-top: 6px; margin-right: 5px; }
+.menu_top a { display: block; height: 23px; width: 72px; text-align: center; background: url(../images/MenuLink.gif) no-repeat center; color: #707070; text-decoration: none; float: left; line-height: 23px; }
+.menu_top a:hover, .over_menu { background-image: url(../images/MenuOver.gif) !important; color: #FFFFFF !important; font-weight: bold; }
+/*top_menu*/
+
+/*footer*/
+.bottom{
+	background:url(../images/footer_bg.jpg) top left repeat-x;
+	margin:10px 5px;	
+	height:40px;
+	padding-top:10px;
+	font-size:12px;
+	color:#666;
+	text-align:center;
+	font-family:Arial, Helvetica, sans-serif;
+	}
+.bottom a { color: #666; text-decoration: none; }
+.bottom a:hover { color: #F00; text-decoration: underline; }
+
+#footer { background: url(../images/footer_05.gif) repeat-x;top:0px }
+#fr_left ,#fr_right {background-repeat:no-repeat; height: 36px; width: 12px; }
+#fr_left{ background-image:url(../images/footer_03.gif);float:left;}
+#fr_right{ background-image:url(../images/footer_07.gif);float:right;}
+#fr_middle { text-align: center; line-height: 36px; margin:0;}
+#footer a { color: #666; text-decoration: none; }
+#footer a:hover { color: #F00; text-decoration: underline; }
+/*footer*/
+.hit_side { background: url(../images/panter_26.gif) repeat-y; width: 300px; }
+#hit_side_right { right: 0px; }
+.hit_side h5 { margin: 0px; background: url(../images/panter_02.gif); color: #FFFFFF; height: 31px; }
+.hit_side h5 span { padding-top: 14px; display: block; padding-left: 36px; }
+.hit_side dl { background: url(../images/panter_40.gif) no-repeat; height: 24px; margin: 0px; clear: both; }
+.side_our { width: 279px; margin-left: 10px; overflow:auto; height: 400px; background-image: url(../images/panter_33.gif); }
+.side_right { background:#fff;}
+.side_our h3 { background: #F7F7F7; border: solid #E5E5E5; border-width:1px 0; padding-top: 5px; height: 18px; margin: 0px; padding-left: 26px; display: block; color: #3A3A3A; clear: both; }
+.side_our h3 a { color: #3A3A3A; text-decoration: none; }
+.side_our h3 a:hover { color: red; text-decoration:underline; }
+.line_side ul li a img { margin-top: 5px; }
+.side_list { padding: 0px 20px; clear: both; height: 177px; }
+.side_our b { display: block; text-align: center; background: url(../images/panter_19.gif) no-repeat center #fff; height: 47px; overflow:hidden; padding:5px 0; }
+.side_our b img { border: none; vertical-align: inherit;}
+.side_our ul { padding: 0px; list-style-type: none; margin: 0px; float: left; display: block; width: 240px; }
+.side_our p { margin: 0px; line-height: 21px; color: #707070; display: block; height: 118px; padding: 10px 20px; overflow: hidden; }
+.side_our h6 { font-weight: normal; margin: 0px; float: right; width: 80px; color: #3A3A3A; line-height: 24px; }
+.side_our h6 a { color: #3A3A3A; text-decoration: none; }
+.side_our h6 a:hover { color: #FF0000; }
+.side_list li { line-height: 17px; color: #575757; display:block; }
+.side_list marquee ul li span { float:right; margin-top:-17px; }
+.side_title { font-weight: bold; color: #3A3A3A; margin-top: 6px; }
+.hit_liner { background: url(../images/panter_11.gif) repeat-y; margin: auto !important; }
+.hit_liner #top { background-image: url(../images/panter_04.gif); height: 16px; display: block; }
+.hit_liner #top #top_left { background: url(../images/panter_s04_01.gif) no-repeat left; display: block; float: left; height: 16px; width: 14px; }
+.hit_liner #top #top_right { background: url(../images/panter_s04_03.gif) no-repeat; display: block; float: right; height: 16px; width: 14px; }
+.hit_liner #bottom { height: 10px; clear: both; background: url(../images/panter_41.gif) repeat-x bottom; }
+.hit_liner #bottom span { display: block; height: 10px; width: 14px; font-size:1px; background-repeat: no-repeat; background-position: bottom; }
+.hit_liner #bottom #bottom_left { float: left; background-image: url(../images/panter_41_01.gif); }
+.hit_liner #bottom #bottom_right { float: right; background-image: url(../images/panter_41_03.gif); }
+.line_span { background-color: #FFFFFF !important; ; }
+ul li.marks { background: url(../images/panter_37.gif) no-repeat 20px 4px; }
+/*homelist*/
+.line_side { line-height: 20px; background: url(../images/panter_113.gif) repeat-y; background-position: right; margin-left: 6px; }
+.line_side h2 { background: url(../images/panter_08.gif) no-repeat 20px center; color: #3A3A3A; padding-left: 40px; margin: 0; line-height: 22px; border-bottom: 1px solid #E5E5E5; }
+.line_side ul { padding: 0px; list-style-type: none; margin: 0px; }
+.line_side li { border-bottom: 1px solid #E5E5E5; padding-left: 40px; color: #707070; line-height: 22px; clear: both; background: url(../images/NewLine.gif) no-repeat 23px center; overflow:hidden;}
+.line_side li a { color: #707070; text-decoration: none; float: left; }
+.line_side a:hover { color: #3A3A3A; }
+.line_side ul li span { float: right; width: 70px; }
+.ScrollCon { overflow: auto; margin-right: 6px; height: 100%; }

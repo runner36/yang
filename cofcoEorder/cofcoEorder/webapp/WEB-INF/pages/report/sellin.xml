@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>sellin</title>
+	
+	<header>
+		<column property="0" title="玛氏时间" />
+		<column property="1" title="经销商名称" bundle="page" key="common.distName" />
+		<column property="2" title="玛氏产品编号"/>
+		<column property="3" title="品类"/>
+		<column property="4" title="经销商产品名称" bundle="page" key="common.distProdName"/>
+		
+		<column property="5" title="入库数量(箱)" align="right" cell="currency" format="0.########"/>
+		<column property="6" title="DTR入库金额(元)" align="right" cell="number" format="0.00"/>
+		
+		<column property="7" title="MARS入库金额（元）" align="right" cell="number" format="0.00"/>
+		<column property="8" title="退货数量(箱)" align="right" cell="currency" format="0.########"/>
+		
+		<column property="9" title="DTR退货金额(元)" align="right" cell="number" format="0.00"/>
+		<column property="10" title="MARS退货金额（元）" align="right" cell="number" format="0.00"/>
+		<column property="11" title="DTR单价(元)" align="right" cell="number" format="0.00"/>
+		<column property="12" title="MARS进货总金额(元)" align="right" cell="number" format="0.00"/>
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH, _FIRST_DAY_OF_WEEK -->
+		<param id="_orgAuthExp" initValue="" defaultValue="">$orgAuth$</param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+		<param id="distCode" template="and ddr.dist_Code like '%$distCode$%'">$distCode$</param>
+		<param id="orgSubCode" template="and org.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+		<param id="distId" template="and ddr.dist_id in ($distId$)">$distId$</param>
+		<param id="clientId" template=" AND dc.client_id in($clientId$)">$clientId$</param>
+		<param id="prodCode" template="and dp.PROD_CODE like '%$prodCode$%'">$prodCode$</param>
+		<param id="year1">$year1$</param>
+		<param id="year2">$year2$</param>
+		<param id="month1">$month1$</param>
+		<param id="month2">$month2$</param>
+		<param id="week1">$week1$</param>
+		<param id="week2">$week2$</param>
+		<!-- 
+			<param id="billDate1" template="and ddp.bill_date>='$billDate1$'">$billDate1$</param>
+			<param id="billDate2" template="and ddp.bill_date&lt;='$billDate2$ 23:59:59'">$billDate2$</param>
+		 -->
+		<sql>
+<![CDATA[
+SELECT 
+  	dbo.fn_getMarsWeekDay(convert(VARCHAR(20),ddp.bill_date,120)),
+	ddr.dist_name,
+	dp.PROD_CODE AS code,
+	t1.item_name,
+	dp.PROD_NAME AS name,
+	----- ddp.prod_quantity>=0进货，ddp.prod_quantity<0退货
+	sum(CASE WHEN ddp.prod_quantity>=0 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,ddp.PROD_QUANTITY),0) ELSE 0 end) AS duenum1,
+	sum(CASE WHEN ddp.prod_quantity>=0 THEN isnull(ddP.prod_amount,0) ELSE 0 end) AS dueprice1,
+	sum(CASE WHEN ddp.prod_quantity>=0 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,ddp.PROD_QUANTITY)*dp.prod_price,0) ELSE 0 end) AS duepricenum1,
+	sum(CASE WHEN ddp.prod_quantity<0 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,ddp.PROD_QUANTITY),0) ELSE 0 end) AS duenum2,
+	sum(CASE WHEN ddp.prod_quantity<0 THEN isnull(ddP.prod_amount,0) ELSE 0 end) AS dueprice2,
+	sum(CASE WHEN ddp.prod_quantity<0 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,ddp.PROD_QUANTITY)*dp.prod_price,0) ELSE 0 end) AS duepricenum2,
+	case when dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,1) is null then null else ddp.PROD_PRICE/dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,1) end,
+	sum(CASE WHEN ddp.prod_quantity>=0 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,ddp.PROD_QUANTITY)*dp.prod_price,0) ELSE 0 end)
+		+sum(CASE WHEN ddp.prod_quantity<0 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,ddp.PROD_QUANTITY)*dp.prod_price,0) ELSE 0 end)
+FROM Dms_Data_Purchase ddp
+	INNER JOIN DMS_CLIENT dc ON dc.CLIENT_ID=ddp.CLIENT_ID
+	INNER JOIN MDM_DISTRIBUTOR ddr ON ddr.DIST_ID=dc.DIST_ID
+	INNER JOIN DMS_PROD_MAPPING dpm ON dpm.DIST_PROD_CODE = ddp.PROD_CODE AND dpm.DIST_PROD_UNIT = ddp.PROD_UNIT and ddp.CLIENT_ID=dpm.CLIENT_ID
+	left join BASE_DICT_ITEM item1 on dpm.TARGET_UNIT_ID = item1.DICT_ITEM_ID
+	INNER JOIN MDM_PRODUCT dp ON dp.PROD_CODE = dpm.TARGET_PROD_CODE
+	INNER JOIN BASE_DICT_ITEM t1 ON t1.DICT_ITEM_ID=dp.TYPE_ID
+	inner join base_org org on ddr.org_id=org.org_id
+WHERE ddp.state='1'
+	 and ddp.bill_date between 
+	(select cal_date from MDM_CALENDAR where cal_year='$year1$' and cal_month='$month1$' and cal_week='$week1$' and cal_day='1') and
+	(select cal_date from MDM_CALENDAR where cal_year='$year1$' and cal_month='$month2$' and cal_week='$week2$' and cal_day='7')
+    $orgSubCode$ $distId$ $distCode$ $prodCode$ $clientId$	  
+GROUP BY  dp.PROD_CODE,dp.PROD_NAME,ddr.dist_name,
+  	dbo.fn_getMarsWeekDay(convert(VARCHAR(20),ddp.bill_date,120)),
+	t1.ITEM_NAME,case when dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,1) is null then null else ddp.PROD_PRICE/dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,1) end
+
+]]>
+		</sql>
+	</content>
+	
+</config>

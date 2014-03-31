@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title></title>
+	
+	<header>
+		<column property="0" title="上级组织" width="300"/>
+	</header>
+	
+	<content>
+		<param id="startDate">$startDate$</param>
+		<param id="endDate">$endDate$</param>
+		<sql>
+<![CDATA[
+with dist as
+(
+select dist.DIST_ID,dist.DIST_CODE,client.CLIENT_ID,client.CLIENT_CODE,dist.OWNERGRP_CODE 
+from MDM_DISTRIBUTOR dist
+	inner join DMS_CLIENT client
+	on dist.DIST_ID=client.DIST_ID
+where dist.pass_back_date is not null
+),
+old as
+(
+select dist.OWNERGRP_CODE,sale.STORE_CODE,convert(VARCHAR(10),sale.BILL_DATE,120) as BILL_DATE
+from DMS_DATA_SALE sale
+	inner join dist dist
+	on sale.CLIENT_ID = dist.CLIENT_ID
+	inner join DMS_PROD_MAPPING mapping
+	on sale.PROD_CODE=mapping.DIST_PROD_CODE
+	and sale.PROD_NAME=mapping.DIST_PROD_NAME
+	and sale.PROD_UNIT=mapping.DIST_PROD_UNIT
+	and sale.CLIENT_ID=mapping.CLIENT_ID
+	left join DMS_STORE_MAPPING sm
+	on sale.STORE_CODE=sm.DIST_STORE_CODE
+	and sale.CLIENT_ID=sm.CLIENT_ID
+WHERE sale.delete_time >= '$startDate$' 
+	and sale.delete_time < '$endDate$'
+	and mapping.TARGET_PROD_CODE!='nonike'
+	and sale.STATE='1' and sale.PROD_QUANTITY>0 and sale.PROD_PRICE>0
+	and sale.BILL_TYPE not like '%调拨%' and sale.BILL_TYPE not like '%批发%'
+	and (sm.isreturn_data!='0' or sm.isreturn_data is null)
+	and sale.bill_date>='2011-06-01'
+group by dist.OWNERGRP_CODE,sale.STORE_CODE,convert(VARCHAR(10),sale.BILL_DATE,120)
+),
+new as
+(
+select dist.OWNERGRP_CODE,sale.STORE_CODE,convert(VARCHAR(10),sale.BILL_DATE,120) as BILL_DATE
+from DMS_DATA_SALE sale
+	inner join dist dist
+	on sale.CLIENT_ID = dist.CLIENT_ID
+	inner join DMS_PROD_MAPPING mapping
+	on sale.PROD_CODE=mapping.DIST_PROD_CODE
+	and sale.PROD_NAME=mapping.DIST_PROD_NAME
+	and sale.PROD_UNIT=mapping.DIST_PROD_UNIT
+	and sale.CLIENT_ID=mapping.CLIENT_ID
+	left join DMS_STORE_MAPPING sm
+	on sale.STORE_CODE=sm.DIST_STORE_CODE
+	and sale.CLIENT_ID=sm.CLIENT_ID
+WHERE sale.UPDATE_TIME >= '$startDate$' 
+	and sale.UPDATE_TIME < '$endDate$'
+	and mapping.TARGET_PROD_CODE!='nonike'
+	and sale.STATE='1' and sale.PROD_QUANTITY>0 and sale.PROD_PRICE>0
+	and sale.BILL_TYPE not like '%调拨%' and sale.BILL_TYPE not like '%批发%'
+	and (sm.isreturn_data!='0' or sm.isreturn_data is null)
+group by dist.OWNERGRP_CODE,sale.STORE_CODE,convert(VARCHAR(10),sale.BILL_DATE,120)
+),
+zero as
+(
+select old.OWNERGRP_CODE,old.STORE_CODE,old.BILL_DATE 
+from old old
+	left join new new
+	on old.OWNERGRP_CODE=new.OWNERGRP_CODE
+	and old.STORE_CODE=new.STORE_CODE
+	and old.BILL_DATE=new.BILL_DATE
+where new.OWNERGRP_CODE is null
+)
+select a.OWNERGRP_CODE+a.STORE_CODE as doorkey,
+	a.OWNERGRP_CODE,
+	a.STORE_CODE,
+	CONVERT(varchar(8),cast(a.BILL_DATE as datetime),112) as salesdate,
+	'CNY','CN',0,0,0
+from zero a
+union all
+select 
+	REPLICATE('0',10-LEN(dist.OWNERGRP_CODE))+dist.OWNERGRP_CODE+sale.STORE_CODE as doorkey,
+	dist.OWNERGRP_CODE as ownergrpnumber,  
+	sale.STORE_CODE as storenumber,
+	convert(varchar(8),sale.BILL_DATE,112) as salesdate,
+	'CNY' as currencycode,
+	'CN' as countrycode,
+	avg(ISNULL(sale.PROD_PRICE,0)*ISNULL(sale.PROD_QUANTITY,0)) as adpt,
+	count(distinct sale.BILL_CODE) as totaltransactioncount,
+	avg(ISNULL(sale.PROD_QUANTITY,0)) as upt
+from DMS_DATA_SALE sale
+	inner join dist dist
+	on sale.CLIENT_ID = dist.CLIENT_ID
+	inner join DMS_PROD_MAPPING mapping
+	on sale.PROD_CODE=mapping.DIST_PROD_CODE
+	and sale.PROD_NAME=mapping.DIST_PROD_NAME
+	and sale.PROD_UNIT=mapping.DIST_PROD_UNIT
+	and sale.CLIENT_ID=mapping.CLIENT_ID
+	left join DMS_STORE_MAPPING sm
+	on sale.STORE_CODE=sm.DIST_STORE_CODE
+	and sale.CLIENT_ID=sm.CLIENT_ID
+	inner join MDM_PRODUCT mp
+	on mapping.TARGET_PROD_CODE=mp.PROD_CODE
+where sale.UPLOAD_TIME>='$startDate$' and sale.UPLOAD_TIME<'$endDate$' and mapping.TARGET_PROD_CODE!='nonike'
+	and sale.STATE='1' and sale.PROD_QUANTITY>0 and sale.PROD_PRICE>0
+	and sale.BILL_TYPE not like '%调拨%' and sale.BILL_TYPE not like '%批发%'
+	and (sm.isreturn_data!='0' or sm.isreturn_data is null)
+group by 
+	dist.OWNERGRP_CODE,
+	sale.STORE_CODE,
+	mp.EXT_CODE,
+	convert(varchar(8),sale.BILL_DATE,112)
+]]>
+		</sql>
+	</content>
+	
+</config>

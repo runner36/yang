@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title></title>
+	
+	<header>
+		<column property="0" title="上级组织" width="300"/>
+	</header>
+	
+	<content>
+		<sql>
+<![CDATA[
+with uat as
+(
+select c.OWNERGRP_NAME,SUM(a.PROD_QUANTITY) as qty,SUM(a.PROD_QUANTITY*a.PROD_PRICE) as amt from DMS_DATA_SALE a
+inner join DMS_CLIENT b
+on a.CLIENT_ID=b.CLIENT_ID
+inner join MDM_DISTRIBUTOR c
+on b.DIST_ID=c.DIST_ID
+where a.BILL_DATE>='2011-05-01' and (a.STATE='1' or a.DELETE_TIME is null)
+group by c.OWNERGRP_NAME
+),
+old as
+(
+SELECT b.OWNERGRP_NAME,sum(a.QUANTITY) as qty,sum(case when b.dist_code='PAOYUAN'
+				then a.price else a.quantity*a.price end) as amt FROM nike.dbo.DMS_DATA_SALE a
+INNER JOIN nike.dbo.DMS_DISTRIBUTOR b
+ON a.DIST_ID=b.DIST_ID
+WHERE a.SALE_TIME >= '2011-05-01' and a.SALE_TIME<'2012-01-01'
+GROUP BY b.OWNERGRP_NAME
+)
+
+select a.OWNERGRP_NAME,a.qty as old_qty,b.qty as uat_qty,
+a.qty-b.qty as qty_gap,a.amt as old_amt,b.amt as uat_amt,a.amt-b.amt as amt_gap from old a
+inner join uat b
+on a.OWNERGRP_NAME=b.OWNERGRP_NAME
+]]>
+		</sql>
+	</content>
+	
+</config>

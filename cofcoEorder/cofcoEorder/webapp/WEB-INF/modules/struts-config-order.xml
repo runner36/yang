@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts-config PUBLIC
+		"-//Apache Software Foundation//DTD Struts Configuration 1.2//EN"
+		"http://struts.apache.org/dtds/struts-config_1_2.dtd"> 
+<struts-config>
+	<form-beans>
+		<form-bean name="orderSapForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="mdmDistributorAddressForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="orderInfoForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="mdmDistEmpProdgroupForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="orderMemberOrderForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="orderMemberOrderItemForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="orderItemForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="orderInfoOrgForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="mdmDistOrderempProdgroupForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="salesmanOrderForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="mdmDistributorLinkmanForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="orderAgreementLogForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="orderSuperAbolishedLogForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="mdmProdGroupDeliveryDaysForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+	</form-beans>
+
+	<action-mappings>
+		<!--orderSap-->
+		<action path="/order/*" name="{1}Form" parameter="method" scope="request" validate="false">
+			<forward name="list" path="/WEB-INF/pages/order/{1}List.jsp"/>
+			<forward name="imp" path="/WEB-INF/pages/order/{1}ImpAdd.jsp"/>
+			<forward name="edit" path="/WEB-INF/pages/order/{1}Edit.jsp"/>
+			<forward name="view" path="/WEB-INF/pages/order/{1}View.jsp"/>
+			<forward name="success" path="/order/{1}.do?method=list"/>
+			<forward name="makeInfo" path="/WEB-INF/pages/order/{1}Edit.jsp"/>
+			<forward name="listSp" path="/WEB-INF/pages/order/{1}ListSp.jsp"/>
+			<forward name="index" path="/WEB-INF/pages/order/{1}Index.jsp"/>
+			<forward name="update" path="/WEB-INF/pages/order/{1}Update.jsp"/>
+		</action>
+
+	</action-mappings>
+</struts-config>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title>组织结构</title>
+	
+	<header>
+		<column property="0" title="上级组织编码" width="300"/>
+		<column property="1" title="上级组织名称" width="300"/>
+		<column property="2" title="组织编码" width="300"/>
+		<column property="3" title="组织名称" bundle="page" key="common.orgName" width="300"/>
+		<column property="4" title="组织简称" width="300"/>
+		<column property="5" title="组织层级" width="300"/>
+		<column property="6" title="外部编码" width="300"/>
+		<column property="7" title="组织类型" width="300"/>
+		<column property="8" title="英文名称" width="300"/>
+		<column property="9" title="负责人" width="300"/>
+		<column property="10" title="电话" width="300"/>
+		<column property="11" title="邮箱" width="300"/>
+		<column property="12" title="传真" width="300"/>
+		<column property="13" title="地址" width="300"/>
+		<column property="14" title="邮编" width="300"/>
+		<column property="15" title="网站" width="300"/>
+		<column property="16" title="状态" bundle="page" key="common.status" width="300"/>
+		<column property="17" title="排序" width="300"/>
+		<column property="18" title="备注一" width="300"/>
+		<column property="19" title="备注二" width="300"/>
+		<column property="20" title="备注三" width="300"/>
+	</header>
+	
+	<content>
+		<param id="_orgAuthExp" initValue="" defaultValue=""></param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+		
+		<param id="t" initValue="_FIRST_DAY_OF_WEEK" defaultValue="" offset="-1" format="yyyyMMdd"></param>
+		<sql>
+<![CDATA[
+SELECT 
+upbo.ORG_CODE,
+upbo.ORG_NAME,
+bo.ORG_CODE,
+bo.ORG_NAME,
+bo.ORG_ALIAS,
+bo.LEVEL_CODE,
+bo.EXT_CODE,
+orgtype.ITEM_NAME,
+bo.ORG_NAME_EN,
+bae.EMP_NAME,
+bo.phone,
+bo.email,
+bo.fax,
+bo.ORG_ADDR,
+bo.post_Code,
+bo.WEBSITE,
+bo.state,
+bo.sort,
+bo.memo1,
+bo.memo2,
+bo.memo3
+FROM BASE_ORG bo
+LEFT JOIN BASE_ORG upbo ON upbo.ORG_ID=bo.PARENT_ORG_ID 
+LEFT JOIN BASE_DICT_ITEM orgtype ON orgtype.DICT_ITEM_ID=bo.ORG_TYPE_ID
+LEFT JOIN BASE_EMPLOYEE bae ON bae.EMP_ID=bo.EMP_ID
+order by bo.sub_code
+]]>
+		</sql>
+	</content>
+	
+</config>

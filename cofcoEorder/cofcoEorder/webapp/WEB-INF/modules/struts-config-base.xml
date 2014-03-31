@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts-config PUBLIC
+		"-//Apache Software Foundation//DTD Struts Configuration 1.2//EN"
+		"http://struts.apache.org/dtds/struts-config_1_2.dtd">
+<struts-config>
+	<form-beans>
+		<form-bean name="loginForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="changePassForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseOrgForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseEmployeeForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseDictForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseResourceForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseRoleForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseUserForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseMenuForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseLogForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseDataLogForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseJobLogForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="listReportForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="selectEmployeeForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="importForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseMessResForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseMessagesForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="baseOpinionsForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<!--
+		<form-bean name="dynamicTreeForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		-->
+	</form-beans>
+
+	<action-mappings>
+		<!--使用通配符-->
+		<action path="/base/*" name="{1}Form" parameter="method" scope="request" validate="false">
+			<forward name="index" path="/WEB-INF/pages/base/{1}Index.jsp"/>
+			<forward name="list" path="/WEB-INF/pages/base/{1}List.jsp"/>
+			<forward name="edit" path="/WEB-INF/pages/base/{1}Edit.jsp"/>
+			<forward name="view" path="/WEB-INF/pages/base/{1}View.jsp"/>
+			<forward name="success" path="/base/{1}.do?method=list"/>
+		</action>
+		
+		<action path="/login" name="loginForm" scope="request" validate="false"/>
+		<action path="/changePass" name="changePassForm" scope="request" validate="false"/>
+		<action path="/logout" scope="request" validate="false"/>
+		<action path="/tree/baseTree" parameter="method" scope="request" validate="false"/>
+		
+		<action path="/report/treeReport" parameter="method" scope="request" validate="false">
+			<forward name="view" path="/widgets/treetable/treeview.jsp"/>
+		</action>
+		<action path="/report/listReport" name="listReportForm" parameter="method" scope="request" validate="false">
+			<forward name="view" path="/widgets/extremecomponents/listview.jsp"/>
+		</action>
+		
+		<action path="/imp/import" name="importForm" parameter="method" scope="request" validate="false"/>
+		
+		<action path="/dynamicTree" name="dynamicTreeForm" parameter="method" scope="request" validate="false"/>
+		
+		<!-- 公告版 -->
+		<action path="/base/baseMessages" name="baseMessagesForm" parameter="method" scope="request" validate="false">
+			<forward name="index" path="/WEB-INF/pages/messages/baseMessagesIndex.jsp"/>
+			<forward name="view" path="/WEB-INF/pages/messages/baseMessagesView.jsp"/>
+			<forward name="list" path="/WEB-INF/pages/messages/baseMessagesList.jsp"/>
+			<forward name="edit" path="/WEB-INF/pages/messages/baseMessagesEdit.jsp"/>
+			<forward name="success" path="/base/baseMessages.do?method=list" redirect="false"/>
+			<forward name="ListSp" path="/WEB-INF/pages/messages/baseMessagesListSp.jsp"/>
+		</action>
+		<action path="/base/baseOpinions" name="baseOpinionsForm" parameter="method" scope="request" validate="false">
+			<forward name="index" path="/WEB-INF/pages/messages/baseMessagesIndex.jsp"/>
+			<forward name="view" path="/WEB-INF/pages/messages/baseMessagesView.jsp"/>
+			<forward name="list" path="/WEB-INF/pages/messages/baseOpinionsList.jsp"/>
+			<forward name="edit" path="/WEB-INF/pages/messages/baseOpinionsEdit.jsp"/>
+			<forward name="success" path="/base/baseOpinions.do?method=list" redirect="false"/>
+			<forward name="ListSp" path="/WEB-INF/pages/messages/baseMessagesListSp.jsp"/>
+		</action>	
+		
+	</action-mappings>
+</struts-config>

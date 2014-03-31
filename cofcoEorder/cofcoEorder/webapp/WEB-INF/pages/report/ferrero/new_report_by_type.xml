@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>Ex-Distributor Analysis (By Type)</title>
+	
+	<header>
+		<column property="0" title="Banner"/>
+		<column property="1" title="Type"/>
+		<column property="2" title="September,LY"  align="center"  />
+		<column property="3" title="September,TY"  align="center"  />
+		<column property="4" title="September,%"  align="center"  />
+		<column property="5" title="October,LY"  align="center"  />
+		<column property="6" title="October,TY"  align="center"  />
+		<column property="7" title="October,%"  align="center"  />
+		<column property="8" title="November,LY"  align="center"  />
+		<column property="9" title="November,TY"  align="center"  />
+		<column property="10" title="November,%"  align="center"  />
+		<column property="11" title="December,LY"  align="center"  />
+		<column property="12" title="December,TY"  align="center"  />
+		<column property="13" title="December,%"  align="center"  />
+		<column property="14" title="January,LY"  align="center"  />
+		<column property="15" title="January,TY"  align="center"  />
+		<column property="16" title="January,%"  align="center"  />	
+		<column property="17" title="Feburary,LY"  align="center"  />
+		<column property="18" title="Feburary,TY"  align="center"  />
+		<column property="19" title="Feburary,%"  align="center"  />
+		<column property="20" title="March,LY"  align="center"  />
+		<column property="21" title="March,TY"  align="center"  />
+		<column property="22" title="March,%"  align="center"  />
+		<column property="23" title="April,LY"  align="center"  />
+		<column property="24" title="April,TY"  align="center"  />
+		<column property="25" title="April,%"  align="center"  />
+		<column property="26" title="May,LY"  align="center"  />
+		<column property="27" title="May,TY"  align="center"  />
+		<column property="28" title="May,%"  align="center"  />
+		<column property="29" title="June,LY"  align="center"  />
+		<column property="30" title="June,TY"  align="center"  />
+		<column property="31" title="June,%"  align="center"  />
+		<column property="32" title="July,LY"  align="center"  />
+		<column property="33" title="July,TY"  align="center"  />
+		<column property="34" title="July,%"  align="center"  />
+		<column property="35" title="August,LY"  align="center"  />
+		<column property="36" title="August,TY"  align="center"  />
+		<column property="37" title="August,%"  align="center"  />
+		
+		
+		<column property="38" title="YTD(同期),LY"  align="center"  />
+		<column property="39" title="YTD(同期),TY"  align="center"  />
+		<column property="40" title="YTD(同期),%"  align="center"  />
+		<column property="41" title="Mix,TY"  align="center"  />				
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH -->
+ 		<param id="Type" template="and sour.Type like '%$Type$%'">$Type$</param>
+ 		<param id="Year" template="">$Year$</param>
+ 		
+ 		<!-- by luobin 2010-09-08 修改city查询条件为多选-->
+		<!-- 
+ 		<param id="city" initValue="" defaultValue="" template="and (sour.city like '$city$%') ">$city$</param>
+ 		-->
+ 		<param id="city" initValue="" defaultValue="" template="and sour.city in ($city$) " dataType="char">$city$</param>
+ 		 
+		<sql>
+<![CDATA[
+
+
+
+WITH a AS(
+
+SELECT  sour.YEAR, sour.MONTH,
+sour.YEAR+'-'+(
+CASE sour.MONTH WHEN 'December' THEN  '12'
+ WHEN 'January' THEN  '01'  
+ WHEN 'February' THEN  '02' 
+ WHEN 'March' THEN  '03' 
+ WHEN 'April' THEN  '04' 
+ WHEN 'May' THEN  '05' 
+ WHEN 'June' THEN  '06' 
+ WHEN 'July' THEN  '07' 
+ WHEN 'August' THEN  '08' 
+ WHEN 'September' THEN  '09' 
+ WHEN 'October' THEN  '10' 
+ WHEN 'November' THEN  '11' 
+  ELSE '12' 
+  END 
+) AS time,
+sour.Banner,sour.TYPE, sum(sour.QLI) AS qli
+FROM TMP_SOURCE_DATA  sour WHERE sour.Banner='Others' $Type$ $city$
+ 
+
+ GROUP BY sour.YEAR, sour.MONTH,sour.TYPE,sour.Banner
+
+)  ,
+
+b AS(
+
+SELECT  a.Banner,a.type,
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,0, '$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end) AS  q1,
+--(CASE WHEN sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,0, '$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)=0 THEN 0 ELSE 
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,-12,'$Year$'+'-09-01' ),23),0,8) THEN a.qli ELSE 0 end)  AS  s1,
+
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,1,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end) AS  q2,
+--(CASE WHEN sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,1,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)=0 THEN 0 ELSE 
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,-11,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)  AS  s2,
+
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,2,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end) AS  q3,
+--(CASE WHEN sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,2,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)=0 THEN 0 ELSE 
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,-10,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)  AS  s3,
+
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,3,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end) AS  q4,
+--(CASE WHEN sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,3,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)=0 THEN 0 ELSE 
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,-9,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)  AS  s4,
+
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,4,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end) AS  q5,
+--(CASE WHEN sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,4,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)=0 THEN 0 ELSE 
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,-8,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)  AS  s5,
+
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,5,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end) AS  q6,
+--(CASE WHEN sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,5,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)=0 THEN 0 ELSE 
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,-7,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)  AS  s6,
+
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,6,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end) AS  q7,
+--(CASE WHEN sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,6,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)=0 THEN 0 ELSE 
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,-6,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)  AS  s7,
+
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,7,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end) AS  q8,
+--(CASE WHEN sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,7,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)=0 THEN 0 ELSE 
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,-5,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)  AS  s8,
+
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,8,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end) AS  q9,
+--(CASE WHEN sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,8,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)=0 THEN 0 ELSE 
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,-4,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)  AS  s9,
+
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,9,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end) AS  q10,
+--(CASE WHEN sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,9,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)=0 THEN 0 ELSE 
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,-3,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)  AS  s10,
+
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,10,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end) AS  q11,
+--(CASE WHEN sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,10,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)=0 THEN 0 ELSE 
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,-2,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)  AS  s11,
+
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,11,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end) AS  q12,
+--(CASE WHEN sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,11,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)=0 THEN 0 ELSE 
+sum( CASE WHEN a.time=substring(convert(VARCHAR(100),dateadd(mm,-1,'$Year$'+'-09-01'),23),0,8) THEN a.qli ELSE 0 end)  AS  s12
+FROM a
+GROUP BY a.Banner,a.type
+)
+
+
+SELECT b.Banner,b.type,
+ cast(s1 as decimal(38,2)) as s1,cast(q1 as decimal(38,2))as q1, 
+  CASE WHEN q1 =0 THEN '-'
+         ELSE CASE WHEN s1 =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((q1-s1)/s1)<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (q1-s1)*100/s1 AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (q1-s1)*100/s1 AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b1,
+ cast(s2 as decimal(38,2)) as s2,cast(q2 as decimal(38,2)) as q2, 
+ CASE WHEN q2 =0 THEN '-'
+         ELSE CASE WHEN s2 =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((q2-s2)/s2)<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (q2-s2)*100/s2 AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (q2-s2)*100/s2 AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b2,
+ cast(s3 as decimal(38,2)) as s3,cast(q3 as decimal(38,2)) as q3, 
+ CASE WHEN q3 =0 THEN '-'
+         ELSE CASE WHEN s3 =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((q3-s3)/s3)<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (q3-s3)*100/s3 AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (q3-s3)*100/s3 AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b3,
+
+ cast(s4 as decimal(38,2)) as s4,cast(q4 as decimal(38,2)) as q4, 
+ CASE WHEN q4 =0 THEN '-'
+         ELSE CASE WHEN s4 =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((q4-s4)/s4)<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (q4-s4)*100/s4 AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (q4-s4)*100/s4 AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b4,
+ 
+ cast(s5 as decimal(38,2)) as s5,cast(q5 as decimal(38,2)) as q5, 
+ CASE WHEN q5 =0 THEN '-'
+         ELSE CASE WHEN s5 =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((q5-s5)/s5)<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (q5-s5)*100/s5 AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (q5-s5)*100/s5 AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b5,
+
+ cast(s6 as decimal(38,2)) as s6,cast(q6 as decimal(38,2)) as q6, 
+ CASE WHEN q6 =0 THEN '-'
+         ELSE CASE WHEN s6 =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((q6-s6)/s6)<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (q6-s6)*100/s6 AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (q6-s6)*100/s6 AS decimal(38,2) )  AS VARCHAR) +'%'
+ END END END as b6,
+ cast(s7 as decimal(38,2)) as s7,cast(q7 as decimal(38,2)) as q7, 
+ CASE WHEN q7 =0 THEN '-'
+         ELSE CASE WHEN s7 =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((q7-s7)/s7)<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (q7-s7)*100/s7 AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (q7-s7)*100/s7 AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b7,
+ cast(s8 as decimal(38,2)) as s ,cast(q8 as decimal(38,2)) as q8, 
+  CASE WHEN q8 =0 THEN '-'
+         ELSE CASE WHEN s8 =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((q8-s8)/s8)<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (q8-s8)*100/s8 AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (q8-s8)*100/s8 AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b8,
+ 
+ cast(s9 as decimal(38,2)) as s9,cast(q9 as decimal(38,2)) as q9, 
+  CASE WHEN q9 =0 THEN '-'
+         ELSE CASE WHEN s9 =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((q9-s9)/s9)<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (q9-s9)*100/s9 AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (q9-s9)*100/s9 AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b9,
+ cast(s10 as decimal(38,2)) as s10,cast(q10 as decimal(38,2)) as q10,
+  CASE WHEN q10 =0 THEN '-'
+         ELSE CASE WHEN s10 =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((q10-s10)/s10)<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (q10-s10)*100/s10 AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (q10-s10)*100/s10 AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b10,
+ cast(s11 as decimal(38,2)) as s11,cast(q11 as decimal(38,2)) as q11, 
+  CASE WHEN q11 =0 THEN '-'
+         ELSE CASE WHEN s11 =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((q11-s11)/s11)<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (q11-s11)*100/s11 AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (q11-s11)*100/s11 AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b11,
+ cast(s12 as decimal(38,2)) as s12,cast(q12 as decimal(38,2)) as q12, 
+  CASE WHEN q12 =0 THEN '-'
+         ELSE CASE WHEN s12 =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((q12-s12)/s12)<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (q12-s12)*100/s12 AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (q12-s12)*100/s12 AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b12,
+ cast((s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12) as decimal(38,2)) AS std,
+ cast((q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12) as decimal(38,2)) AS qtd,
+
+ --CASE WHEN (s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12)=0 THEN 0 ELSE 
+ --cast(((q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12)-(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12))/(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12) as decimal(38,4))
+ --END  AS sqb,
+
+ CASE WHEN (q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12) =0 THEN '-'
+         ELSE CASE WHEN (s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12)=0  THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN (((q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12)-(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12))/(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( ((q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12)-(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12))*100/(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( ((q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12)-(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12))*100/(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12) AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as sqb,
+
+ --cast((q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12) /(SELECT sum(q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12) FROM b)as decimal(38,4)) as mix
+ CAST(  CAST( ((q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12))*100/(SELECT sum(q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12) FROM b) AS decimal(38,2) )  AS VARCHAR) +'%'
+ 
+FROM b 
+
+
+UNION ALL 
+
+SELECT '','total', 
+
+ cast(sum(s1) as decimal(38,2)) as s1,cast(sum(q1) as decimal(38,2))as q1, 
+ CASE WHEN sum(q1) =0 THEN '-'
+         ELSE CASE WHEN ((sum(s1) =0) and (sum(q1) >0)) THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((sum(q1)-sum(s1))/sum(s1))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum(q1)-sum(s1))*100/sum(s1) AS decimal(38,2) )  AS VARCHAR)+'%</font>' 
+                   ELSE  CAST(  CAST( (sum(q1)-sum(s1))*100/sum(s1) AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b1,
+ cast(sum(s2) as decimal(38,2)) as s2,cast(sum(q2) as decimal(38,2)) as q2, 
+ CASE WHEN sum(q2) =0 THEN '-'
+         ELSE CASE WHEN sum(s2) =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((sum(q2)-sum(s2))/sum(s2))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum(q2)-sum(s2))*100/sum(s2) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (sum(q2)-sum(s2))*100/sum(s2) AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b2,
+ cast(sum(s3) as decimal(38,2)) as s3,cast(sum(q3) as decimal(38,2)) as q3, 
+ CASE WHEN sum(q3) =0 THEN '-'
+         ELSE CASE WHEN sum(s3) =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((sum(q3)-sum(s3))/sum(s3))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum(q3)-sum(s3))*100/sum(s3) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (sum(q3)-sum(s3))*100/sum(s3) AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b3,
+
+ cast(sum(s4) as decimal(38,2)) as s4,cast(sum(q4) as decimal(38,2)) as q4, 
+ CASE WHEN sum(q4) =0 THEN '-'
+         ELSE CASE WHEN sum(s4) =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((sum(q4)-sum(s4))/sum(s4))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum(q4)-sum(s4))*100/sum(s4) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (sum(q4)-sum(s4))*100/sum(s4) AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b4,
+ 
+ cast(sum(s5) as decimal(38,2)) as s5,cast(sum(q5) as decimal(38,2)) as q5, 
+ CASE WHEN sum(q5) =0 THEN '-'
+         ELSE CASE WHEN sum(s5) =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((sum(q5)-sum(s5))/sum(s5))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum(q5)-sum(s5))*100/sum(s5) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (sum(q5)-sum(s5))*100/sum(s5) AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b5,
+
+ cast(sum(s6) as decimal(38,2)) as s6,cast(sum(q6) as decimal(38,2)) as q6, 
+ CASE WHEN sum(q6) =0 THEN '-'
+         ELSE CASE WHEN sum(s6) =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((sum(q6)-sum(s6))/sum(s6))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum(q6)-sum(s6))*100/sum(s6) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (sum(q6)-sum(s6))*100/sum(s6) AS decimal(38,2) )  AS VARCHAR) +'%'
+ END END END as b6,
+ cast(sum(s7) as decimal(38,2)) as s7,cast(sum(q7) as decimal(38,2)) as q7, 
+ CASE WHEN sum(q7) =0 THEN '-'
+         ELSE CASE WHEN sum(s7) =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((sum(q7)-sum(s7))/sum(s7))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum(q7)-sum(s7))*100/sum(s7) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (sum(q7)-sum(s7))*100/sum(s7) AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b7,
+ cast(sum(s8) as decimal(38,2)) as s8,cast(sum(q8) as decimal(38,2)) as q8, 
+  CASE WHEN sum(q8) =0 THEN '-'
+         ELSE CASE WHEN sum(s8) =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((sum(q8)-sum(s8))/sum(s8))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum(q8)-sum(s8))*100/sum(s8) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (sum(q8)-sum(s8))*100/sum(s8) AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b8,
+ 
+ cast(sum(s9) as decimal(38,2)) as s9,cast(sum(q9) as decimal(38,2)) as q9, 
+  CASE WHEN sum(q9) =0 THEN '-'
+         ELSE CASE WHEN sum(s9) =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((sum(q9)-sum(s9))/sum(s9))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum(q9)-sum(s9))*100/sum(s9) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (sum(q9)-sum(s9))*100/sum(s9) AS decimal(38,2) )  AS VARCHAR) +'%'
+   END END END as b9,
+ 
+ cast(sum(s10) as decimal(38,2)) as s10,cast(sum(q10) as decimal(38,2)) as q10,
+  CASE WHEN sum(q10) =0 THEN '-'
+         ELSE CASE WHEN sum(s10) =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((sum(q10)-sum(s10))/sum(s10))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum(q10)-sum(s10))*100/sum(s10) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (sum(q10)-sum(s10))*100/sum(s10) AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b10,
+ cast(sum(s11) as decimal(38,2)) as s11,cast(sum(q11) as decimal(38,2)) as q11, 
+  CASE WHEN sum(q11) =0 THEN '-'
+         ELSE CASE WHEN sum(s11) =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((sum(q11)-sum(s11))/sum(s11))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum(q11)-sum(s11))*100/sum(s11) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (sum(q11)-sum(s11))*100/sum(s11) AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b11,
+ cast(sum(s12) as decimal(38,2)) as s12,cast(sum(q12) as decimal(38,2)) as q12, 
+  CASE WHEN sum(q12) =0 THEN '-'
+         ELSE CASE WHEN sum(s12) =0 THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN ((sum(q12)-sum(s12))/sum(s12))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum(q12)-sum(s12))*100/sum(s12) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (sum(q12)-sum(s12))*100/sum(s12) AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as b12,
+
+ --sum(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12) AS std,
+ cast(sum((s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12)) as decimal(38,2)) AS std,
+ --sum(q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12) AS qtd,
+ cast(sum((q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12)) as decimal(38,2)) AS qtd,
+ 
+ --CASE WHEN sum(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12)=0 THEN 0 ELSE 
+ --(sum(q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12)-sum(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12))/sum(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12) 
+ --END  AS sqb,
+ CASE WHEN sum((q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12)) =0 THEN '-'
+         ELSE CASE WHEN sum((s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12))=0  THEN '<font color=green>NEW</font>'
+         ELSE CASE WHEN (((sum(q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12))-(sum(s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12)))/sum((s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12)))<0 
+                   THEN  '<font color=red>'+CAST(  CAST( (sum((q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12))-sum((s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12)))*100/sum((s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12)) AS decimal(38,2) )  AS VARCHAR)+'%</font>'
+                   ELSE  CAST(  CAST( (sum((q1+q2+q3+q4+q5+q6+q7+q8+q9+q10+q11+q12))-sum((s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12)))*100/sum((s1+s2+s3+s4+s5+s6+s7+s8+s9+s10+s11+s12)) AS decimal(38,2) )  AS VARCHAR) +'%'
+  END END END as sqb,
+  CAST(  CAST( (1*100)/1 AS decimal(38,2) )  AS VARCHAR) +'%'
+
+FROM b
+  
+]]>
+		</sql>
+	</content>
+	
+</config>

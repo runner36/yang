@@ -1,0 +1,241 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+  <config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+  
+	<title>Monthly Report By Banner By Outlet</title>
+	<header>
+		<column title="Grand" width="300"/>
+		<column title="Banner" width="100"/>
+		<column title="Outlet" width="200"/>
+		<column title="SKU" width="200"/>
+	
+		<column title="TD,1" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,2" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,3" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,4" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,5" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,6" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,7" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,8" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,9" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,10" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,11" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,12" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,13" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,14" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,15" width="70" align="center"  cell="number" format="0.00"/>	
+		<column title="TD,16" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,17" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,18" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,19" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,20" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,21" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,22" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,23" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,24" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,25" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,26" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,27" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,28" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,29" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,30" width="70" align="center"  cell="number" format="0.00"/>
+		<column title="TD,31" width="70" align="center"  cell="number" format="0.00"/>
+		
+		<column title="MTD,MTD" width="100" align="center"  cell="number" format="0.00"/>
+		<column title="MTD,LY" width="100" align="center"  cell="number" format="0.00"/>
+		<column title="MTD,VS%" width="100" align="center"  cell="number" format="0.00"/>
+						
+	</header>
+	
+	<content>	
+		<param id="orgId" template=" and md.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="Unit" template="" defaultValue="341">$Unit$</param>
+		<param id="Year" template=" '$Year$' ">$Year$</param>
+		<param id="Month" template=" '$Month$' ">$Month$</param>
+		<param id="brandId" template=" and mp.BRAND_ID in ($brandId$) ">$brandId$</param>
+		<param id="typeId" template=" and store.NATURE_ID in ($typeId$) ">$typeId$</param>
+		
+		<param id="simsContand" template="" >$simsContand$</param>
+		<!-- 权限 -->
+		<param id="orgSubCode" template=" AND bo.SUB_CODE like '$orgSubCode$%' ">$orgSubCode$</param>
+		<sql>
+		
+		
+		<![CDATA[
+
+WITH qli AS (
+	SELECT 	dict.DICT_ITEM_ID AS bannerId, dict.ITEM_NAME AS bannerName,
+			store.STORE_CODE AS storeCode, store.STORE_NAME AS storeName,
+			
+			mp.PROD_CODE AS prodCode, mp.PROD_ALIAS AS prodName, mp.SORT AS P_SORT, 
+			
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-1 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-1 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_1,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-2 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-2 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_2,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-3 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-3 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_3,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-4 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-4 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_4,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-5 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-5 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_5,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-6 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-6 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_6,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-7 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-7 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_7,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-8 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-8 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_8,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-9 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-9 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_9,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-10 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-10 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_10,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-11 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-11 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_11,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-12 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-12 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_12,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-13 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-13 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_13,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-14 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-14 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_14,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-15 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-15 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_15,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-16 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-16 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_16,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-17 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-17 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_17,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-18 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-18 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_18,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-19 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-19 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_19,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-20 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-20 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_20,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-21 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-21 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_21,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-22 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-22 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_22,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-23 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-23 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_23,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-24 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-24 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_24,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-25 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-25 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_25,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-26 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-26 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_26,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-27 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-27 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_27,
+			sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-28 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-28 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) AS TD_28,
+			
+			--判断当前年月中是否有29号
+			CASE WHEN convert(INT,$Month$)=2 AND (convert(INT,$Year$)%400=0 OR convert(INT,$Year$)%4=0 AND convert(INT,$Year$)%100<>0)
+				THEN sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-29 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-29 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) 
+				ELSE 0
+			END AS TD_29,
+			--判断当前年月中是否有30号
+			CASE WHEN convert(INT,$Month$)<>2
+				THEN sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-30 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-30 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) 
+				ELSE 0
+			END AS TD_30,
+			--判断当前年月中是否有31号
+			CASE WHEN convert(INT,$Month$)=1 OR convert(INT,$Month$)=3 OR convert(INT,$Month$)=5 OR convert(INT,$Month$)=7 OR convert(INT,$Month$)=8 OR convert(INT,$Month$)=10 OR convert(INT,$Month$)=12
+				THEN sum(CASE WHEN dds.BILL_DATE>=$Year$+'-'+$Month$+'-31 0:00:00' AND dds.BILL_DATE<=$Year$+'-'+$Month$+'-31 23:59:59' THEN dds.PROD_AMOUNT ELSE 0 END) 
+				ELSE 0
+			END AS TD_31,
+			
+			--本月累计
+			sum(CASE WHEN dds.BILL_DATE >= $Year$+'-'+$Month$+'-1 0:00:00' AND dds.BILL_DATE <= dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,$Year$+'-'+$Month$+'-01')+1, 0)) THEN dds.PROD_AMOUNT ELSE 0 END) AS TM_MONTH,
+			--去年同月累计
+			sum(CASE WHEN dds.BILL_DATE >= dateadd(yy,-1,DATEADD(mm, DATEDIFF(mm,0,$Year$+'-'+$Month$+'-01'), 0)) AND dds.BILL_DATE <= dateadd(yy,-1,dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0, $Year$+'-'+$Month$+'-01')+1, 0))) THEN dds.PROD_AMOUNT ELSE 0 END) AS LM_MONTH
+			
+	FROM  	DMS_DATA_SALE as dds  
+			INNER JOIN DMS_PROD_MAPPING dpm ON dds.PROD_CODE = dpm.DIST_PROD_CODE AND dds.CLIENT_ID = dpm.CLIENT_ID AND dds.PROD_UNIT=dpm.DIST_PROD_UNIT AND dds.PROD_NAME=dpm.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT mp ON mp.PROD_CODE=dpm.TARGET_PROD_CODE AND mp.BRAND_ID IS NOT NULL 
+			
+			INNER JOIN DMS_STORE_MAPPING as mapping on dds.STORE_CODE = mapping.DIST_STORE_CODE AND dds.CLIENT_ID=mapping.CLIENT_ID
+			INNER JOIN MDM_STORE as store on store.STORE_CODE = mapping.TARGET_STORE_CODE AND store.CORP_ID IS NOT NULL AND store.NATURE_ID IS NOT NULL 
+			LEFT JOIN BASE_DICT_ITEM as dict on store.CORP_ID = dict.DICT_ITEM_ID AND dict.DICT_ID = 'storeCorp' 
+			
+			LEFT JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+			LEFT JOIN BASE_ORG bo ON bo.ORG_ID=md.ORG_ID
+	
+	WHERE 	dds.BILL_DATE >= dateadd(yy,-1,DATEADD(mm, DATEDIFF(mm,0,$Year$+'-'+$Month$+'-01'), 0)) and 
+			dds.BILL_DATE <= dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,$Year$+'-'+$Month$+'-01')+1, 0)) and dds.state='1' and dds.prod_quantity<>0 
+			$orgId$ $brandId$ $typeId$ $simsContand$ $orgSubCode$
+			and mp.PROD_CODE not in ('zengpin','qita','tingchan')
+	GROUP BY store.STORE_CODE, store.STORE_NAME, dict.DICT_ITEM_ID, dict.ITEM_NAME, mp.PROD_CODE, mp.PROD_ALIAS, mp.SORT
+)
+
+
+--创建临时表
+SELECT * INTO #TEMP_REPORT_TABLE FROM qli
+
+--从临时表中查询数据
+SELECT 	a.parentId, a.selfId, 
+		a.a, a.d, a.e, a.f, 
+		a.TD_1, a.TD_2, a.TD_3, a.TD_4, a.TD_5, a.TD_6, a.TD_7, a.TD_8, a.TD_9, a.TD_10, 
+		a.TD_11, a.TD_12, a.TD_13, a.TD_14, a.TD_15, a.TD_16, a.TD_17, a.TD_18, a.TD_19, a.TD_20, 
+		a.TD_21, a.TD_22, a.TD_23, a.TD_24, a.TD_25, a.TD_26, a.TD_27, a.TD_28, a.TD_29, a.TD_30, a.TD_31,
+		a.TM_MONTH, a.LM_MONTH, a.rt
+
+FROM (
+	SELECT	'0' as parentId, 'Total' as selfId, 
+			'Grand' as a, '' as d, '' as e, '' as f, 0 AS P_SORT, 
+			sum(TD_1) as TD_1, sum(TD_2) as TD_2, sum(TD_3) as TD_3, sum(TD_4) as TD_4, sum(TD_5) as TD_5, sum(TD_6) as TD_6, sum(TD_7) as TD_7, sum(TD_8) as TD_8, sum(TD_9) as TD_9, sum(TD_10) as TD_10,
+			sum(TD_11) as TD_11, sum(TD_12) as TD_12, sum(TD_13) as TD_13, sum(TD_14) as TD_14, sum(TD_15) as TD_15, sum(TD_16) as TD_16, sum(TD_17) as TD_17, sum(TD_18) as TD_18, sum(TD_19) as TD_19, sum(TD_20) as TD_20,
+			sum(TD_21) as TD_21, sum(TD_22) as TD_22, sum(TD_23) as TD_23, sum(TD_24) as TD_24, sum(TD_25) as TD_25, sum(TD_26) as TD_26, sum(TD_27) as TD_27, sum(TD_28) as TD_28, sum(TD_29) as TD_29, sum(TD_30) as TD_30, sum(TD_31) as TD_31,
+			sum(TM_MONTH) as TM_MONTH, 
+			sum(LM_MONTH) as LM_MONTH, 
+			CASE WHEN isnull(sum(TM_MONTH),0)=0 THEN '-'
+				ELSE CASE WHEN isnull(sum(LM_MONTH),0)=0 THEN 'NEW'
+				ELSE CAST(CAST(sum(TM_MONTH)/sum(LM_MONTH)*100 AS decimal(38,0)) AS VARCHAR)+'%'	
+				END
+			END as rt
+	FROM #TEMP_REPORT_TABLE
+	
+	
+	
+	UNION ALL 
+	
+	
+	SELECT	'Total' as parentId, CAST(bannerId AS VARCHAR) as selfId, 
+			'Grand' as a, bannerName as d, '' as e, '' as f, 0 AS P_SORT, 
+			sum(TD_1) as TD_1, sum(TD_2) as TD_2, sum(TD_3) as TD_3, sum(TD_4) as TD_4, sum(TD_5) as TD_5, sum(TD_6) as TD_6, sum(TD_7) as TD_7, sum(TD_8) as TD_8, sum(TD_9) as TD_9, sum(TD_10) as TD_10,
+			sum(TD_11) as TD_11, sum(TD_12) as TD_12, sum(TD_13) as TD_13, sum(TD_14) as TD_14, sum(TD_15) as TD_15, sum(TD_16) as TD_16, sum(TD_17) as TD_17, sum(TD_18) as TD_18, sum(TD_19) as TD_19, sum(TD_20) as TD_20,
+			sum(TD_21) as TD_21, sum(TD_22) as TD_22, sum(TD_23) as TD_23, sum(TD_24) as TD_24, sum(TD_25) as TD_25, sum(TD_26) as TD_26, sum(TD_27) as TD_27, sum(TD_28) as TD_28, sum(TD_29) as TD_29, sum(TD_30) as TD_30, sum(TD_31) as TD_31,
+			sum(TM_MONTH) as TM_MONTH, 
+			sum(LM_MONTH) as LM_MONTH, 
+			CASE WHEN isnull(sum(TM_MONTH),0)=0 THEN '-'
+				ELSE CASE WHEN isnull(sum(LM_MONTH),0)=0 THEN 'NEW'
+				ELSE CAST(CAST(sum(TM_MONTH)/sum(LM_MONTH)*100 AS decimal(38,0)) AS VARCHAR)+'%'	
+				END
+			END as rt
+			
+	FROM #TEMP_REPORT_TABLE
+	GROUP BY bannerId, bannerName
+	
+	
+	UNION ALL 
+	
+	
+	SELECT	CAST(bannerId AS VARCHAR) as parentId, CAST(bannerId AS VARCHAR)+CAST(storeCode AS VARCHAR) as selfId, 
+			'Grand' as a, bannerName as d, storeName as e, '' as f, 0 AS P_SORT, 
+			sum(TD_1) as TD_1, sum(TD_2) as TD_2, sum(TD_3) as TD_3, sum(TD_4) as TD_4, sum(TD_5) as TD_5, sum(TD_6) as TD_6, sum(TD_7) as TD_7, sum(TD_8) as TD_8, sum(TD_9) as TD_9, sum(TD_10) as TD_10,
+			sum(TD_11) as TD_11, sum(TD_12) as TD_12, sum(TD_13) as TD_13, sum(TD_14) as TD_14, sum(TD_15) as TD_15, sum(TD_16) as TD_16, sum(TD_17) as TD_17, sum(TD_18) as TD_18, sum(TD_19) as TD_19, sum(TD_20) as TD_20,
+			sum(TD_21) as TD_21, sum(TD_22) as TD_22, sum(TD_23) as TD_23, sum(TD_24) as TD_24, sum(TD_25) as TD_25, sum(TD_26) as TD_26, sum(TD_27) as TD_27, sum(TD_28) as TD_28, sum(TD_29) as TD_29, sum(TD_30) as TD_30, sum(TD_31) as TD_31,
+			sum(TM_MONTH) as TM_MONTH, 
+			sum(LM_MONTH) as LM_MONTH, 
+			CASE WHEN isnull(sum(TM_MONTH),0)=0 THEN '-'
+				ELSE CASE WHEN isnull(sum(LM_MONTH),0)=0 THEN 'NEW'
+				ELSE CAST(CAST(sum(TM_MONTH)/sum(LM_MONTH)*100 AS decimal(38,0)) AS VARCHAR)+'%'	
+				END
+			END as rt
+			
+	FROM #TEMP_REPORT_TABLE
+	GROUP BY bannerId, bannerName, storeCode, storeName
+	
+	
+	UNION ALL 
+	
+	
+	SELECT	CAST(bannerId AS VARCHAR)+CAST(storeCode AS VARCHAR) as parentId, 
+			CAST(bannerId AS VARCHAR)+CAST(storeCode AS VARCHAR)+CAST(prodCode AS VARCHAR) as selfId, 
+			'Grand' as a, bannerName as d, storeName as e, prodName as f, P_SORT AS P_SORT, 
+			sum(TD_1) as TD_1, sum(TD_2) as TD_2, sum(TD_3) as TD_3, sum(TD_4) as TD_4, sum(TD_5) as TD_5, sum(TD_6) as TD_6, sum(TD_7) as TD_7, sum(TD_8) as TD_8, sum(TD_9) as TD_9, sum(TD_10) as TD_10,
+			sum(TD_11) as TD_11, sum(TD_12) as TD_12, sum(TD_13) as TD_13, sum(TD_14) as TD_14, sum(TD_15) as TD_15, sum(TD_16) as TD_16, sum(TD_17) as TD_17, sum(TD_18) as TD_18, sum(TD_19) as TD_19, sum(TD_20) as TD_20,
+			sum(TD_21) as TD_21, sum(TD_22) as TD_22, sum(TD_23) as TD_23, sum(TD_24) as TD_24, sum(TD_25) as TD_25, sum(TD_26) as TD_26, sum(TD_27) as TD_27, sum(TD_28) as TD_28, sum(TD_29) as TD_29, sum(TD_30) as TD_30, sum(TD_31) as TD_31,
+			sum(TM_MONTH) as TM_MONTH, 
+			sum(LM_MONTH) as LM_MONTH, 
+			CASE WHEN isnull(sum(TM_MONTH),0)=0 THEN '-'
+				ELSE CASE WHEN isnull(sum(LM_MONTH),0)=0 THEN 'NEW'
+				ELSE CAST(CAST(sum(TM_MONTH)/sum(LM_MONTH)*100 AS decimal(38,0)) AS VARCHAR)+'%'	
+				END
+			END as rt
+			
+	FROM #TEMP_REPORT_TABLE
+	GROUP BY bannerId, bannerName, storeCode, storeName, prodCode, prodName, P_SORT
+	
+) AS a
+ORDER BY a.P_SORT
+
+--删除临时表
+IF object_id('tempdb..#TEMP_REPORT_TABLE') IS NOT NULL BEGIN 
+    DROP TABLE #TEMP_REPORT_TABLE
+END
+	
+		]]>
+		</sql>
+	</content>
+
+</config>

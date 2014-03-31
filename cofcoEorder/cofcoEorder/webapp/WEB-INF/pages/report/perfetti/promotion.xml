@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title> 促销报告</title>
+	
+	<header>
+		<column property="0" title="大区"/>
+		<column property="1" title="办事处"/>
+		<column property="2" title="业务单元"/>
+		<column property="3" title="促销内容"/>
+		<column property="4" title="经销商名称"/>
+		<column property="5" title="经销商编码"/>		
+		<column property="6" title="渠道"/>
+		<column property="7" title="有促销活动客户数量" cell="number" format="0" style="text-align:right" />
+		<column property="8" title="促销资源" cell="number" format="0.00" style="text-align:right" />		
+		<column property="9" title="促销资源分配量" cell="number" format="0.00%" style="text-align:right" />
+		
+	</header>
+	
+	<content>
+		<param id="_orgAuthExp" initValue="" defaultValue="">$orgAuth$</param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="orgSubCode" template="and org.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+		<param id="distId" template="and dist.dist_id in ($distId$)">$distId$</param>
+		<param id="channelId" template="and  store.channel_id in ($channelId$)">$channelId$</param>
+		
+		<!-- 
+		<param id="lastDate1" template="and sale.lastDate>='$lastDate1$'">$lastDate1$</param>
+		<param id="lastDate2" template="and sale.lastDate&lt;='$lastDate2$ 23:59:59'">$lastDate2$</param>
+		 -->
+		<sql>
+<![CDATA[
+
+  WITH  unit  AS (
+  SELECT 
+   org.pi4, org.PN4, prod.PROD_ID,
+  isnull(sum(data.prod_quantity*pm.rate*prod.PROD_PRICE) ,0)  AS sou
+  from dms_data_sale data
+	inner join dms_client client on data.client_id=client.client_id
+	inner join mdm_distributor dist on client.dist_id=dist.dist_id
+	inner join base_org org on dist.org_id=org.org_id
+	inner join dms_prod_mapping pm on data.client_id=pm.client_id and data.prod_code=pm.dist_prod_code and data.prod_unit=pm.dist_prod_unit
+	inner join mdm_product prod on pm.target_prod_code=prod.prod_code
+	where   data.state=1 and  data.prod_price=0 $orgSubCode$
+	GROUP BY    org.pi4, org.PN4, prod.PROD_ID  
+)
+
+ SELECT  
+   org.PN2, org.PN3, org.PN4,prod.PROD_NAME,
+	dist.dist_name ,dist.dist_code ,channel.ITEM_NAME , 
+	count(DISTINCT store.store_id) AS wsnum , isnull(sum(data.prod_quantity*pm.rate*prod.PROD_PRICE) ,0) AS ziyuan,
+     isnull(sum(data.prod_quantity*pm.rate*prod.PROD_PRICE) ,0)/(case unit.sou when 0 then 1 else unit.sou end) 
+from dms_data_sale data
+	inner join dms_client client on data.client_id=client.client_id
+	inner join mdm_distributor dist on client.dist_id=dist.dist_id
+	inner join base_org org on dist.org_id=org.org_id
+	inner join dms_prod_mapping pm on data.client_id=pm.client_id and data.prod_code=pm.dist_prod_code and data.prod_unit=pm.dist_prod_unit
+	inner join mdm_product prod on pm.target_prod_code=prod.prod_code
+	inner join dms_store_mapping sm on data.client_id=sm.client_id and data.store_code=sm.dist_store_code
+	inner join mdm_store store on sm.target_store_code=store.store_code 
+    INNER JOIN BASE_DICT_ITEM channel ON channel.DICT_ITEM_ID=store.CHANNEL_ID     
+    INNER JOIN unit ON  prod.PROD_ID=unit.prod_id  AND org.PI4=unit.pi4
+    WHERE  data.state=1 and data.prod_price=0 $orgSubCode$  $distId$  $channelId$
+  GROUP BY 
+   org.PN2, org.PN3, org.PN4,
+	dist.dist_name ,dist.dist_code ,channel.ITEM_NAME ,prod.PROD_NAME,unit.sou 
+   ORDER BY  org.PN2, org.PN3, org.PN4,prod.PROD_NAME,	dist.dist_name ,dist.dist_code ,channel.ITEM_NAME 
+    
+]]>
+		</sql>
+	</content>
+	
+</config>

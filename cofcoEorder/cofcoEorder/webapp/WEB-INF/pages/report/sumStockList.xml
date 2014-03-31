@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>进销存汇总表</title>
+	
+	<header>
+		<column  title="ABC" width="180" align="center" />
+		<column  title="大区" width="70" align="center" />
+		<column  title="大分区" width="70" align="center" />
+		<column  title="分区" width="70" align="center" />
+		<column  title="小分区" width="70" align="center" />
+		<column  title="细分区" width="70" align="center" />
+		<column  title="办事处" width="70" align="center" />
+		<column  title="助记码" width="70" align="center" />
+		<column  title="期初库存" width="70" align="center" />
+		<column  title="本期入库" width="70" align="center" />
+		<column  title="本期出库" width="70" align="center" />
+		<column  title="本期结存"  width="70" align="center" />
+		<column  title="安全库存" width="70" align="center" />
+		<column  title="库存周转天数" width="100" align="center" />
+		<column  title="订货提醒" width="70" align="center" />
+	</header>
+	
+	<content>
+		<param id="startDate">$startDate$</param>
+		<param id="endDate" >$endDate$</param>
+		<param id="distId" template="AND stock.DIST_ID in ($distId$)">$distId$</param>
+		<param id="prodName" template="and stock.prod_code  like '%$prodName$%'">$prodName$</param>
+		<param id="brandId" template="and  stock.BRAND_ID in ($brandId$) ">$brandId$</param>
+		<param id="otherId" template="and stock.OTHER_ID in ($otherId$) ">$otherId$</param>
+		<param id="typeId" template="and  stock.TYPE_ID  in ($typeId$) ">$typeId$</param>
+		<param id="prodLayerId" template="and  stock.MEMO1 in  ($prodLayerId$ ) ">$prodLayerId$</param>
+		<param id="prodFormulaId" template="and  stock.MEMO2 in ($prodFormulaId$) ">$prodFormulaId$</param>
+		<param id="prodShapeId" template="and  stock.MEMO3 in ($prodShapeId$)">$prodShapeId$</param>
+		<param id="prodThicknessId" template="and  stock.MEMO4 in ($prodThicknessId$)">$prodThicknessId$</param>
+		<param id="prodLengthId" template="and  stock.MEMO5 in ($prodLengthId$)">$prodLengthId$</param>
+		<param id="prodUseId" template="and  stock.MEMO6 like  ($prodUseId$) ">$prodUseId$</param>
+		<param id="prodspecificationId" template="and   stock.PROD_SPEC in ($prodspecificationId$)">$prodspecificationId$</param>
+		<param id="packId" template="and stock.PACK_ID in ($packId$) ">$packId$</param>
+		<param id="prodId" template="and stock.TYPE_ID in ($prodId$)">$prodId$</param>
+		<param id="prodUnit" template="and stock.PROD_UNIT = '$prodUnit$'">$prodUnit$</param>
+		<param id="out" >$out$</param>
+		<param id="satisfyingRate" >$satisfyingRate$</param>		
+		<param id="allocationDate">$allocationDate$</param>
+		<param id="strDate" >$strDate$</param>		
+		<param id="strsDate">$strsDate$</param>
+		
+		
+		
+
+		
+		<sql>
+<![CDATA[
+
+
+
+WITH stock AS (
+	SELECT 	dds.CLIENT_ID AS CLIENT_ID, 
+	        md.DIST_ID AS DIST_ID, 
+	        md.ORG_ID AS ORG_ID, 
+	        p.PROD_CODE AS PROD_CODE, --产品CODE
+	        p.prod_Name AS prod_Name,--产品名称
+	        bo.PNALL AS  PNALL, --组织经销商
+	        p.EXT_CODE AS EXT_CODE, 
+	        bo.pn2, --管理大区
+	        bo.pn3, --管理大分区
+	        bo.pn4,  --管理分区
+	        bo.pn5,  --管理小分区
+	        bo.pn6,  --管理细分区
+	        bo.pn7, --管理办事处
+	        bo1.ORG_ID AS ON_ID_1,
+		   	bo2.ORG_ID AS ON_ID_2,
+		   	bo3.ORG_ID AS ON_ID_3,
+		   	bo4.ORG_ID AS ON_ID_4,
+		   	bo5.ORG_ID AS ON_ID_5,
+		    bo.ORG_ID  AS ON_ID_6,
+	        md.DIST_NAME, --经销商名称
+	        p.BRAND_ID,  --产品品牌ID
+	        p.OTHER_ID, --类别（产品线）
+	        p.PROD_PC_BARCODE, --助记码
+	        p.TYPE_ID,  --产品品类ID
+	        p.MEMO1,    --表层
+	        p.MEMO2,    --配方
+	        p.MEMO3,    --形状
+	        p.MEMO4,    --厚度
+	        p.MEMO5,    --长度
+	        p.MEMO6,    --用途
+	        p.PROD_SPEC, --规格
+	        p.PACK_ID , --包装ID
+	        p.prod_Type ,--属性
+	        p.PROD_UNIT, --单位 
+	        sum(dds.BOX) AS STOCK_BOX 
+	FROM 	RPT_DATA_STOCK dds 
+			INNER JOIN (				
+				SELECT 	dds.CLIENT_ID AS CLIENT_ID, dds.DIST_ID AS DIST_ID, 
+						dds.PROD_CODE AS PROD_CODE, min(dds.STOCK_DATE) AS STOCK_DATE
+				FROM 	RPT_DATA_STOCK dds
+				WHERE 	dds.STOCK_DATE >= '$startDate$' AND dds.STOCK_DATE <= '$endDate$'
+				GROUP BY dds.CLIENT_ID, dds.DIST_ID, dds.PROD_CODE
+				
+			) d ON dds.CLIENT_ID=d.CLIENT_ID AND dds.DIST_ID=d.DIST_ID AND dds.PROD_CODE=d.PROD_CODE AND dds.STOCK_DATE=d.STOCK_DATE
+			--关联产品
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE 
+			INNER JOIN DMS_PROD_MAPPING m ON m.DIST_PROD_CODE=dds.PROD_CODE AND dds.CLIENT_ID=m.CLIENT_ID AND dds.PROD_UNIT=m.DIST_PROD_UNIT
+			--关联经销商
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dds.DIST_ID
+			--关联组织结构
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+		    INNER JOIN BASE_ORG bo1 ON bo1.ORG_ID = bo.PARENT_ORG_ID
+		    INNER JOIN BASE_ORG bo2 ON bo2.ORG_ID = bo1.PARENT_ORG_ID
+		    INNER JOIN BASE_ORG bo3 ON bo3.ORG_ID = bo2.PARENT_ORG_ID
+		    INNER JOIN BASE_ORG bo4 ON bo4.ORG_ID = bo3.PARENT_ORG_ID
+		    INNER JOIN BASE_ORG bo5 ON bo5.ORG_ID = bo4.PARENT_ORG_ID
+
+						
+	WHERE 1=1 AND 	dds.STOCK_DATE >= '$startDate$' AND dds.STOCK_DATE <= '$endDate$'
+	
+	
+	 $out$
+	GROUP BY dds.CLIENT_ID,
+	        p.prod_Name, 
+	        p.OTHER_ID,
+	        bo.pn2, --管理大区
+	        bo.pn3, --管理大分区
+	        bo.pn4,  --管理分区
+	        bo.pn5,  --管理小分区
+	        bo.pn6,  --管理细分区
+	        bo.pn7, --管理办事处
+	        bo1.ORG_ID,
+		   	bo2.ORG_ID,
+		   	bo3.ORG_ID,
+		   	bo4.ORG_ID,
+		   	bo5.ORG_ID,
+		    bo.ORG_ID  ,
+	        p.MEMO1,    --表层
+	        p.MEMO2,    --配方
+	        p.MEMO3,    --形状
+	        p.MEMO4,    --厚度
+	        p.MEMO5,    --长度
+	        p.MEMO6,    --用途
+	        p.PROD_SPEC, --规格
+	        p.PACK_ID , --包装ID
+	        p.prod_Type ,--属性
+	        p.PROD_UNIT, --单位
+	        p.PROD_PC_BARCODE,p.TYPE_ID, md.DIST_ID, md.ORG_ID, p.PROD_CODE,bo.PNALL,  md.DIST_NAME,
+	        p.BRAND_ID,p.EXT_CODE
+)
+,purchase AS (
+	SELECT 	dds.CLIENT_ID AS CLIENT_ID, 
+	        md.DIST_ID AS DIST_ID, 
+	        md.ORG_ID AS ORG_ID, 
+	        p.PROD_CODE AS PROD_CODE, 
+	        sum(dds.BOX) AS PURCHASE_BOX
+	FROM 	RPT_DATA_PURCHASE dds
+			--关联产品
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE 
+			INNER JOIN DMS_PROD_MAPPING m ON m.DIST_PROD_CODE=dds.PROD_CODE AND dds.CLIENT_ID=m.CLIENT_ID AND dds.PROD_UNIT=m.DIST_PROD_UNIT
+			--关联经销商
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dds.DIST_ID
+			--关联组织结构
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	  
+	
+	WHERE 	  dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$' $out$
+	GROUP BY dds.CLIENT_ID, md.DIST_ID, md.ORG_ID, p.PROD_CODE
+)
+,sale AS (
+	SELECT 	
+	        dds.CLIENT_ID,
+			md.DIST_CODE AS DIST_CODE,
+			md.DIST_NAME AS DIST_NAME, 
+			p.PROD_CODE AS PROD_CODE,
+			p.EXT_CODE AS SHORT_NAME,
+			m.RATE AS RATE,
+			p.PROD_BARCODE AS PROD_BARCODE, p.PROD_NAME AS PROD_NAME,		   
+			p.PROD_SPEC AS PROD_SPEC, 
+			p.PROD_TYPE AS PROD_TYPE, 
+			STDEVP(dds.BOX) AS BOX,
+			sum(dds.BOX) AS SALE_BOX
+			
+			
+	FROM 	RPT_DATA_SALE dds
+			--关联产品
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE 
+			INNER JOIN DMS_PROD_MAPPING m ON m.DIST_PROD_CODE=dds.PROD_CODE AND dds.CLIENT_ID=m.CLIENT_ID AND dds.PROD_UNIT=m.DIST_PROD_UNIT		
+			--关联门店
+			INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dds.TARGET_STORE_CODE
+			--关联经销商
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dds.DIST_ID
+			--关联组织结构
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+			
+					
+	WHERE 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$'	  $out$
+	
+	GROUP BY 
+			p.PROD_CODE,  dds.CLIENT_ID, p.EXT_CODE, m.RATE, 	p.PROD_TYPE ,	p.PROD_SPEC ,  p.PROD_BARCODE, p.PROD_NAME	   ,	md.DIST_CODE ,
+			md.DIST_NAME 
+)
+,sl_sale AS (	
+      SELECT 	
+	        dds.CLIENT_ID,
+			md.DIST_CODE AS DIST_CODE,
+			md.DIST_NAME AS DIST_NAME, 
+			p.PROD_CODE AS PROD_CODE,
+			p.EXT_CODE AS SHORT_NAME,
+			m.RATE AS RATE,
+			p.PROD_BARCODE AS PROD_BARCODE, p.PROD_NAME AS PROD_NAME,		   
+			p.PROD_SPEC AS PROD_SPEC, 
+			p.PROD_TYPE AS PROD_TYPE, 
+			CASE WHEN CAST(sum(dds.BOX)/7 AS DECIMAL(38,2))  IS NULL THEN '0' 
+			ELSE CAST(sum(dds.BOX)/7 AS DECIMAL(38,2))  END 	
+			
+			AS SALE_BOX
+	FROM 	RPT_DATA_SALE dds
+			--关联产品
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE 
+			INNER JOIN DMS_PROD_MAPPING m ON m.DIST_PROD_CODE=dds.PROD_CODE AND dds.CLIENT_ID=m.CLIENT_ID AND dds.PROD_UNIT=m.DIST_PROD_UNIT		
+			--关联门店
+			INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dds.TARGET_STORE_CODE
+			--关联经销商
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dds.DIST_ID
+			--关联组织结构
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+			
+			
+	WHERE 	dds.BILL_DATE >= '$strDate$' AND dds.BILL_DATE <= '$strsDate$'  $out$
+	
+	GROUP BY 
+			p.PROD_CODE,  dds.CLIENT_ID, p.EXT_CODE, m.RATE, 	p.PROD_TYPE ,	p.PROD_SPEC ,  p.PROD_BARCODE, p.PROD_NAME	   ,	md.DIST_CODE ,
+			md.DIST_NAME 
+),end_stock AS (
+	SELECT 	dds.CLIENT_ID AS CLIENT_ID, 
+	        md.DIST_ID AS DIST_ID, 
+	        md.ORG_ID AS ORG_ID, 
+	        p.PROD_CODE AS PROD_CODE,
+	        bo.PNALL AS  PNALL,
+	        p.EXT_CODE AS EXT_CODE,
+	        md.DIST_NAME,
+	        p.BRAND_ID,	
+	        CASE WHEN  sum(dds.BOX) IS NULL THEN '0' else  sum(dds.BOX) END        
+	        AS STOCK_BOX
+	FROM 	RPT_DATA_STOCK dds 
+			INNER JOIN (				
+				SELECT 	dds.CLIENT_ID AS CLIENT_ID, dds.DIST_ID AS DIST_ID, 
+						dds.PROD_CODE AS PROD_CODE, min(dds.STOCK_DATE) AS STOCK_DATE
+				FROM 	RPT_DATA_STOCK dds
+				WHERE 	dds.STOCK_DATE >= '$startDate$' 
+				GROUP BY dds.CLIENT_ID, dds.DIST_ID, dds.PROD_CODE
+				
+			) d ON dds.CLIENT_ID=d.CLIENT_ID AND dds.DIST_ID=d.DIST_ID AND dds.PROD_CODE=d.PROD_CODE AND dds.STOCK_DATE=d.STOCK_DATE
+			--关联产品
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE 
+			INNER JOIN DMS_PROD_MAPPING m ON m.DIST_PROD_CODE=dds.PROD_CODE AND dds.CLIENT_ID=m.CLIENT_ID AND dds.PROD_UNIT=m.DIST_PROD_UNIT
+			--关联经销商
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dds.DIST_ID
+			--关联组织结构
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID		
+						
+	WHERE 	dds.STOCK_DATE >= '$startDate$'   $out$
+	GROUP BY dds.CLIENT_ID, md.DIST_ID, md.ORG_ID, p.PROD_CODE,bo.PNALL,  md.DIST_NAME,
+	        p.BRAND_ID,p.EXT_CODE
+)
+,sum_org AS (
+SELECT 
+       stock.PNALL, --经销商
+       stock.pn2 AS ON_1, --管理大区
+	   stock.pn3 AS ON_2, --管理大分区
+	   stock.pn4 AS ON_3,  --管理分区
+	   stock.pn5 AS ON_4,  --管理小分区
+	   stock.pn6 AS ON_5,  --管理细分区
+	   stock.pn7 AS ON_6, --管理办事处
+       stock.PROD_PC_BARCODE,--助记码
+       (CASE WHEN  stock.STOCK_BOX IS NULL THEN '0' else  stock.STOCK_BOX END) AS  STOCK_BOX , -- 期初库存
+       (CASE WHEN  purchase.PURCHASE_BOX IS NULL THEN '0' else  purchase.PURCHASE_BOX END) AS PURCHASE_BOX, --本期入库
+       (CASE WHEN  sale.SALE_BOX IS NULL  THEN '0' else  sale.SALE_BOX END) AS SALE_BOX, --本期出库
+       
+       (CASE WHEN  stock.STOCK_BOX IS NULL THEN '0' else  stock.STOCK_BOX END)+
+       (CASE WHEN  purchase.PURCHASE_BOX IS NULL THEN '0' else  purchase.PURCHASE_BOX END)-
+       (CASE WHEN  sale.SALE_BOX IS NULL  THEN '0' else  sale.SALE_BOX END) AS SPL_BOX,  --本期结存
+       
+       --(CASE WHEN  sl_sale.SALE_BOX IS NULL THEN '0' else  sl_sale.SALE_BOX END) AS sl_box, 
+       
+       (CASE WHEN  end_stock.STOCK_BOX IS NULL THEN '0' else  end_stock.STOCK_BOX END) AS end_stock,
+       
+        CASE WHEN CAST($satisfyingRate$*SQRT($allocationDate$)*sale.BOX AS DECIMAL(38,2)) IS NULL THEN '0' ELSE      
+       CAST ($satisfyingRate$*SQRT($allocationDate$)*sale.BOX AS DECIMAL(38,2)) END AS security_stock,   --安全库存 
+       
+       CASE WHEN (sl_sale.SALE_BOX IS NULL OR  sl_sale.SALE_BOX='0')  THEN '0' ELSE  
+       CAST (end_stock.STOCK_BOX/sl_sale.SALE_BOX AS DECIMAL(38,0) )  END AS BOX,  --库存周转天数    
+       
+      
+       
+       CASE WHEN 
+       CAST ($satisfyingRate$*SQRT($allocationDate$)*sale.BOX AS DECIMAL(38,2)) > end_stock.STOCK_BOX 
+       THEN '√' ELSE '' END  AS remind,
+       
+       
+       stock.EXT_CODE, --
+       stock.DIST_ID,
+       stock.prod_code,
+       stock.prod_Name,
+       stock.BRAND_ID,
+       bdi1.item_name AS BRAND_NAME,--产品名称
+       stock.TYPE_ID,
+       bdi2.item_name AS TYPE_NAME, --类型名称
+       stock.OTHER_ID, --类别（产品线）
+       bdi3.item_name AS OTHER_NAME, --类别名称
+	   stock.MEMO1,    --表层
+	   stock.MEMO2,    --配方
+	   stock.MEMO3,    --形状
+	   stock.MEMO4,    --厚度
+	   stock.MEMO5,    --长度
+	   stock.MEMO6,    --用途
+	   stock.PROD_SPEC, --规格
+	   stock.PACK_ID , --包装ID
+	   bdi4.item_name AS PACK_NAME, --包装名称
+	   stock.prod_Type ,--属性
+	   ON_ID_1,
+	   ON_ID_2,
+	   ON_ID_3,
+	   ON_ID_4,
+	   ON_ID_5,
+	   ON_ID_6,
+	   stock.PROD_UNIT --单位
+       FROM 
+stock  left JOIN purchase ON stock.CLIENT_ID=purchase.CLIENT_ID AND stock.PROD_CODE = purchase.PROD_CODE
+       left JOIN sale     ON stock.CLIENT_ID=sale.CLIENT_ID AND purchase.CLIENT_ID = sale.CLIENT_ID 
+                         AND stock.PROD_CODE = sale.PROD_CODE AND purchase.PROD_CODE = sale.PROD_CODE
+       LEFT JOIN sl_sale  ON   sl_sale.CLIENT_ID = sale.CLIENT_ID
+                             AND    sl_sale.PROD_CODE = sale.PROD_CODE
+       LEFT JOIN end_stock  ON end_stock.CLIENT_ID =stock.CLIENT_ID
+                            AND  end_stock.PROD_CODE = stock.PROD_CODE
+       LEFT  JOIN BASE_DICT_ITEM  bdi1 ON stock.BRAND_ID = bdi1.DICT_ITEM_ID
+       LEFT JOIN BASE_DICT_ITEM  bdi2 ON stock.TYPE_ID = bdi2.DICT_ITEM_ID
+       LEFT JOIN BASE_DICT_ITEM  bdi3 ON stock.OTHER_ID = bdi3.DICT_ITEM_ID
+       LEFT JOIN BASE_DICT_ITEM  bdi4 ON stock.PACK_ID = bdi4.DICT_ITEM_ID
+  WHERE 1=1   		$distId$ $prodName$ $brandId$  $otherId$ $typeId$ $prodLayerId$ $prodFormulaId$
+		$prodShapeId$  $prodThicknessId$ $prodLengthId$ $prodUseId$ $prodspecificationId$
+		$packId$  $prodId$  $prodUnit$   
+		       
+)
+
+
+
+SELECT 
+       '0','a','ABC','','','','','','',
+       '-',
+       sum(STOCK_BOX),
+       sum(PURCHASE_BOX),    
+       sum(SALE_BOX),
+       sum(SPL_BOX),
+       sum(BOX), 
+       sum(security_stock),
+       remind
+FROM sum_org
+GROUP BY remind
+
+UNION ALL 
+
+SELECT 
+       'a',CAST(ON_ID_1 AS VARCHAR),'ABC',CAST(ON_1 AS VARCHAR),'','','','','',
+       '-',
+       sum(STOCK_BOX),
+       sum(PURCHASE_BOX),    
+       sum(SALE_BOX),
+       sum(SPL_BOX),
+       sum(BOX), 
+       sum(security_stock),
+       remind
+FROM sum_org
+GROUP BY remind,ON_1,ON_ID_1
+UNION ALL 
+
+SELECT 
+        CAST(ON_ID_1 AS VARCHAR),CAST(ON_ID_2 AS VARCHAR),'ABC',CAST(ON_1 AS VARCHAR),CAST(ON_2 AS VARCHAR),'','','','',
+       '-',
+       sum(STOCK_BOX),
+       sum(PURCHASE_BOX),    
+       sum(SALE_BOX),
+       sum(SPL_BOX),
+       sum(BOX), 
+       sum(security_stock),
+       remind
+FROM sum_org
+GROUP BY remind,ON_1,ON_2,ON_ID_1,ON_ID_2
+
+UNION ALL 
+
+SELECT 
+        CAST(ON_ID_2 AS VARCHAR),CAST(ON_ID_3 AS VARCHAR),'ABC',CAST(ON_1 AS VARCHAR),CAST(ON_2 AS VARCHAR),CAST(ON_3 AS VARCHAR),'','','',
+       '-',
+       sum(STOCK_BOX),
+       sum(PURCHASE_BOX),    
+       sum(SALE_BOX),
+       sum(SPL_BOX),
+       sum(BOX), 
+       sum(security_stock),
+       remind
+FROM sum_org
+GROUP BY remind,ON_1,ON_2,ON_3,ON_ID_2,ON_ID_3
+
+
+UNION ALL 
+
+SELECT 
+        CAST(ON_ID_3 AS VARCHAR),CAST(ON_ID_4 AS VARCHAR),'ABC',CAST(ON_1 AS VARCHAR),CAST(ON_2 AS VARCHAR),CAST(ON_3 AS VARCHAR),CAST(ON_4 AS VARCHAR),'','',
+       '-',
+       sum(STOCK_BOX),
+       sum(PURCHASE_BOX),    
+       sum(SALE_BOX),
+       sum(SPL_BOX),
+       sum(BOX), 
+       sum(security_stock),
+       remind
+FROM sum_org
+GROUP BY remind,ON_1,ON_2,ON_3,ON_4,ON_ID_3,ON_ID_4
+
+
+
+UNION ALL 
+
+SELECT 
+        CAST(ON_ID_4 AS VARCHAR),CAST(ON_ID_5 AS VARCHAR),'ABC',CAST(ON_1 AS VARCHAR),CAST(ON_2 AS VARCHAR),CAST(ON_3 AS VARCHAR),CAST(ON_4 AS VARCHAR),CAST(ON_5 AS VARCHAR),'',
+       '-',
+       sum(STOCK_BOX),
+       sum(PURCHASE_BOX),    
+       sum(SALE_BOX),
+       sum(SPL_BOX),
+       sum(BOX), 
+       sum(security_stock),
+       remind
+FROM sum_org
+GROUP BY remind,ON_1,ON_2,ON_3,ON_4,ON_5,ON_ID_4,ON_ID_5
+
+
+
+UNION ALL 
+
+SELECT 
+        CAST(ON_ID_5 AS VARCHAR),CAST(ON_ID_6 AS VARCHAR),'ABC',CAST(ON_1 AS VARCHAR),CAST(ON_2 AS VARCHAR),CAST(ON_3 AS VARCHAR),CAST(ON_4 AS VARCHAR),CAST(ON_5 AS VARCHAR),CAST(ON_6 AS VARCHAR),
+       PROD_PC_BARCODE,
+       sum(STOCK_BOX),
+       sum(PURCHASE_BOX),    
+       sum(SALE_BOX),
+       sum(SPL_BOX),
+       sum(BOX), 
+       sum(security_stock),
+       remind
+FROM sum_org
+GROUP BY remind,ON_1,ON_2,ON_3,ON_4,ON_5,ON_6,ON_ID_5,ON_ID_6,PROD_PC_BARCODE
+      
+]]>
+		</sql>
+	</content>
+	
+</config>

@@ -1,0 +1,60 @@
+#msg {
+	width: 300px;
+	height: 150px;
+	margin-top: 10px;
+	margin-right: auto;
+	margin-left: auto;
+}
+
+#msg span {
+	width: 80px;
+	height: 150px;
+	float: left;
+	cursor: move;
+	display: block;
+}
+
+#msg i {
+	display: inline;
+	margin-top: 3px;
+	width: 10px;
+	height: 10px;
+	float: right;
+	clear: both;
+	margin-right: 3px;
+}
+
+#msg i a {
+	font-size: 10px;
+	line-height: 10px;
+	background-image: url(../images/close-1.gif);
+	background-repeat: no-repeat;
+	background-position: 2px 4px;
+	width: 10px;
+	height: 10px;
+	margin: 0;
+	padding: 0;
+	display: block;
+}
+
+.msg2 {
+	background-image: url(../images/no.jpg);
+	background-repeat: no-repeat;
+	background-position: center;
+}
+.msg5 {
+	background-image: url(../images/warning.jpg);
+	background-repeat: no-repeat;
+	background-position: center;
+}
+#msg p {
+	text-indent: 0;
+	width: 198px;
+	height: 115px;
+	overflow: auto;
+	float: right;
+	clear: right;
+	margin-top: 0;
+	margin-right: 15px;
+	display: inline;
+}

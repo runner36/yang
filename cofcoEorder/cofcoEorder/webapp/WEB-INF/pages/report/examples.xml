@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>员工报表</title>
+	
+	<header>
+		<column title="员工,员工姓名" width="300"/>
+		<column title="员工,员工ID" width="100" align="right" cell="number" format="0.00"/>
+		<column title="创建时间" bundle="page" key="common.createdTime" width="200" cell="date" format="yyyy-MM-dd HH:mm"/>
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH -->
+		<param id="_orgAuthExp" initValue="" defaultValue="" valueList="" dataType="char"></param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="empName" initValue="" defaultValue="%">$empName$</param>
+		<param id="empId" initValue="" defaultValue="" template="and emp.emp_id=$empId$">$empId$</param>
+		<sql>
+<![CDATA[
+select emp.parent_emp_id, emp.emp_id, emp.emp_name, emp.emp_id, emp.created
+from base_employee emp 
+where emp.emp_name like '$empName$' $empId$ 
+order by level_code desc
+]]>
+		</sql>
+	</content>
+	
+</config>

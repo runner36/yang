@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>异常毛利分析</title>
+	
+	<header>
+		<column property="0" title="大区" style="text-align:left"/>
+		<column property="1" title="省" style="text-align:left"/>
+		<column property="2" title="城市" style="text-align:left"/>
+		<column property="3" title="经销商编码" style="text-align:left"/>
+		<column property="4" title="经销商名称" style="text-align:left"/>
+		<column property="5" title="品牌" style="text-align:left" />
+		<column property="6" title="产品代码" style="text-align:left" />
+		<column property="7" title="产品名称" style="text-align:left" />
+		
+		<column property="8" title="净销售金额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="9" title="成本" style="text-align:right" cell="number" format="#0.00"/>
+
+		<column property="10" title="毛利额" style="text-align:right" cell="number" format="#0.00"/>	
+		<column property="11" title="毛利率" style="text-align:right" />
+		<column property="12" title="毛利贡献率" style="text-align:right" />		
+	</header>
+	
+	<content>
+
+		
+		<!-- 开始时间 结束时间 -->
+        <param id="YearMon" isDisplay="1" displayName="开始时间" template="">$YearMon$</param>
+		<!-- 组织 -->
+		<param id="orgId" template=" and gp.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="orgName" isDisplay="1" displayName="组织" template="">$orgName$</param>
+		<!-- 经销商 -->
+		<param id="distId"  template=" and gp.DIST_ID in ($distId$) ">$distId$</param>
+		<param id="distCode" isDisplay="1" displayName="经销商编码" template=" and gp.DIST_CODE like '%$distCode$%' ">$distCode$</param>
+		<param id="distName" isDisplay="1" displayName="经销商名称" template="">$distName$</param>
+		<!-- 产品品牌 -->
+		<param id="prodBrandId" template=" and gp.DICT_ITEM_ID in ($prodBrandId$) ">$prodBrandId$</param>
+		<param id="prodBrandName" isDisplay="1" displayName="产品品牌" template="">$prodBrandName$</param>
+		<!-- 产品名称 产品编码 -->
+		<param id="prodCode" template=" and gp.PROD_CODE like '%$prodCode$%' ">$prodCode$</param>
+		<param id="prodName" isDisplay="1" displayName="产品名称" template=" and gp.PROD_NAME like '%$prodName$%' ">$prodName$</param>		
+<sql>
+	<![CDATA[
+		DECLARE @totalAmount DECIMAL(18,8) SET @totalAmount=0;
+
+		WITH sum_amount AS (
+			SELECT sum(gp.gm_amt) AS amt FROM GROSS_PROFIT gp
+			WHERE substring(CONVERT(VARCHAR(10), gp.BILL_DATE, 120 ),1,7) = '$YearMon$' $orgId$ $distId$ $distCode$ $prodBrandId$ $prodName$ $prodCode$ 
+		)
+		SELECT @totalAmount=amt FROM sum_amount;
+		
+		SELECT PN2,PN4,PN5,DIST_CODE, DIST_NAME, PROD_TYPE, PROD_CODE, PROD_NAME, QTY, AMT, gm_amt, 
+				CAST(CAST(gpm AS DECIMAL(38,3)) AS VARCHAR)+'%', con_margin
+		FROM (
+		
+			SELECT 
+					gp.PN2 , gp.PN4, gp.PN5, gp.DIST_CODE, gp.DIST_NAME, gp.PROD_TYPE, gp.PROD_CODE, gp.PROD_NAME, 
+					sum(gp.QTY) AS qty, sum(gp.AMT) AS amt, sum(gp.gm_amt) AS gm_amt,
+					CASE WHEN sum(gp.amt) = 0 THEN 0 ELSE sum(gp.gm_amt)/sum(gp.amt)*100 END AS gpm,		
+					CASE WHEN @totalAmount = 0 THEN '0.000%' ELSE CAST(cast(sum(gp.gm_amt)/@totalAmount*100  as DECIMAL(38,3)) AS VARCHAR)+'%' END AS con_margin	
+			
+			FROM 	GROSS_PROFIT gp
+			WHERE 	substring(CONVERT(VARCHAR(10), gp.BILL_DATE, 120 ),1,7) = '$YearMon$' $orgId$ $distId$ $distCode$ $prodBrandId$ $prodName$ $prodCode$ 
+			GROUP BY gp.PN2 , gp.PN4, gp.PN5, gp.DIST_CODE, gp.DIST_NAME, gp.PROD_TYPE, gp.PROD_CODE, gp.PROD_NAME
+						
+		) a 
+		WHERE (a.gpm>15 OR a.gpm<-5)
+
+		UNION ALL
+	
+		SELECT 	'合计：' AS PN2,'' AS PN4,'' AS PN5,'' AS DIST_CODE,'' AS DIST_NAME,'' AS PROD_TYPE,'' AS PROD_CODE,'' AS PROD_NAME, 
+			sum(gp.QTY) AS QTY, sum(gp.AMT) AS AMT, sum(gp.gm_amt) AS gm_amt,
+			CASE WHEN sum(gp.amt) = 0 THEN '0.000%' ELSE CAST(CAST(sum(gp.gm_amt)/sum(gp.amt)*100 AS DECIMAL(38,3)) AS VARCHAR)+'%' END AS gpm, 
+		   	
+			'' AS con_margin
+	
+		FROM 	GROSS_PROFIT gp
+		WHERE 	substring(CONVERT(VARCHAR(10), gp.BILL_DATE, 120 ),1,7) = '$YearMon$' $orgId$ $distId$ $distCode$ $prodBrandId$ $prodName$ $prodCode$ 
+
+          ]]>
+		</sql>
+	</content>
+	
+</config>

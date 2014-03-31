@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>otherInoutReport</title>
+	
+	<header>
+		<column property="0" title="玛氏时间" />
+		<column property="1" title="经销商名称" />
+		<column property="2" title="玛氏产品编号"/>
+		<column property="3" title="品类"/>
+		<column property="4" title="玛氏产品名称"/>
+		
+		<column property="5" title="其它入库数量(箱)" align="right" cell="currency" format="0.########"/>
+		<column property="6" title="Mars入库金额（元）" align="right" cell="number" format="0.00"/>
+		
+		<column property="7" title="其它出库数量(箱)" align="right" cell="currency" format="0.########"/>
+		
+		<column property="8" title="Mars出库金额（元）" align="right" cell="number" format="0.00"/>
+		<column property="9" title="出入库类型"/>
+		<column property="10" title="MARS其它出入库总金额" align="right" cell="number" format="0.00"/>
+		
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH, _FIRST_DAY_OF_WEEK -->
+		<param id="_orgAuthExp" initValue="" defaultValue="">$orgAuth$</param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="orgSubCode" template="and org.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+		<param id="distId" template="and ddr.dist_id in ($distId$)">$distId$</param>
+		
+		<param id="distCode" template="and ddr.dist_Code like '%$distCode$%'">$distCode$</param>
+		<param id="prodCode" template="and dp.PROD_CODE like '%$prodCode$%'">$prodCode$</param>
+		<param id="year1">$year1$</param>
+		<param id="year2">$year2$</param>
+		<param id="month1">$month1$</param>
+		<param id="month2">$month2$</param>
+		<param id="week1">$week1$</param>
+		<param id="week2">$week2$</param>
+		<!-- 
+			<param id="billDate1" template="and dd.bill_date>='$billDate1$'">$billDate1$</param>
+			<param id="billDate2" template="and dd.bill_date&lt;='$billDate2$ 23:59:59'">$billDate2$</param>
+		 -->
+		<sql>
+<![CDATA[
+SELECT 
+  	dbo.fn_getMarsWeekDay(convert(VARCHAR(20),dd.bill_date,120)),
+	ddr.dist_name,
+	dp.PROD_CODE,
+	t1.item_name,
+	dp.prod_name,
+	sum(CASE WHEN dd.PROD_QUANTITY >=0 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,dd.PROD_QUANTITY),0) ELSE 0 END) AS zheng1,
+	sum(CASE WHEN dd.PROD_QUANTITY >=0 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,dd.PROD_QUANTITY)*dp.prod_Price,0) ELSE 0 END) AS zheng2,
+	sum(CASE WHEN dd.PROD_QUANTITY <0 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,dd.PROD_QUANTITY),0) ELSE 0 END) AS fu1,
+	sum(CASE WHEN dd.PROD_QUANTITY <0 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,dd.PROD_QUANTITY)*dp.prod_Price,0) ELSE 0 END) AS fu2,
+	dd.BILL_TYPE,
+	sum(CASE WHEN dd.PROD_QUANTITY >=0 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,dd.PROD_QUANTITY)*dp.prod_Price,0) ELSE 0 END)+sum(CASE WHEN dd.PROD_QUANTITY <0 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,dd.PROD_QUANTITY)*dp.prod_Price,0) ELSE 0 END)
+FROM DMS_DATA_INOUT dd
+	INNER JOIN DMS_CLIENT dc ON dc.CLIENT_ID=dd.CLIENT_ID
+	INNER JOIN MDM_DISTRIBUTOR ddr ON ddr.DIST_ID=dc.DIST_ID
+	LEFT JOIN DMS_PROD_MAPPING dpm ON dpm.DIST_PROD_CODE = dd.PROD_CODE AND dd.PROD_UNIT=dpm.DIST_PROD_UNIT and dd.CLIENT_ID=dpm.CLIENT_ID
+	left join BASE_DICT_ITEM item1 on dpm.TARGET_UNIT_ID = item1.DICT_ITEM_ID
+	LEFT JOIN MDM_Product dp ON dp.PROD_CODE = dpm.TARGET_PROD_CODE
+	INNER JOIN BASE_DICT_ITEM t1 ON t1.DICT_ITEM_ID=dp.TYPE_ID
+	inner join base_org org on ddr.org_id=org.org_id
+WHERE 1=1
+	and dd.state='1'
+	 and dd.bill_date between 
+	(select cal_date from MDM_CALENDAR where cal_year='$year1$' and cal_month='$month1$' and cal_week='$week1$' and cal_day='1') and
+	(select cal_date from MDM_CALENDAR where cal_year='$year1$' and cal_month='$month2$' and cal_week='$week2$' and cal_day='7')
+    $orgSubCode$ $distId$ $distCode$ $prodCode$ 		  
+GROUP BY  
+  	dbo.fn_getMarsWeekDay(convert(VARCHAR(20),dd.bill_date,120)),ddr.dist_name,dp.PROD_CODE,t1.ITEM_NAME,dd.BILL_TYPE,dp.prod_name
+
+]]>
+		</sql>
+	</content>
+	
+</config>

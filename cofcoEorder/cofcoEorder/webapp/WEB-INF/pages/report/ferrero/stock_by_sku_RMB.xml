@@ -1,0 +1,230 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+  <config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>Monthly Distributor Stock Report By Sku</title>
+	
+	<header>
+		<column title="Grand" width="160"/>
+		<column title="Brand" width="100"/>
+		<column title="sku" width="180"/>
+		
+		<column title="Saleable" width="120" align="center"  />
+		<column title="Damaged"  width="120" align="center"  />
+		<column title="Obsolete" width="120" align="center"  />	
+		<column title="Sales" width="120" align="center"  />	
+		<column title="Coverage" width="120" align="center"  />	
+		
+		<column title="Others" width="70" align="center"  />
+		<column title="Before 6M" width="70" align="center"  />
+		<column title="Before 5M" width="70" align="center"  />
+		<column title="Before 4M" width="70" align="center"  />
+		<column title="Before 3M" width="70" align="center"  />
+		<column title="Before 2M" width="70" align="center"  />
+		<column title="Before 1M" width="70" align="center"  />
+	</header>
+
+	<content>
+		<param id="startDate" template=" '$startDate$' ">$startDate$</param>
+		<param id="endDate" template=" '$endDate$' ">$endDate$</param>
+		
+		<param id="distId" template=" AND client.DIST_ID in ($distId$) ">$distId$</param>
+		<param id="brand" template=" AND brand.item_name in ($brand$) " dataType="char">$brand$</param>
+		<param id="skuName" template=" AND product.PROD_ALIAS in ($skuName$) " dataType="char">$skuName$</param>
+		<param id="Unit" template="">$Unit$</param>
+		<param id="orgId" template=" AND md.ORG_ID in ($orgId$) ">$orgId$</param>
+		<!-- 权限 -->
+		<param id="orgSubCode" template=" AND bo.SUB_CODE like '$orgSubCode$%' ">$orgSubCode$</param>		
+		<sql>
+		<![CDATA[
+		
+WITH stock AS (
+	SELECT 	brand.dict_item_id AS brandId, brand.ITEM_NAME AS brandName, 
+			product.PROD_CODE AS prodCode, product.PROD_ALIAS AS productName, 
+			product.SORT AS P_SORT, brand.SORT AS B_SORT, stock.CLIENT_ID AS CLIENT_ID,
+			
+			sum(CASE WHEN stock.STOCK_TYPE='GL' THEN dbo.fn_getUnitConvById(mapping.TARGET_UNIT_ID, $Unit$, mapping.TARGET_PROD_CODE, stock.PROD_QUANTITY)*product.PROD_PRICE ELSE 0 END ) AS 'GL',
+			sum(CASE WHEN stock.STOCK_TYPE='DL' THEN dbo.fn_getUnitConvById(mapping.TARGET_UNIT_ID, $Unit$, mapping.TARGET_PROD_CODE, stock.PROD_QUANTITY)*product.PROD_PRICE ELSE 0 END ) AS 'DL',
+			sum(CASE WHEN stock.STOCK_TYPE='EL' THEN dbo.fn_getUnitConvById(mapping.TARGET_UNIT_ID, $Unit$, mapping.TARGET_PROD_CODE, stock.PROD_QUANTITY)*product.PROD_PRICE ELSE 0 END ) AS 'EL',
+			
+			sum( CASE WHEN data.PROD_NUM ='0'  THEN  stock.PROD_QUANTITY ELSE  0 END ) AS first1,
+			sum( CASE WHEN data.PROD_NUM ='0'  THEN  stock.PROD_QUANTITY ELSE  0 END ) AS first2,
+			sum( CASE WHEN data.PROD_NUM ='0'  THEN  stock.PROD_QUANTITY ELSE  0 END ) AS first3,
+			sum( CASE WHEN data.PROD_NUM ='0'  THEN  stock.PROD_QUANTITY ELSE  0 END ) AS first4,
+			sum( CASE WHEN data.PROD_NUM ='0'  THEN  stock.PROD_QUANTITY ELSE  0 END ) AS first5,
+			sum( CASE WHEN data.PROD_NUM ='0'  THEN  stock.PROD_QUANTITY ELSE  0 END ) AS first6,
+			sum( CASE WHEN data.PROD_NUM ='0'  THEN  stock.PROD_QUANTITY ELSE  0 END ) AS first7
+
+	FROM 	DMS_DATA_STOCK  stock
+			INNER JOIN (
+				SELECT 	max(stock.STOCK_DATE) AS STOCK_DATE, stock.PROD_CODE AS PROD_CODE,
+						stock.CLIENT_ID AS CLIENT_ID, stock.STOCK_TYPE AS STOCK_TYPE
+						
+				FROM 	DMS_DATA_STOCK  stock 
+						INNER JOIN DMS_PROD_MAPPING mapping ON stock.PROD_CODE=mapping.DIST_PROD_CODE AND stock.CLIENT_ID=mapping.CLIENT_ID AND stock.PROD_UNIT=mapping.DIST_PROD_UNIT AND stock.PROD_NAME=mapping.DIST_PROD_NAME
+						INNER JOIN MDM_PRODUCT product ON  product.PROD_CODE=mapping.TARGET_PROD_CODE and product.BRAND_ID is not null
+						LEFT JOIN BASE_DICT_ITEM brand ON brand.DICT_ITEM_ID=product.BRAND_ID AND brand.DICT_ID='prodBrand'
+						LEFT JOIN DMS_DATA_PRODUCT data ON data.PROD_CODE=mapping.DIST_PROD_CODE AND mapping.client_id = data.client_id AND data.PROD_UNIT=mapping.DIST_PROD_UNIT AND data.PROD_NAME=mapping.DIST_PROD_NAME AND data.STATE=1
+						LEFT JOIN DMS_CLIENT client ON client.CLIENT_ID = stock.CLIENT_ID
+						LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = client.DIST_ID
+						inner JOIN BASE_ORG bo ON bo.ORG_ID=md.ORG_ID
+						
+				WHERE 	stock.STOCK_DATE <= $startDate$+' 0:00:00' and stock.STOCK_TYPE IS NOT NULL and stock.state='1'
+						$distId$ $orgId$ $brand$ $skuName$ $orgSubCode$
+						and product.PROD_CODE not in ('zengpin','qita','tingchan')
+				GROUP BY stock.PROD_CODE, stock.CLIENT_ID, stock.STOCK_TYPE
+				
+			) a ON stock.STOCK_TYPE=a.STOCK_TYPE AND a.CLIENT_ID=stock.CLIENT_ID AND a.PROD_CODE=stock.PROD_CODE AND stock.STOCK_DATE=a.STOCK_DATE
+			 
+			INNER JOIN DMS_PROD_MAPPING mapping ON stock.PROD_CODE=mapping.DIST_PROD_CODE AND stock.CLIENT_ID=mapping.CLIENT_ID AND stock.PROD_UNIT=mapping.DIST_PROD_UNIT AND stock.PROD_NAME=mapping.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT product ON  product.PROD_CODE=mapping.TARGET_PROD_CODE and product.BRAND_ID is not null
+			LEFT JOIN BASE_DICT_ITEM brand ON brand.DICT_ITEM_ID=product.BRAND_ID AND brand.DICT_ID='prodBrand'
+			LEFT JOIN DMS_DATA_PRODUCT data ON data.PROD_CODE=mapping.DIST_PROD_CODE AND mapping.client_id = data.client_id AND data.PROD_UNIT=mapping.DIST_PROD_UNIT AND data.PROD_NAME=mapping.DIST_PROD_NAME AND data.STATE=1
+			LEFT JOIN DMS_CLIENT client ON client.CLIENT_ID = stock.CLIENT_ID
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = client.DIST_ID
+			inner JOIN BASE_ORG bo ON bo.ORG_ID=md.ORG_ID
+			
+	WHERE 	stock.STOCK_TYPE IS NOT NULL and stock.state='1'
+			$distId$ $orgId$ $brand$ $skuName$ $orgSubCode$
+			and product.PROD_CODE not in ('zengpin','qita','tingchan')
+	GROUP BY product.PROD_CODE, product.PROD_ALIAS, brand.ITEM_NAME, brand.dict_item_id, product.SORT, brand.SORT, stock.CLIENT_ID
+)
+,sale as (
+	SELECT 	brand.dict_item_id AS brandId, brand.ITEM_NAME AS brandName, 
+			dds.CLIENT_ID AS CLIENT_ID, product.PROD_CODE AS prodCode, product.PROD_ALIAS AS productName, 
+			sum(dbo.fn_getUnitConvById(mapping.TARGET_UNIT_ID, $Unit$, mapping.TARGET_PROD_CODE, dds.PROD_QUANTITY)*product.PROD_PRICE) AS amount
+
+	FROM 	DMS_DATA_SALE dds
+			INNER JOIN DMS_PROD_MAPPING mapping ON dds.PROD_CODE=mapping.DIST_PROD_CODE AND dds.CLIENT_ID=mapping.CLIENT_ID AND dds.PROD_UNIT=mapping.DIST_PROD_UNIT AND dds.PROD_NAME=mapping.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT product ON  product.PROD_CODE=mapping.TARGET_PROD_CODE and product.BRAND_ID is not null
+			LEFT JOIN BASE_DICT_ITEM brand ON brand.DICT_ITEM_ID=product.BRAND_ID AND brand.DICT_ID='prodBrand'
+			LEFT JOIN DMS_CLIENT client ON client.CLIENT_ID = dds.CLIENT_ID
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = client.DIST_ID
+			inner JOIN BASE_ORG bo ON bo.ORG_ID=md.ORG_ID
+			
+	WHERE 	dds.BILL_DATE >= DateAdd(day, -14, $startDate$) AND dds.BILL_DATE < $startDate$+' 0:00:00' and dds.state='1'
+			$distId$ $orgId$ $brand$ $skuName$ $orgSubCode$
+			and product.PROD_CODE not in ('zengpin','qita','tingchan')	
+	GROUP BY dds.CLIENT_ID, product.PROD_CODE, product.PROD_ALIAS, brand.ITEM_NAME, brand.dict_item_id
+	
+)
+,base as (
+	SELECT 	stock.brandId AS brandId, stock.brandName AS brandName, 
+			stock.prodCode AS prodCode, stock.productName AS productName, 
+			stock.P_SORT AS P_SORT, stock.B_SORT AS B_SORT,
+			stock.GL AS 'GL',
+			stock.DL AS 'DL',
+			stock.EL AS 'EL',
+			stock.first1 AS first1,
+			stock.first2 AS first2,
+			stock.first3 AS first3,
+			stock.first4 AS first4,
+			stock.first5 AS first5,
+			stock.first6 AS first6,
+			stock.first7 AS first7,
+			sale.amount/2 AS saleAmount
+
+	FROM 	stock 
+			LEFT JOIN sale ON stock.CLIENT_ID=sale.CLIENT_ID AND stock.prodCode=sale.prodCode AND stock.brandId=sale.brandId
+)
+
+--创建临时表
+SELECT * INTO #TEMP_REPORT_TABLE FROM base
+
+
+
+SELECT 	parentId, selfId, a.a1, a.a4, a.a5, a,b,c,d,e,f,g,h,i,j,k,l
+
+FROM (
+	SELECT  '0' AS parentId, 'Total' AS selfId, 
+			'Grand' AS a1, '' AS a4, '' AS a5, 0 AS 'P_SORT', 0 AS 'B_SORT',
+	
+			CAST(sum(GL) AS decimal(38,2)) AS a,
+			CAST(sum(DL) AS decimal(38,2)) AS b,
+			CAST(sum(EL) AS decimal(38,2)) AS c,
+			CAST(sum(saleAmount) AS decimal(38,2)) AS d,
+			case when sum(GL)=0 then 0 
+				else case when sum(saleAmount)=0 then 0
+				else cast(sum(GL)/sum(saleAmount) as decimal(38,2))
+				end
+			end as e,
+			
+			CAST(sum(first1) AS decimal(38,2)) AS f,
+			CAST(sum(first2) AS decimal(38,2)) AS g,
+			CAST(sum(first3) AS decimal(38,2)) AS h,
+			CAST(sum(first4) AS decimal(38,2)) AS i,
+			CAST(sum(first5) AS decimal(38,2)) AS j,
+			CAST(sum(first6) AS decimal(38,2)) AS k,
+			CAST(sum(first7) AS decimal(38,2)) AS l
+
+	FROM #TEMP_REPORT_TABLE
+	
+	
+	union all
+	
+	
+	SELECT  'Total' AS parentId, 
+			CAST(brandId AS VARCHAR) AS selfId, 
+			'Grand' AS a1, brandName AS a4, '' AS a4, 0 AS 'P_SORT', B_SORT AS 'B_SORT',
+	
+			CAST(sum(GL) AS decimal(38,2)) AS a,
+			CAST(sum(DL) AS decimal(38,2)) AS b,
+			CAST(sum(EL) AS decimal(38,2)) AS c,
+			CAST(sum(saleAmount) AS decimal(38,2)) AS d,
+			case when sum(GL)=0 then 0 
+				else case when sum(saleAmount)=0 then 0
+				else cast(sum(GL)/sum(saleAmount) as decimal(38,2))
+				end
+			end as e,
+			
+			CAST(sum(first1) AS decimal(38,2)) AS f,
+			CAST(sum(first2) AS decimal(38,2)) AS g,
+			CAST(sum(first3) AS decimal(38,2)) AS h,
+			CAST(sum(first4) AS decimal(38,2)) AS i,
+			CAST(sum(first5) AS decimal(38,2)) AS j,
+			CAST(sum(first6) AS decimal(38,2)) AS k,
+			CAST(sum(first7) AS decimal(38,2)) AS l
+
+	FROM #TEMP_REPORT_TABLE	
+	GROUP BY brandId, brandName, B_SORT
+		
+	
+	union all
+	
+	
+	SELECT  CAST(brandId AS VARCHAR) AS parentId, 
+			CAST(brandId AS VARCHAR)+prodCode AS selfId, 
+			'Grand' AS a1, brandName AS a4, productName AS a4, P_SORT AS 'P_SORT', B_SORT AS 'B_SORT',
+	
+			CAST(sum(GL) AS decimal(38,2)) AS a,
+			CAST(sum(DL) AS decimal(38,2)) AS b,
+			CAST(sum(EL) AS decimal(38,2)) AS c,
+			CAST(sum(saleAmount) AS decimal(38,2)) AS d,
+			case when sum(GL)=0 then 0 
+				else case when sum(saleAmount)=0 then 0
+				else cast(sum(GL)/sum(saleAmount) as decimal(38,2))
+				end
+			end as e,
+			
+			CAST(sum(first1) AS decimal(38,2)) AS f,
+			CAST(sum(first2) AS decimal(38,2)) AS g,
+			CAST(sum(first3) AS decimal(38,2)) AS h,
+			CAST(sum(first4) AS decimal(38,2)) AS i,
+			CAST(sum(first5) AS decimal(38,2)) AS j,
+			CAST(sum(first6) AS decimal(38,2)) AS k,
+			CAST(sum(first7) AS decimal(38,2)) AS l
+
+	FROM #TEMP_REPORT_TABLE	
+	GROUP BY brandId, brandName, prodCode, productName, B_SORT, P_SORT
+	
+) AS a
+ORDER BY a.P_SORT, a.B_SORT ASC
+
+--删除临时表
+IF object_id('tempdb..#TEMP_REPORT_TABLE') IS NOT NULL BEGIN 
+    DROP TABLE #TEMP_REPORT_TABLE
+END
+
+		]]>
+		</sql>
+	</content>
+
+</config>

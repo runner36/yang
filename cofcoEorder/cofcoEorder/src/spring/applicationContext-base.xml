@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+<beans default-autowire="byName" default-lazy-init="true">
+	<bean id="baseOrgManager" class="com.winchannel.base.service.BaseOrgManager"/>
+	<bean id="baseEmployeeManager" class="com.winchannel.base.service.BaseEmployeeManager"/>
+	<bean id="baseDictManager" class="com.winchannel.base.service.BaseDictManager"/>
+	<bean id="baseResourceManager" class="com.winchannel.base.service.BaseResourceManager"/>
+	<bean id="baseRoleManager" class="com.winchannel.base.service.BaseRoleManager"/>
+	<bean id="baseAuthManager" class="com.winchannel.base.service.BaseAuthManager"/>
+	<bean id="baseUserManager" class="com.winchannel.base.service.BaseUserManager"/>
+	<bean id="baseUserRoleManager" class="com.winchannel.base.service.BaseUserRoleManager"/>
+	<bean id="baseMenuManager" class="com.winchannel.base.service.BaseMenuManager"/>
+	<bean id="baseSecurityManager" class="com.winchannel.base.service.BaseSecurityManager"/>
+	<bean id="baseDataAuthManager" class="com.winchannel.base.service.BaseDataAuthManager"/>
+	<bean id="baseLogManager" class="com.winchannel.base.service.BaseLogManager"/>
+	<bean id="baseDataLogManager" class="com.winchannel.base.service.BaseDataLogManager"/>
+	<bean id="baseJobLogManager" class="com.winchannel.base.service.BaseJobLogManager"/>
+	<bean id="baseReportManager" class="com.winchannel.base.service.BaseReportManager"/>
+	<bean id="baseMessResManager" class="com.winchannel.base.service.BaseMessResManager"/>
+	<bean id="baseMessageManager" class="com.winchannel.message.service.BaseMessageManager"/>
+	<bean id="baseOpinionManager" class="com.winchannel.message.service.BaseOpinionManager"/>
+	
+</beans>

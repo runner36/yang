@@ -1,0 +1,284 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+  <config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+  
+	<title>经销商采购到货情况表</title>
+	<header>
+		<column property="1" title="经销商编码" bundle="page" key="common.distCode" />
+		<column property="2" title="经销商名称" bundle="page" key="common.distName" />
+		<column property="3" title="发货单据类型" />
+		<column property="4" title="转换前产品标准代码" />
+		<column property="5" title="产品标准编码" bundle="page" key="common.pordStandardCode" />
+		<column property="6" title="产品标准名称" bundle="page" key="common.pordStandardName" />
+		<column property="7" title="发货日期"  cell="date" format="yyyy-MM-dd"/>
+		<column property="8" title="到货日期"  cell="date" format="yyyy-MM-dd"/>
+	    <column property="9" title="在途天数" align="right"/>
+		<column property="10" title="转换前发货数量" align="right" cell="currency" format="0.########"/>
+		<column property="11" title="转换前发货单位"  />
+		<column property="12" title="发货数量" align="right" cell="currency" format="0.########"/>
+		<column property="13" title="发货单位"  />
+		<column property="14" title="到货数量" align="right" cell="currency" format="0.########"/>
+		<column property="15" title="到货单位"  />
+		<column property="16" title="数量差值" align="right" cell="currency" format="0.########"/>
+		<column property="17" title="首次到货率"  align="right" cell="currency" format="0.########"/>
+		<column property="18" title="经销商产品编码" bundle="page" key="common.distProdCode"/>
+		<column property="19" title="经销商产品名称" bundle="page" key="common.distProdName"/>
+		<column property="20" title="客户端编码" bundle="page" key="common.clientCode"/>
+		<column property="21" title="发货单号" />
+		<column property="22" title="发货汇总行数"/>
+		<column property="23" title="收货单号" />
+		<column property="24" title="收货汇总行数"/>
+		<column property="25" title="经销商ID"/>
+		<!-- column property="24" title="发货产品是否匹配"/>
+		<column property="25" title="发货产品单位是否匹配"/>
+		<column property="23" title="未转换数量"  align="right"  cell="currency" format="0.########"/>
+		<column property="21" title="未转换单位"  /-->
+	</header>
+	    
+	<content>	
+		<param id="dist_code" template=" AND dist.DIST_CODE LIKE '%$dist_code$%' ">$dist_code$</param>
+		<param id="distId" template=" AND dist.dist_id in($distId$)">$distId$</param>
+		<param id="clientId" template=" AND client.client_id in($clientId$)">$clientId$</param>
+		<param id="target_prod_code" template=" AND px.TARGET_PROD_CODE LIKE '%$target_prod_code$%'  ">$target_prod_code$</param>
+		<param id="target_prod_name" template=" AND px.TARGET_PROD_NAME LIKE '%$target_prod_name$%'  ">$target_prod_name$</param>
+		<param id="prod_code" template=" AND px.prod_code LIKE '%$prod_code$%'  ">$prod_code$</param>
+		<param id="prod_name" template=" AND px.prod_name LIKE '%$prod_name$%'  ">$prod_name$</param>
+		<param id="ship_date" template=" AND px.TARGET_BILL_DATE >= '$ship_date$'  ">$ship_date$</param>
+		<param id="purchase_date" template="  AND px.TARGET_BILL_DATE &lt;= '$purchase_date$' ">$purchase_date$</param>
+		
+		<sql>
+		<![CDATA[
+			WITH data_sale as(
+			select	client.client_id,
+					dist.DIST_CODE,
+					dist.DIST_ID,
+					dist.DIST_NAME,
+					client.CLIENT_CODE,
+					sale.BILL_CODE,
+					sale.BILL_DATE,
+					sale.BILL_TYPE,
+					case when prod.PROD_CODE is null then sale.PROD_CODE else prod.PROD_CODE end 
+					as PROD_CODE,
+					sale.PROD_CODE AS ORIGINAL_PROD_CODE,
+					case when prod.PROD_CODE is null then sale.PROD_NAME else prod.PROD_NAME end 
+					as PROD_NAME,
+					sale.PROD_NAME AS ORIGINAL_PROD_NAME,
+					case when prod.PROD_CODE is null or dbo.fn_getUnitConvByName(item1.ITEM_NAME,item.ITEM_NAME,prod.PROD_CODE,sale.PROD_QUANTITY) is null then sale.PROD_UNIT else item.ITEM_NAME end 
+					as PROD_UNIT,
+					sale.PROD_UNIT AS ORIGINAL_PROD_UNIT,
+					item.ITEM_NAME as MAIN_PROD_BASE_UNIT,
+					item1.ITEM_NAME as MAPPINT_MAIN_PROD_UNIT,
+					case when prod.PROD_CODE is null then sale.PROD_QUANTITY else 
+					isnull(dbo.fn_getUnitConvByName(item1.ITEM_NAME,item.ITEM_NAME,prod.PROD_CODE,sale.PROD_QUANTITY),sale.PROD_QUANTITY) end 
+					as PROD_QUANTITY,
+					sale.PROD_QUANTITY AS ORIGINAL_PROD_QUANTITY,
+					case when prod.PROD_CODE is null then 'N' else 'Y' end as SHIP_PROD_MATCH,
+					case when dbo.fn_getUnitConvByName(item1.ITEM_NAME,item.ITEM_NAME,prod.PROD_CODE,sale.PROD_QUANTITY) is null then 'N' else 'Y' end 
+					as SHIP_UNIT_MATCH
+			from DMS_DATA_SALE sale
+			INNER JOIN DMS_CLIENT client2 ON sale.CLIENT_ID = client2.CLIENT_ID and client2.CLIENT_CODE='COFCO'
+			left join DMS_PROD_MAPPING mapping on sale.PROD_CODE = mapping.DIST_PROD_CODE and sale.CLIENT_ID = mapping.CLIENT_ID and sale.prod_unit = mapping.DIST_PROD_UNIT and sale.PROD_NAME = mapping.DIST_PROD_NAME
+			left join MDM_PRODUCT prod on prod.PROD_CODE = mapping.TARGET_PROD_CODE
+			left join BASE_DICT_ITEM item on prod.PROD_BASEUNIT_ID = item.DICT_ITEM_ID
+			left join BASE_DICT_ITEM item1 on mapping.TARGET_UNIT_ID = item1.DICT_ITEM_ID
+			INNER JOIN MDM_DISTRIBUTOR dist ON dist.DIST_CODE = sale.STORE_CODE
+			INNER JOIN DMS_CLIENT client on dist.DIST_ID = client.DIST_ID
+			where sale.STATE = 1 $dist_code$ $distId$ $clientId$
+		),
+		shipout AS (
+			select shipout1.*,
+				case when shipout2.BILL_CODE is null then '*' else shipout2.BILL_CODE end as BILL_CODE,
+				case when shipout2.BILL_CODE is null then '*' else shipout2.BILL_TYPE end as BILL_TYPE,
+				case when shipout2.BILL_CODE is null then '*' else shipout2.ORIGINAL_PROD_CODE end as ORIGINAL_PROD_CODE
+			from
+			(
+				SELECT 	data_sale.client_id,
+						data_sale.DIST_CODE,
+						data_sale.DIST_ID,
+						data_sale.DIST_NAME,
+						data_sale.CLIENT_CODE,
+						count(1) ROW_COUNT,
+						data_sale.PROD_CODE AS TARGET_PROD_CODE, 
+						data_sale.PROD_NAME AS TARGET_PROD_NAME,
+						data_sale.BILL_DATE AS TARGET_BILL_DATE, 
+						sum(data_sale.PROD_QUANTITY) AS TARGET_PROD_QUANTITY,
+						sum(data_sale.ORIGINAL_PROD_QUANTITY) AS ORIGINAL_PROD_QUANTITY,
+						data_sale.PROD_UNIT AS TARGET_PROD_UNIT,
+						--data_sale.ORIGINAL_PROD_CODE,
+						--data_sale.ORIGINAL_PROD_NAME,
+						data_sale.ORIGINAL_PROD_UNIT,
+						data_sale.MAPPINT_MAIN_PROD_UNIT,
+						data_sale.MAIN_PROD_BASE_UNIT,
+						data_sale.SHIP_PROD_MATCH,
+						data_sale.SHIP_UNIT_MATCH
+				FROM 	data_sale
+				where data_sale.PROD_QUANTITY !=0 
+				group by data_sale.client_id,
+						data_sale.DIST_CODE,data_sale.DIST_ID,
+						data_sale.DIST_NAME,data_sale.CLIENT_CODE,
+						data_sale.PROD_CODE,data_sale.PROD_NAME,
+						data_sale.BILL_DATE,data_sale.PROD_UNIT,
+						--data_sale.ORIGINAL_PROD_CODE,
+						--data_sale.ORIGINAL_PROD_NAME,
+						data_sale.ORIGINAL_PROD_UNIT,
+						data_sale.MAPPINT_MAIN_PROD_UNIT,
+						data_sale.MAIN_PROD_BASE_UNIT,
+						data_sale.SHIP_PROD_MATCH,
+						data_sale.SHIP_UNIT_MATCH
+			) as shipout1
+			left join 
+			data_sale as shipout2
+			on shipout1.DIST_ID = shipout2.DIST_ID
+			and shipout1.client_ID = shipout2.client_ID
+			and shipout1.TARGET_BILL_DATE = shipout2.BILL_DATE
+			and shipout1.TARGET_PROD_CODE = shipout2.PROD_CODE
+			and shipout1.ROW_COUNT = 1
+		),
+		purchasein as (
+			select purchasein1.*,
+				case when purchasein2.BILL_CODE is null then '*' else purchasein2.BILL_CODE end as BILL_CODE
+			from
+			(
+			    select  
+				pchs.client_id,
+				pchs.DIST_ID,
+				
+				pchs.BILL_DATE,
+				pchs.PROD_CODE,pchs.PROD_NAME,
+				pchs.PROD_UNIT,
+				count(1) ROW_COUNT,
+				count(distinct pchs.BILL_CODE) bill_count,
+				pchs.TARGET_PROD_CODE,
+				sum(pchs.PROD_QUANTITY) as PROD_QUANTITY
+			    from (
+					select client.client_id,
+					purchasein.DIST_ID,
+					purchasein.BILL_CODE,
+					purchasein.BILL_DATE,
+					purchasein.PROD_CODE,purchasein.PROD_NAME,
+					--purchasein.PROD_UNIT,
+					item.ITEM_NAME as PROD_UNIT,
+					count(1) ROW_COUNT,
+					count(distinct purchasein.BILL_CODE) bill_count,
+					purchasein.TARGET_PROD_CODE,
+					sum(purchasein.PROD_QUANTITY) as PROD_QUANTITY
+					from RPT_DATA_PURCHASE purchasein
+					INNER JOIN MDM_DISTRIBUTOR dist ON dist.DIST_ID = purchasein.DIST_ID
+					left join dms_client client on client.client_id = purchasein.client_id
+					left join DMS_PROD_MAPPING mapping
+					on mapping.client_id = purchasein.client_id
+					and purchasein.PROD_CODE = mapping.DIST_PROD_CODE
+					and purchasein.TARGET_PROD_CODE = mapping.TARGET_PROD_CODE
+					and purchasein.PROD_NAME = mapping.DIST_PROD_NAME
+					AND purchasein.PROD_UNIT = mapping.DIST_PROD_UNIT
+					left join BASE_DICT_ITEM item on mapping.TARGET_UNIT_ID = item.DICT_ITEM_ID
+					where 1=1 $distId$ $clientId$
+					group by client.client_id,purchasein.DIST_ID,
+						purchasein.BILL_CODE,
+						purchasein.BILL_DATE,
+						purchasein.PROD_CODE,purchasein.PROD_NAME,
+						--purchasein.PROD_UNIT,
+						item.ITEM_NAME,
+						purchasein.TARGET_PROD_CODE
+					having sum(purchasein.PROD_QUANTITY)!=0
+			    ) pchs 
+			    group by pchs.client_id,
+				pchs.DIST_ID,			
+				pchs.BILL_DATE,
+				pchs.PROD_CODE,pchs.PROD_NAME,
+				pchs.PROD_UNIT,pchs.TARGET_PROD_CODE
+			) as purchasein1
+			left join
+			(
+				select client.client_id,
+						purchasein.DIST_ID,
+						purchasein.BILL_CODE,
+						case when right(purchasein.BILL_TYPE,2) = 'WD' then left(purchasein.BILL_TYPE,len(purchasein.BILL_TYPE)-2) else purchasein.BILL_TYPE end as BILL_TYPE,
+						purchasein.BILL_DATE,
+						purchasein.PROD_CODE,purchasein.PROD_NAME,
+						--purchasein.PROD_UNIT,
+						item.ITEM_NAME as PROD_UNIT,
+						purchasein.TARGET_PROD_CODE,
+						sum(purchasein.PROD_QUANTITY) as PROD_QUANTITY
+				from RPT_DATA_PURCHASE purchasein
+				INNER JOIN MDM_DISTRIBUTOR dist ON dist.DIST_ID = purchasein.DIST_ID
+				left join dms_client client on client.client_id = purchasein.client_id
+				left join DMS_PROD_MAPPING mapping
+				on mapping.client_id = purchasein.client_id
+				and purchasein.PROD_CODE = mapping.DIST_PROD_CODE
+				and purchasein.PROD_NAME = mapping.DIST_PROD_NAME
+				and purchasein.TARGET_PROD_CODE = mapping.TARGET_PROD_CODE
+				AND purchasein.PROD_UNIT = mapping.DIST_PROD_UNIT
+				left join BASE_DICT_ITEM item on mapping.TARGET_UNIT_ID = item.DICT_ITEM_ID
+				where 1=1 $distId$ $clientId$
+				group by client.client_id,purchasein.DIST_ID,
+					purchasein.BILL_CODE,
+					case when right(purchasein.BILL_TYPE,2) = 'WD' then left(purchasein.BILL_TYPE,len(purchasein.BILL_TYPE)-2) else purchasein.BILL_TYPE end,
+					purchasein.BILL_DATE,
+					purchasein.PROD_CODE,purchasein.PROD_NAME,
+					--purchasein.PROD_UNIT,
+					item.ITEM_NAME,
+					purchasein.TARGET_PROD_CODE
+				having sum(purchasein.PROD_QUANTITY)!=0
+			) as purchasein2
+			on purchasein1.DIST_ID = purchasein2.DIST_ID
+			and purchasein1.TARGET_PROD_CODE = purchasein2.TARGET_PROD_CODE
+			and purchasein1.BILL_DATE = purchasein2.BILL_DATE
+			and purchasein1.bill_count = 1
+			and purchasein1.client_id = purchasein2.client_id
+		)
+		select * from (
+			select  
+					row_number()
+					over
+					(partition by shipout.DIST_CODE,shipout.TARGET_PROD_CODE,shipout.BILL_CODE,shipout.TARGET_BILL_DATE order by BILL_DATE) as rn,
+					shipout.DIST_CODE,
+					shipout.DIST_NAME,
+					shipout.BILL_TYPE,
+					shipout.ORIGINAL_PROD_CODE,
+					shipout.TARGET_PROD_CODE,
+					shipout.TARGET_PROD_NAME,
+					shipout.TARGET_BILL_DATE,
+					case when purchasein.BILL_DATE is null then '2999-12-31' else purchasein.BILL_DATE end as BILL_DATE,
+					DateDiff(day, shipout.TARGET_BILL_DATE,case when purchasein.BILL_DATE is null then '2999-12-31' else purchasein.BILL_DATE end) as days_intransit,
+					shipout.ORIGINAL_PROD_QUANTITY,
+					shipout.ORIGINAL_PROD_UNIT,
+					shipout.TARGET_PROD_QUANTITY,
+					shipout.TARGET_PROD_UNIT,
+					isnull(dbo.fn_getUnitConvByName(item.ITEM_NAME,shipout.TARGET_PROD_UNIT,shipout.TARGET_PROD_CODE,purchasein.PROD_QUANTITY),isnull(purchasein.PROD_QUANTITY,0))
+					as PROD_QUANTITY,
+					case when dbo.fn_getUnitConvByName(item.ITEM_NAME,shipout.TARGET_PROD_UNIT,shipout.TARGET_PROD_CODE,purchasein.PROD_QUANTITY) is null
+					then purchasein.PROD_UNIT else shipout.TARGET_PROD_UNIT end as PROD_UNIT,
+					shipout.TARGET_PROD_QUANTITY - isnull(dbo.fn_getUnitConvByName(item.ITEM_NAME,shipout.TARGET_PROD_UNIT,shipout.TARGET_PROD_CODE,purchasein.PROD_QUANTITY),isnull(purchasein.PROD_QUANTITY,0)) as qty_diff,
+					isnull(dbo.fn_getUnitConvByName(item.ITEM_NAME,shipout.TARGET_PROD_UNIT,shipout.TARGET_PROD_CODE,purchasein.PROD_QUANTITY),isnull(purchasein.PROD_QUANTITY,0))/shipout.TARGET_PROD_QUANTITY as fill_rate,							
+					purchasein.PROD_CODE,
+					purchasein.PROD_NAME,
+					shipout.CLIENT_CODE,
+					shipout.BILL_CODE as TARGET_BILL_CODE,
+					shipout.ROW_COUNT as shipout_count,
+					purchasein.BILL_CODE,
+					isnull(purchasein.ROW_COUNT,0) as purchasein_count,
+					shipout.DIST_ID
+			 from 
+			shipout
+			left join mdm_distributor dist
+			on shipout.DIST_ID = dist.DIST_ID
+			left join purchasein
+			on shipout.DIST_ID = purchasein.DIST_ID
+			and shipout.client_id = purchasein.client_id
+			and purchasein.TARGET_PROD_CODE = shipout.TARGET_PROD_CODE 
+			and purchasein.BILL_DATE >= DATEADD(dd,case when dist.MEMO6 is null then 0 else cast(dist.MEMO6 as numeric) end,shipout.TARGET_BILL_DATE)
+			left join DMS_PROD_MAPPING mapping
+			on purchasein.PROD_CODE = mapping.DIST_PROD_CODE
+			and shipout.TARGET_PROD_CODE = mapping.TARGET_PROD_CODE
+			and purchasein.PROD_NAME = mapping.DIST_PROD_NAME
+			and shipout.client_id = mapping.client_id
+			left join BASE_DICT_ITEM item on mapping.TARGET_UNIT_ID = item.DICT_ITEM_ID
+		) as px
+		where px.rn=1
+   $prod_code$ $prod_name$ $target_prod_code$ $target_prod_name$ $ship_date$ $purchase_date$
+		       
+		]]>
+		</sql>
+	</content>
+
+</config>

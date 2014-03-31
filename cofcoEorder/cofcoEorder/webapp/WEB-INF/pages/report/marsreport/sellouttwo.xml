@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>sellouttwo</title>
+	<header>
+		<column property="0" title="玛氏时间" />
+		<column property="1" title="经销商名称" />
+		<column property="2" title="玛氏产品编号"/>
+		<column property="3" title="品类"/>
+		<column property="4" title="产品名称"/>
+		<column property="5" title="分销商产品编号"/>
+		
+		<column property="6" title="销售团体,Mega,销售数量(退货后)" align="right" cell="currency" format="0.########"/>
+		<column property="7" title="销售团体,Mega,商店进货额(退货后GSV)" cell="number" format="0.00"/>
+		<column property="8" title="销售团体,Mega,MARS销售净额（退货后）" cell="number" format="0.00" />
+		
+		<column property="9" title="销售团体,Middle,销售数量(退货后)" align="right" cell="currency" format="0.########"/>
+		<column property="10" title="销售团体,Middle,商店进货额(退货后GSV)" cell="number" format="0.00"/>
+		<column property="11" title="销售团体,Middle,MARS销售净额（退货后）" cell="number" format="0.00" />
+		
+		<column property="12" title="销售团体,IC,销售数量(退货后)" align="right" cell="currency" format="0.########"/>
+		<column property="13" title="销售团体,IC,商店进货额(退货后GSV)" cell="number" format="0.00"/>
+		<column property="14" title="销售团体,IC,MARS销售净额（退货后）" cell="number" format="0.00" />
+		
+		<column property="15" title="销售团体,Unknown,销售数量(退货后)" align="right" cell="currency" format="0.########"/>
+		<column property="16" title="销售团体,Unknown,商店进货额(退货后GSV)" cell="number" format="0.00"/>
+		<column property="17" title="销售团体,Unknown,MARS销售净额（退货后）" cell="number" format="0.00" />
+		<column property="18" title="MARS销售总净额" cell="number" format="0.00"/>
+	</header>
+		<content>
+			<param id="distId" template=" and mdis.dist_id in ($distId$)">$distId$</param>
+			<param id="distCode" template=" and mdis.dist_Code like '%$distCode$%'">$distCode$</param>
+			<param id="prodCode" template=" and mp.PROD_CODE like '$prodCode$%'">$prodCode$</param>
+			<param id="orgSubCode" template="and bo.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+			<param id="year1">$year1$</param>
+			<param id="year2">$year2$</param>
+			<param id="month1">$month1$</param>
+			<param id="month2">$month2$</param>
+			<param id="week1">$week1$</param>
+			<param id="week2">$week2$</param>
+			
+			<param id="clientId" template=" AND dc.client_id in($clientId$)">$clientId$</param>
+	<sql>
+		<![CDATA[
+
+SELECT  
+dbo.fn_getMarsWeekDay(convert(VARCHAR(20),dds.bill_date,120))
+,mdis.DIST_NAME
+
+,mp.PROD_CODE AS targetProdCode
+,bdi.ITEM_NAME
+,mp.prod_name
+,dds.PROD_CODE AS distPorodCode
+
+,sum(CASE WHEN dds.PROD_QUANTITY>=0 and orgbdi.dict_item_id=1364 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)-abs(sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1364 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)) AS '销售数量（退货后）'
+,sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1364 THEN isnull(dds.PROD_AMOUNT,0) ELSE 0 END)+sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1364 THEN isnull(dds.PROD_AMOUNT,0) ELSE 0 END)
+,sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1364 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY)*mp.prod_price,0) ELSE 0 END)+sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1364 THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)
+ 
+,sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1365 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)-abs(sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1365 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)) AS '销售数量（退货后）'
+,sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1365 THEN isnull(dds.PROD_AMOUNT,0) ELSE 0 END)+sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1365 THEN isnull(dds.PROD_AMOUNT,0) ELSE 0 END)
+,sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1365 THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)+sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1365 THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)
+
+,sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1366 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)-abs(sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1366 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)) AS '销售数量（退货后）'
+,sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1366 THEN isnull(dds.PROD_AMOUNT,0) ELSE 0 END)+sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1366 THEN isnull(dds.PROD_AMOUNT,0) ELSE 0 END)
+,sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1366 THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)+sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1366 THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)
+
+
+,sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1367 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)-abs(sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1367 THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)) AS '销售数量（退货后）'
+,sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1367 THEN isnull(dds.PROD_AMOUNT,0) ELSE 0 END)+sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1367 THEN isnull(dds.PROD_AMOUNT,0) ELSE 0 END)
+,sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1367 THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)+sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1367 THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)
+
+ ,(sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1364 THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)+sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1364 THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)
++sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1365  THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)+sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1365 THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)
++sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1366  THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)+sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1366 THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)
++sum(CASE WHEN dds.PROD_QUANTITY>=0  and orgbdi.dict_item_id=1367 THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END)+sum(CASE WHEN dds.PROD_QUANTITY<0  and orgbdi.dict_item_id=1367  THEN isnull(mp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',mp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 END))
+ 
+FROM DMS_DATA_SALE dds 
+ 
+INNER JOIN DMS_CLIENT dc ON dc.CLIENT_ID=dds.CLIENT_ID
+INNER JOIN MDM_DISTRIBUTOR mdis ON mdis.DIST_ID=dc.DIST_ID 
+INNER JOIN DMS_PROD_MAPPING dpm ON dpm.DIST_PROD_CODE=dds.PROD_CODE AND dds.CLIENT_ID=dpm.CLIENT_ID AND dpm.DIST_PROD_UNIT=dds.PROD_UNIT
+left join BASE_DICT_ITEM item1 on dpm.TARGET_UNIT_ID = item1.DICT_ITEM_ID
+INNER JOIN MDM_PRODUCT mp ON mp.PROD_CODE=dpm.TARGET_PROD_CODE
+inner JOIN BASE_DICT_ITEM bdi ON bdi.DICT_ITEM_ID=mp.TYPE_ID
+INNER JOIN DMS_STORE_MAPPING dsm ON dsm.DIST_STORE_CODE=dds.STORE_CODE AND dds.CLIENT_ID=dsm.CLIENT_ID
+INNER JOIN MDM_STORE ms ON ms.STORE_CODE=dsm.TARGET_STORE_CODE  
+INNER JOIN BASE_ORG bo ON bo.ORG_ID=ms.ORG_ID
+INNER JOIN BASE_DICT_ITEM orgbdi ON bo.ORG_TYPE_ID=orgbdi.DICT_ITEM_ID
+WHERE dds.STATE=1
+  and dds.bill_date between 
+	(select cal_date from MDM_CALENDAR where cal_year='$year1$' and cal_month='$month1$' and cal_week='$week1$' and cal_day='1') and
+	(select cal_date from MDM_CALENDAR where cal_year='$year1$' and cal_month='$month2$' and cal_week='$week2$' and cal_day='7')
+ AND  orgbdi.DICT_ITEM_ID in(1364,1365,1366,1367)
+ $distId$  $distCode$ $prodCode$  $orgSubCode$ $clientId$	 
+GROUP BY 
+dbo.fn_getMarsWeekDay(convert(VARCHAR(20),dds.bill_date,120))
+,mdis.DIST_NAME
+,mp.PROD_CODE 
+,bdi.ITEM_NAME
+,mp.prod_name
+,dds.PROD_CODE
+		]]>
+	</sql>
+	</content>
+</config>

@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>Sale Detail Report</title>
+	
+	<header>
+		<column title="Year" property="0" />
+		<column title="Month" property="1" />
+		<column title="Week" property="2" />
+		<column title="Date" property="3" cell="date" format="yyyy-MM-dd" />
+		<column title="Region"   property="4"  />
+		<column title="City"  property="5"  />
+		<column title="Distributor"  property="6"  />
+		<column title="Banner"  property="7"  />
+		<column title="Customer Code"  property="8"  />
+		<column title="Customer Name"  property="9"  />
+		<column title="Type"  property="10"  />
+		<column title="Channel"  property="11"  />
+		<column title="Address"  property="12"  />
+		<column title="Brand"  property="13"  />
+		<column title="Ferrero SKU Code"  property="14"  />
+		<column title="Ferrero Name"  property="15"  />
+		<column title="EA"  property="16"  cell="number" format="0.00" />
+		<column title="CT"  property="17"  cell="number" format="0.00" />
+		<column title="Qli"  property="18" cell="number" format="0.00" />	
+		<column title="EX-DIS VALUE"  property="19" cell="number" format="0.00" />
+	</header>
+	<content>
+		<param id="startDate" template=" dds.BILL_DATE >= '$startDate$ 0:00:00' ">$startDate$</param>
+		<param id="endDate" template=" AND dds.BILL_DATE &lt;= '$endDate$ 23:59:59' ">$endDate$</param>
+		<param id="distId" template=" AND md.DIST_ID in ($distId$) ">$distId$</param>
+		<param id="channelId" template=" AND ms.TYPE_ID in ($channelId$) ">$channelId$</param>
+		<param id="typeId" template=" AND ms.NATURE_ID in ($typeId$) ">$typeId$</param>
+		<param id="bannerId" template=" AND ms.CORP_ID in ($bannerId$) ">$bannerId$</param>
+		<param id="storeCode" template=" AND ms.STORE_CODE like '%$storeCode$%' ">$storeCode$</param>
+		<param id="storeName" template=" AND ms.STORE_NAME like '%$storeName$%' ">$storeName$</param>
+		<param id="brandId" template=" AND mp.BRAND_ID in ($brandId$) ">$brandId$</param>
+		<param id="prodCode" template=" AND mp.PROD_CODE like '%$prodCode$%' ">$prodCode$</param>
+		<param id="simsOrgId" template=" and ms.ORG_ID in ($simsOrgId$) ">$simsOrgId$</param>
+		<!-- 权限 -->
+		<param id="orgSubCode" template=" AND bo.SUB_CODE like '$orgSubCode$%' ">$orgSubCode$</param>
+		<sql>
+<![CDATA[
+
+
+
+SELECT 	DatePart(yy, dds.BILL_DATE) AS year, 
+		--substring(replace(convert(varchar(30),dds.BILL_DATE,106),' ','-'),4,3) AS month,
+		CASE WHEN DatePart(mm, dds.BILL_DATE)=1 THEN 'Jan'
+			 WHEN DatePart(mm, dds.BILL_DATE)=2 THEN 'Feb'
+			 WHEN DatePart(mm, dds.BILL_DATE)=3 THEN 'Mar'
+			 WHEN DatePart(mm, dds.BILL_DATE)=4 THEN 'Apr'
+			 WHEN DatePart(mm, dds.BILL_DATE)=5 THEN 'May'
+			 WHEN DatePart(mm, dds.BILL_DATE)=6 THEN 'Jun'
+			 WHEN DatePart(mm, dds.BILL_DATE)=7 THEN 'Jul'
+			 WHEN DatePart(mm, dds.BILL_DATE)=8 THEN 'Aug'
+			 WHEN DatePart(mm, dds.BILL_DATE)=9 THEN 'Sep'
+			 WHEN DatePart(mm, dds.BILL_DATE)=10 THEN 'Oct'
+		     WHEN DatePart(mm, dds.BILL_DATE)=11 THEN 'Nov' 
+			ELSE 'Dec'
+		END AS month, 
+		--'',--DatePart(wk, dds.BILL_DATE) AS week,
+		(SELECT CAL_WEEK FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, dds.BILL_DATE) AND CAL_DATE=CONVERT(varchar(10), dds.BILL_DATE, 120 )) as week,		
+		dds.BILL_DATE, bo.PN2, bo.ORG_NAME, md.DIST_NAME, banner.ITEM_NAME, ms.STORE_CODE, ms.STORE_NAME, 
+		type.ITEM_NAME, channel.ITEM_NAME, ms.STORE_ADDR, brand.ITEM_NAME, mp.PROD_CODE, mp.PROD_NAME_EN,
+		
+		dbo.fn_getUnitConvById(dpm.TARGET_UNIT_ID, 340, dpm.TARGET_PROD_CODE, dds.PROD_QUANTITY) AS EA,
+		dbo.fn_getUnitConvById(dpm.TARGET_UNIT_ID, 339, dpm.TARGET_PROD_CODE, dds.PROD_QUANTITY) AS CT,
+		dbo.fn_getUnitConvById(dpm.TARGET_UNIT_ID, 341, dpm.TARGET_PROD_CODE, dds.PROD_QUANTITY)/100 AS QLI,
+		dds.PROD_AMOUNT
+		
+
+FROM 	DMS_DATA_SALE dds
+		INNER JOIN DMS_PROD_MAPPING dpm ON dds.PROD_CODE = dpm.DIST_PROD_CODE AND dds.CLIENT_ID = dpm.CLIENT_ID AND dds.PROD_UNIT=dpm.DIST_PROD_UNIT AND dds.PROD_NAME=dpm.DIST_PROD_NAME
+		INNER JOIN MDM_PRODUCT mp ON  mp.PROD_CODE = dpm.TARGET_PROD_CODE
+		INNER JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE AND dds.CLIENT_ID=dsm.CLIENT_ID
+		INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.TARGET_STORE_CODE
+		
+		LEFT JOIN BASE_DICT_ITEM brand ON brand.DICT_ITEM_ID=mp.BRAND_ID AND brand.DICT_ID='prodBrand' 
+		LEFT JOIN BASE_DICT_ITEM banner ON banner.DICT_ITEM_ID=ms.CORP_ID AND banner.DICT_ID='storeCorp'
+		LEFT JOIN BASE_DICT_ITEM type ON type.DICT_ITEM_ID=ms.NATURE_ID AND type.DICT_ID='storeNature'
+		LEFT JOIN BASE_DICT_ITEM channel ON channel.DICT_ITEM_ID=ms.TYPE_ID AND channel.DICT_ID='storeType'
+		
+		LEFT JOIN DMS_CLIENT dc ON dc.CLIENT_ID = dds.CLIENT_ID
+		INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID AND ms.DIST_ID=md.DIST_ID
+		LEFT JOIN BASE_ORG bo ON bo.ORG_ID=md.ORG_ID
+
+WHERE 	$startDate$ $endDate$ $distId$ $channelId$ $typeId$ $bannerId$ $simsOrgId$ $storeCode$ $storeName$ $brandId$ $prodCode$ $orgSubCode$ AND dds.STATE=1
+		and mp.PROD_CODE not in ('zengpin','qita','tingchan')
+		
+ 
+]]>
+		</sql>
+	</content>
+	
+</config>

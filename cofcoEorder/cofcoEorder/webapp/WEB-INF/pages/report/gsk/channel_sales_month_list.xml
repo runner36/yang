@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>渠道销售月报</title>
+	
+	<header>
+		<column property="0" title="大区"  style="text-align:left"/>
+		<column property="1" title="区域"  style="text-align:left"/>
+		<column property="2" title="城市"  style="text-align:left"/>
+		<column property="3" title="渠道"  style="text-align:left" />
+		<column property="4" title="品牌"  style="text-align:left" />
+		<column property="5" title="产品" style="text-align:left" />
+		<column property="6" title="产品标准单价" bundle="page" key="common.pordStandardPrice"  style="text-align:right" cell="number" format="#0.00"/>	
+			
+		<column property="7" title="1月,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="8" title="1月,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="9" title="2月,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="10" title="2月,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="11" title="3月,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="12" title="3月,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="13" title="4月,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="14" title="4月,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="15" title="5月,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="16" title="5月,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="17" title="6月,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="18" title="6月,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="19" title="7月,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="20" title="7月,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="21" title="8月,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="22" title="8月,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="23" title="9月,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="24" title="9月,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="25" title="10月,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="26" title="10月,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="27" title="11月,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="28" title="11月,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="29" title="12月,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="30" title="12月,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="31" title="YTD,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="32" title="YTD,金额"  style="text-align:right" cell="number" format="#0.00"/>				
+	</header>
+	
+	<content>
+		<!-- 年月 -->
+        <param id="Year" initValue="" defaultValue="" template="">$Year$</param>
+		<!-- 组织 -->
+		<param id="orgId" initValue="" defaultValue="" template=" and ds.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="orgName" initValue="" defaultValue="" template=" and area.PN4 in ($orgName$) " dataType="char" >$orgName$</param>
+		<!-- 地理区域 -->
+		<param id="geoId" initValue="" defaultValue="" template=" and ds.CITY_ID in ($geoId$) ">$geoId$</param>
+		<!-- 渠道 -->
+		<param id="channelId" initValue="" defaultValue="" template=" and ds.CHANNEL_ID in ($channelId$) ">$channelId$</param>
+		<sql>
+		
+          <![CDATA[
+
+			WITH sale AS (
+				SELECT	area.PN2 AS region, area.PN3 AS area, dc.CITY_NAME AS city,
+						ds.CHANNEL_NAME AS channelName, dp.BRAND_NAME AS brandName,
+						dp.PROD_NAME AS prodName, dp.PROD_PRICE AS prodPrice, 
+						
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-01' THEN rds.BOX ELSE 0 END AS QLI_1,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-02' THEN rds.BOX ELSE 0 END AS QLI_2,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-03' THEN rds.BOX ELSE 0 END AS QLI_3,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-04' THEN rds.BOX ELSE 0 END AS QLI_4,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-05' THEN rds.BOX ELSE 0 END AS QLI_5,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-06' THEN rds.BOX ELSE 0 END AS QLI_6,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-07' THEN rds.BOX ELSE 0 END AS QLI_7,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-08' THEN rds.BOX ELSE 0 END AS QLI_8,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-09' THEN rds.BOX ELSE 0 END AS QLI_9,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-10' THEN rds.BOX ELSE 0 END AS QLI_10,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-11' THEN rds.BOX ELSE 0 END AS QLI_11,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-12' THEN rds.BOX ELSE 0 END AS QLI_12,	
+				
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-01' THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_1,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-02' THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_2,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-03' THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_3,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-04' THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_4,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-05' THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_5,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-06' THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_6,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-07' THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_7,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-08' THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_8,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-09' THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_9,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-10' THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_10,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-11' THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_11,
+						CASE WHEN substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) = '$Year$'+'-12' THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_12
+						
+				FROM 	RPT_DATA_SALE rds
+						INNER JOIN DIM_STORE ds ON ds.STORE_CODE=rds.TARGET_STORE_CODE
+						INNER JOIN DIM_PRODUCT dp ON dp.PROD_CODE=rds.TARGET_PROD_CODE
+						INNER JOIN BASE_ORG area ON area.ORG_ID=ds.ORG_ID
+						LEFT JOIN DIM_CITY dc ON dc.CITY_ID=ds.CITY_ID
+				
+				WHERE	1=1 $orgName$ $geoId$ $channelId$
+			)
+			
+			SELECT 	region, area, city, channelName, brandName, prodName, prodPrice,
+					sum(QLI_1), sum(AMOUNT_1)/1000,
+					sum(QLI_2), sum(AMOUNT_2)/1000,
+					sum(QLI_3), sum(AMOUNT_3)/1000,
+					sum(QLI_4), sum(AMOUNT_4)/1000,
+					sum(QLI_5), sum(AMOUNT_5)/1000,
+					sum(QLI_6), sum(AMOUNT_6)/1000,
+					sum(QLI_7), sum(AMOUNT_7)/1000,
+					sum(QLI_8), sum(AMOUNT_8)/1000,
+					sum(QLI_9), sum(AMOUNT_9)/1000,
+					sum(QLI_10), sum(AMOUNT_10)/1000,
+					sum(QLI_11), sum(AMOUNT_11)/1000,
+					sum(QLI_12), sum(AMOUNT_12)/1000,
+					sum(QLI_1+QLI_2+QLI_3+QLI_4+QLI_5+QLI_6+QLI_7+QLI_8+QLI_9+QLI_10+QLI_11+QLI_12),
+					sum(AMOUNT_1+AMOUNT_2+AMOUNT_3+AMOUNT_4+AMOUNT_5+AMOUNT_6+AMOUNT_7+AMOUNT_8+AMOUNT_9+AMOUNT_10+AMOUNT_11+AMOUNT_12)/1000
+					
+			FROM 	sale 
+			
+			GROUP BY region, area, city, channelName, brandName, prodName, prodPrice
+ 						
+          ]]>
+		</sql>
+	</content>
+	
+</config>

@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <config showSql="true" cacheTime="300000"  firstQuery="false" paging="true"  showSort="false" >
+  
+	<title>经销商产品匹配情况</title>
+	<header>
+		<column property="2" title="经销商产品编码"  sortable="false"/>     
+		<column property="3" title="经销商产品名称"  sortable="false"/>
+		<column property="4" title="产品标准名称"  sortable="false"/>
+		<column property="25" title="父类产品"       sortable="false"/>
+		<column property="5" title="匹配情况"  sortable="false"/>
+		<column property="6" title="销售额(实际)" cell="number" format="#0.00"  style="text-align:right"  sortable="false"/>
+		<column property="7" title="销售额(标准)" cell="number" format="#0.00"   style="text-align:right"  sortable="false"/>
+		<column property="27" title="零价销售额" cell="number" format="#0.00"   style="text-align:right"  sortable="false"/>
+		<column property="8" title="加价率" style="text-align:right"  sortable="false"/>
+		<column property="9" title="单位"  sortable="false"/>
+		<column property="10" title="发货数量" cell="number" format="#0"  style="text-align:right"  sortable="false"/>
+		<column property="11" title="到货数量" cell="number" format="#0" style="text-align:right"  sortable="false"/>
+		<column property="12" title="到货/发货" style="text-align:right"  sortable="false"/>
+		<column property="22" title="销售数量" cell="number" format="#0"  style="text-align:right"  sortable="false"/>
+		<column property="23" title="销售/发货" style="text-align:right"  sortable="false"/>
+		<column property="24" title="销售/到货" style="text-align:right"  sortable="false"/>
+		<column property="13" title="经销商条码" escapeAutoFormat="true"  sortable="false"/>
+		<column property="14" title="条码检查状态"  sortable="false"/>
+		<column property="15" title="产品标准编码" style="text-align:right"  sortable="false"/>
+		<column property="16" title="备注"  sortable="false"/>
+		<column property="17" title="匹配记录创建日期"  cell="date" format="yyyy-MM-dd HH:mm:ss" sortable="false"/>
+		<column property="18" title="匹配记录最近更新日期"  cell="date" format="yyyy-MM-dd HH:mm:ss" sortable="false"/>
+		<column property="19" title="经销商编码" sortable="false"/>
+		<column property="0" title="经销商名称"  sortable="false"/>
+		<column property="1" title="客户端编码"  sortable="false"/>
+		<column property="26" title="父类产品编码"  sortable="false"/>
+	</header>
+	    
+	<content>	
+	
+		<param id="start_date" template=" AND RM.STAT_DATE>='$start_date$' ">$start_date$</param> 
+		<param id="end_date" template=" AND RM.STAT_DATE&lt;='$end_date$' ">$end_date$</param>
+		
+		<param id="distIds" template=" AND DC.DIST_ID IN ( $distIds$  )  ">$distIds$</param>
+		
+		<param id="distIds" template=" AND MD.DIST_ID IN ( $mdDistIds$  )  ">$mdDistIds$</param>
+		
+		<param id="distCode" template=" INNER JOIN MDM_DISTRIBUTOR MD  ON  MD.DIST_ID = DC.DIST_ID  AND MD.DIST_CODE LIKE '%$distCode$%'  ">$distCode$</param>
+		
+		<param id="distCode" template=" AND MD.DIST_CODE LIKE '%$distCode2$%'  ">$distCode2$</param>
+		
+		<param id="target_prod_name" template=" AND MP.PROD_NAME LIKE '%$target_prod_name$%' ">$target_prod_name$</param>
+		<param id="prod_name" template=" AND DAP.PROD_NAME LIKE '%$prod_name$%'  ">$prod_name$</param>
+		
+		<!-- 经销商产品名称条件,在最后合并完发货未匹配数据后,再次进行筛选使用 -->
+		<param id="prod_name" template=" AND distProdName LIKE '%$final_dist_prod_name_like$%'  ">$final_dist_prod_name_like$</param>
+	
+		<param id="is_map" template=" $is_map$  "   >$is_map$</param>
+		<param id="volume" template=" $volume$  "   >$volume$</param>
+		
+		<sql>
+		<![CDATA[
+					 
+					WITH SALE_MONTH AS (
+		   				SELECT 
+							 RM.DIST_ID
+							,RM.DIST_NAME
+							,RM.DIST_CODE
+							,RM.PROD_CODE
+							,RM.PROD_NAME
+							,RM.TARGET_PROD_CODE
+							,ISNULL(SUM(RM.STAT_SUM_NUM),0) SALE_NUM
+							,ISNULL(SUM(RM.SUM_AMOUNT),0) SUM_AMOUNT
+							,ISNULL(SUM(RM.STAT_SUM_AMOUNT),0) STAT_SUM_AMOUNT
+							,ISNULL(SUM(RM.STAT_SUM_AMOUNT_NON_PRICE_ZERO),0) STAT_SUM_AMOUNT_NON_PRICE_ZERO  
+						FROM RPT_DATA_SALE_MONTH RM 
+						INNER JOIN DMS_CLIENT DC
+			   		   		ON  DC.CLIENT_ID =  RM.CLIENT_ID
+			   		   		$distIds$  
+			   		   		$distCode$ 
+						WHERE 1=1 
+						 $start_date$   $end_date$ 
+						GROUP BY RM.DIST_ID,
+								 RM.DIST_CODE,RM.DIST_NAME,RM.PROD_CODE,RM.PROD_NAME,RM.TARGET_PROD_CODE		
+					),
+					PURCHASE_MONTH AS (
+						SELECT 
+							RM.DIST_CODE,
+							RM.PROD_CODE,RM.PROD_NAME,
+							ISNULL(SUM(RM.STAT_SUM_NUM),0) AS RECEIVER_NUM
+						FROM RPT_DATA_PURCHASE_MONTH RM 
+						WHERE 1=1 
+						 $start_date$   $end_date$ 
+						GROUP BY RM.DIST_CODE,RM.PROD_CODE,RM.PROD_NAME
+					),
+					STORE_SALES_MONTH AS (
+						SELECT 
+							RM.STORE_CODE DIST_CODE,
+							RM.PROD_CODE,		
+							ISNULL(SUM(RM.STAT_SUM_NUM),0) AS SEND_NUM
+						FROM RPT_DATA_STORE_SALES_MONTH RM 
+						INNER JOIN DMS_CLIENT CLIENT  
+							ON 	CLIENT.CLIENT_ID  = RM.CLIENT_ID
+							AND CLIENT.CLIENT_CODE='kraft' 
+						WHERE 1=1  
+						 $start_date$   $end_date$
+						GROUP BY RM.STORE_CODE,RM.PROD_CODE  
+					), 
+					PROD_MAPPINGED AS (
+						SELECT MD.DIST_ID ,MD.DIST_CODE,MD.DIST_NAME,
+							   DAP.PROD_CODE AS DIST_PROD_CODE ,
+							   DAP.PROD_NAME AS DIST_PROD_NAME,
+							   DPM.TARGET_PROD_CODE,
+							   MIN(DPM.CREATED)  AS CREATED,
+							   MAX(DPM.UPDATED)  AS UPDATED,
+							   MAX(DAP.ACTIVE_ID) AS ACTIVE_ID,
+							   MAX(DC.CLIENT_ID) AS MAX_CLIENT_ID,
+							   MIN(DC.CLIENT_ID) AS MIN_CLIENT_ID
+							   --MAX(DPM.MAPPING_ID) AS MAPPING_ID 
+		   		   		FROM DMS_ACTIVE_PRODUCT DAP
+		   		   		INNER JOIN DMS_CLIENT DC
+			   		   		ON  DC.CLIENT_ID =  DAP.CLIENT_ID 
+			   		   		$distIds$ 
+			   		   		$prod_name$
+			   		   	INNER JOIN MDM_DISTRIBUTOR MD
+			   		   		ON DC.DIST_ID = MD.DIST_ID
+			   		   		$distCode2$
+		   		   		LEFT JOIN DMS_PROD_MAPPING DPM 
+		   		   			ON  ISNULL(DPM.STATE,'1') = '1'
+		   		   			AND DAP.CLIENT_ID = DPM.CLIENT_ID
+		   		   			AND DAP.PROD_CODE = DPM.DIST_PROD_CODE
+		   		   			AND DAP.PROD_NAME = DPM.DIST_PROD_NAME
+		   		   			AND DAP.PROD_UNIT = DPM.DIST_PROD_UNIT
+		   		   	   	GROUP BY MD.DIST_ID ,MD.DIST_CODE,MD.DIST_NAME,DAP.PROD_CODE ,DAP.PROD_NAME,DPM.TARGET_PROD_CODE
+					),
+					MAPPING_ACTIVE_AND_DIST AS (
+					   SELECT  DM.CLIENT_ID,
+							   DM.DIST_PROD_CODE,
+							   DM.DIST_PROD_NAME,
+							   DM.DIST_PROD_UNIT,
+							   DM.TARGET_PROD_CODE,
+							   DM.STATE,
+							   DC.DIST_ID
+					   FROM DMS_PROD_MAPPING DM
+					   INNER JOIN DMS_CLIENT DC
+							ON DC.CLIENT_ID = DM.CLIENT_ID
+					   INNER JOIN DMS_ACTIVE_PRODUCT  DAP 
+							ON  DAP.CLIENT_ID = DM.CLIENT_ID 
+		   		   			AND DAP.PROD_CODE = DM.DIST_PROD_CODE 
+		   		   			AND DAP.PROD_NAME = DM.DIST_PROD_NAME 
+		   		   			AND DAP.PROD_UNIT = DM.DIST_PROD_UNIT 
+		   		   	   WHERE ISNULL(DM.STATE,'1') = '1'	
+				   ),
+				   UNION_RESULT AS (
+					   SELECT  DPM.DIST_NAME AS distName,
+								CASE WHEN DPM.MAX_CLIENT_ID = DPM.MIN_CLIENT_ID
+				   					 THEN (   SELECT DC.CLIENT_CODE
+										      FROM DMS_CLIENT DC
+							   		   	      WHERE DC.CLIENT_ID = DPM.MAX_CLIENT_ID  )
+				   					 ELSE '*'
+								END	 AS CLIENT_CODE,
+				   				DPM.DIST_PROD_CODE AS distProdCode,
+				   				DPM.DIST_PROD_NAME AS distProdName,
+								MP.PROD_NAME+'--('+DPM.TARGET_PROD_CODE+')' AS prodName,
+								CASE WHEN  MP.PROD_NAME IS NULL 
+									 THEN  ''
+									 ELSE
+									 	 
+										 CASE WHEN (SELECT COUNT(*) AS TIMES
+													FROM  MAPPING_ACTIVE_AND_DIST  DPM_IN  
+													WHERE DPM_IN.DIST_ID 	       =  DPM.DIST_ID 
+													AND   (DPM_IN.DIST_PROD_CODE <>  DPM.DIST_PROD_CODE  OR  DPM_IN.DIST_PROD_NAME <> DPM.DIST_PROD_NAME )    
+													AND   DPM_IN.TARGET_PROD_CODE  =  DPM.TARGET_PROD_CODE    ) = 0 
+									  	 THEN --确定左侧是一
+									  	 	--右侧是一或多判断：一个经销商产品产品编码对应多个产品标准编码（可能是因为不同的产品名称或不同的单位造成的多行匹配记录，在匹配过程中被匹配到了不同的产品标准编码）
+									  	 	CASE WHEN ( SELECT COUNT(*) AS TIMES 
+														FROM  MAPPING_ACTIVE_AND_DIST  DPM_IN  
+														WHERE DPM_IN.DIST_ID 	       =  DPM.DIST_ID 
+														AND   DPM_IN.DIST_PROD_CODE    =  DPM.DIST_PROD_CODE  
+														AND   DPM_IN.DIST_PROD_NAME    =  DPM.DIST_PROD_NAME  
+														AND   DPM_IN.TARGET_PROD_CODE  <> DPM.TARGET_PROD_CODE ) = 0 
+											THEN --确定右侧是一
+									    		'一对一'
+									    	ELSE --确定右侧是多
+									    		'一对多'
+									    	END 
+									     ELSE --确定左侧是多
+									     	CASE WHEN ( SELECT COUNT(*) AS TIMES 
+														FROM  MAPPING_ACTIVE_AND_DIST  DPM_IN  
+														WHERE DPM_IN.DIST_ID 	       =  DPM.DIST_ID 
+														AND   DPM_IN.DIST_PROD_CODE    =  DPM.DIST_PROD_CODE 
+														AND   DPM_IN.DIST_PROD_NAME    =  DPM.DIST_PROD_NAME 
+														AND   DPM_IN.TARGET_PROD_CODE  <> DPM.TARGET_PROD_CODE  ) = 0 
+											THEN --确定右侧是一
+									    		'多对一'
+									    	ELSE --确定右侧是多
+									    		'多对多'
+									    	END 
+						   	    	 END
+								END AS mappingStatus,
+								
+								SALE_MONTH.SUM_AMOUNT AS realSaleAmount,
+								SALE_MONTH.STAT_SUM_AMOUNT_NON_PRICE_ZERO AS costSaleAmount,--非零价销售额
+								
+								CASE WHEN 	SALE_MONTH.STAT_SUM_AMOUNT_NON_PRICE_ZERO <> 0
+									 THEN   CONVERT(VARCHAR(10),CAST((SALE_MONTH.SUM_AMOUNT/(SALE_MONTH.STAT_SUM_AMOUNT_NON_PRICE_ZERO*1.17) - 1) *100 AS NUMERIC(10)))+'%' 
+								   	 ELSE   NULL 
+								END  AS addAmountRate,
+								
+								COUNTUNIT.ITEM_NAME AS countUnitName,
+								
+								STORE_SALES_MONTH.SEND_NUM AS deliveryQty,
+								PURCHASE_MONTH.RECEIVER_NUM AS arrivalQty,
+								CASE WHEN STORE_SALES_MONTH.SEND_NUM <> 0
+									THEN  CONVERT(VARCHAR(10),CAST(PURCHASE_MONTH.RECEIVER_NUM*100/STORE_SALES_MONTH.SEND_NUM AS NUMERIC(10)))+'%' 
+									ELSE  NULL 
+								END AS arrivalQtyRate,
+								
+								DDP.PROD_BAR_CODE AS distProdBarCode,
+								
+								CASE WHEN DDP.PROD_BAR_CODE IS NULL OR (MP.PROD_BARCODE IS NULL AND MP.PROD_PC_BARCODE IS NULL )
+									 THEN '未校验'
+									 ELSE
+									 CASE WHEN DDP.PROD_BAR_CODE=MP.PROD_BARCODE OR DDP.PROD_BAR_CODE=MP.PROD_PC_BARCODE
+									 	  THEN '成功' 
+									 	  ELSE '失败' 
+									 END 
+								END AS prodBarCodeCheckStatus,
+					
+								DPM.TARGET_PROD_CODE AS prodCode,
+								DDP.REMARK AS remark,
+								DPM.CREATED AS mappingCreateTime,
+								DPM.UPDATED AS mappingLastUpdateTime,
+								DPM.DIST_CODE,
+								MP.PROD_ID,
+								DPM.ACTIVE_ID,
+								
+								SALE_MONTH.SALE_NUM AS saleNum,
+								
+								CASE WHEN STORE_SALES_MONTH.SEND_NUM <> 0
+									THEN  CONVERT(VARCHAR(10),CAST(SALE_MONTH.SALE_NUM*100/STORE_SALES_MONTH.SEND_NUM AS NUMERIC(10)))+'%' 
+									ELSE  NULL 
+								END AS saleNumDividedBySendNum,
+								
+								CASE WHEN PURCHASE_MONTH.RECEIVER_NUM <> 0
+									THEN  CONVERT(VARCHAR(10),CAST(SALE_MONTH.SALE_NUM*100/PURCHASE_MONTH.RECEIVER_NUM AS NUMERIC(10)))+'%' 
+									ELSE  NULL 
+								END AS saleNumDividedByReceiverNum,
+								
+								MP_PARENT.PROD_NAME PARENT_PRODUCT,
+								MP_PARENT.PROD_CODE PARENT_PRODUCT_CODE,
+								
+								(SALE_MONTH.STAT_SUM_AMOUNT-SALE_MONTH.STAT_SUM_AMOUNT_NON_PRICE_ZERO) AS costSaleAmountPriceZero ,
+								
+								'1' AS isDist 
+					   FROM PROD_MAPPINGED DPM 
+					   
+					   LEFT JOIN SALE_MONTH
+			   		   		ON  DPM.DIST_ID = SALE_MONTH.DIST_ID
+			   		   		AND DPM.DIST_PROD_CODE = SALE_MONTH.PROD_CODE
+			   		   		AND DPM.DIST_PROD_NAME = SALE_MONTH.PROD_NAME
+					   
+					   LEFT JOIN MDM_PRODUCT MP
+					   		ON  MP.PROD_CODE = DPM.TARGET_PROD_CODE
+					   		AND ISNULL(MP.STATE,'1') = '1' 
+					   		
+					   LEFT JOIN BASE_DICT_ITEM COUNTUNIT
+					   		ON COUNTUNIT.DICT_ITEM_ID = MP.PROD_COUNTUNIT_ID
+							AND ISNULL(COUNTUNIT.STATE,'1')  = '1'
+							
+					   LEFT JOIN PURCHASE_MONTH 
+							ON  DPM.DIST_CODE 		= PURCHASE_MONTH.DIST_CODE 
+							AND DPM.DIST_PROD_CODE  = PURCHASE_MONTH.PROD_CODE 
+							AND DPM.DIST_PROD_NAME  = PURCHASE_MONTH.PROD_NAME 
+						
+					   LEFT JOIN STORE_SALES_MONTH 
+							ON  DPM.DIST_CODE   		= STORE_SALES_MONTH.DIST_CODE 
+							AND DPM.TARGET_PROD_CODE 	= STORE_SALES_MONTH.PROD_CODE 
+			   		   
+			   		   LEFT JOIN (
+							SELECT DC.DIST_ID,
+								   DP.PROD_CODE,
+								   DP.PROD_NAME,
+								   MAX(DP.REMARK)		 AS REMARK,
+								   --如果同一经销商 客户端之间的 经销商产品 条码不一致，则比较多条码 是否一致，不一致 直接算做 * 
+								   CASE WHEN MAX(DP.PROD_BAR_CODE) = MIN(DP.PROD_BAR_CODE)
+									    THEN MAX(DP.PROD_BAR_CODE)
+									    ELSE '*' 
+								   END AS PROD_BAR_CODE
+							FROM DMS_DATA_PRODUCT DP
+							INNER JOIN DMS_CLIENT DC
+								ON DC.CLIENT_ID = DP.CLIENT_ID
+							WHERE DP.STATE=1 
+							GROUP BY DC.DIST_ID,DP.PROD_CODE,DP.PROD_NAME
+					   ) AS DDP 
+		   			  		ON  DDP.DIST_ID=DPM.DIST_ID 
+		   			 		AND DDP.PROD_CODE=DPM.DIST_PROD_CODE 
+		   			  		AND DDP.PROD_NAME=DPM.DIST_PROD_NAME 
+			   		   LEFT JOIN  MDM_PRODUCT MP_PARENT
+			   				ON  MP_PARENT.PROD_ID = MP.PARENT_ID
+			   				AND ISNULL(MP_PARENT.STATE,'1')  = '1'
+			   		   WHERE 1 = 1
+			   		   $target_prod_name$   
+			   		   UNION ALL
+					   SELECT   MD.DIST_NAME AS distName,NULL AS CLIENT_CODE,NULL AS distProdCode,NULL AS distProdName,
+								MP.PROD_NAME+'--('+MP.PROD_CODE+')' AS prodName,
+								NULL AS mappingStatus,
+								NULL AS realSaleAmount,
+								NULL AS costSaleAmount,
+								NULL AS addAmountRate,
+								COUNTUNIT.ITEM_NAME AS countUnitName, 
+								SUM(SALE.STAT_SUM_NUM) AS deliveryQty,
+								NULL AS arrivalQty,
+								NULL AS arrivalQtyRate,
+								NULL AS distProdBarCode,
+								NULL AS prodBarCodeCheckStatus,
+								MP.PROD_CODE AS prodCode,
+								NULL AS remark,
+								NULL AS mappingCreateTime,
+								NULL AS mappingLastUpdateTime,
+								MD.DIST_CODE AS DIST_CODE,
+								NULL,
+								NULL,
+								NULL,
+								NULL,
+								NULL,
+								MP_PARENT.PROD_NAME,
+								MP_PARENT.PROD_CODE,
+								NULL,
+								'0' AS isDist 
+					  FROM RPT_DATA_STORE_SALES_MONTH  SALE
+					  INNER JOIN DMS_CLIENT DC
+							ON 	DC.CLIENT_ID  = SALE.CLIENT_ID
+							AND DC.CLIENT_CODE='kraft' 
+					  INNER JOIN MDM_PRODUCT MP
+							ON MP.PROD_CODE = SALE.PROD_CODE
+							AND ISNULL(MP.STATE,'1')  = '1' 
+					  LEFT JOIN BASE_DICT_ITEM COUNTUNIT 
+					   		ON COUNTUNIT.DICT_ITEM_ID = MP.PROD_COUNTUNIT_ID
+							AND ISNULL(COUNTUNIT.STATE,'1')  = '1' 
+					  INNER JOIN MDM_DISTRIBUTOR MD
+							ON MD.DIST_CODE = SALE.STORE_CODE
+					  LEFT JOIN  MDM_PRODUCT MP_PARENT
+   							ON  MP_PARENT.PROD_ID = MP.PARENT_ID
+   							AND ISNULL(MP_PARENT.STATE,'1')  = '1' 
+					  WHERE 1=1 
+					  $mdDistIds$  
+					  $distCode2$ 
+					  $target_prod_name$ 
+				      AND NOT EXISTS (
+							SELECT DPM.MAPPING_ID 
+							FROM DMS_PROD_MAPPING DPM 
+							INNER JOIN DMS_CLIENT DC_IN
+								ON  DC_IN.CLIENT_ID = DPM.CLIENT_ID
+								AND DC_IN.DIST_ID   = MD.DIST_ID     -- AND DC_IN.DIST_ID =   DC.DIST_ID	   --发货到的经销商
+							WHERE 1=1 
+							AND   ( DPM.TARGET_PROD_CODE = SALE.PROD_CODE OR DPM.TARGET_PROD_CODE =  MP_PARENT.PROD_CODE  )  --是否有过目标TARGET_PROD_CODE 
+					  )    
+					  GROUP BY  MD.DIST_NAME ,MP.PROD_CODE,MP.PROD_NAME,MD.DIST_CODE,MP_PARENT.PROD_NAME,MP_PARENT.PROD_CODE,COUNTUNIT.ITEM_NAME  
+				   )
+			   	   SELECT *
+				   FROM UNION_RESULT 
+				   WHERE 1=1
+				   $is_map$ 
+				   
+				   AND CASE WHEN 0 = $volume$  --任何分支返回1则条件成立
+							--走此分支有货量条件
+							THEN CASE WHEN isDist ='1' AND (ISNULL(realSaleAmount,0) >0 OR ISNULL(arrivalQty,0) >0 ) --对于经销商产品，销售额(实际)>0 或者 到货量>0  , 则为有货量
+									  THEN 1
+									  WHEN isDist ='0' AND ISNULL(deliveryQty,0)  > 0 --对于厂家产品（没有对应到经销商），发货>0  , 则为有货量
+										   THEN 1
+									       ELSE 0
+							     END 
+							WHEN 1 = $volume$ 
+							--走此分支无货量条件
+							THEN CASE WHEN isDist ='1' AND ISNULL(realSaleAmount,0) <= 0 AND ISNULL(arrivalQty,0) <= 0  --对于经销商产品，销售额(实际)<=0 并且 到货量<=0  , 则为无货量
+									  THEN 1
+									  WHEN isDist ='0' AND ISNULL(deliveryQty,0)  <= 0  --对于厂家产品（没有对应到经销商），发货<=0   , 则为无货量
+										   THEN 1
+									       ELSE 0
+							     END
+							  
+							ELSE 1
+							--走此分支说明没有传值
+					   END  > 0  
+				   
+				  $final_dist_prod_name_like$ 
+			   	  ORDER BY CASE WHEN ISNULL(deliveryQty,0) > 0 THEN deliveryQty ELSE ISNULL(arrivalQty,0) END DESC  --排序 :如果发货>0,则取发货，否则取到货
+		   		   
+		]]>
+		</sql>
+	</content>
+</config>

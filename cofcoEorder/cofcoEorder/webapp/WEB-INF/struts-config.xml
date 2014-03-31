@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts-config PUBLIC
+		"-//Apache Software Foundation//DTD Struts Configuration 1.2//EN"
+		"http://struts.apache.org/dtds/struts-config_1_2.dtd">
+<struts-config>
+ 	<global-exceptions>
+   		<exception key="global.error.message" type="java.lang.Exception"  path="/commons/exception.jsp"> </exception>
+    </global-exceptions>
+    
+	<global-forwards>
+		<forward name="login" path="/login.jsp" />
+		<forward name="changePass" path="/changePass.jsp" />
+		<forward name="index" path="/index.jsp" />
+		<forward name="tree" path="/widgets/xtree/xtree.jsp" />
+	</global-forwards>
+
+	<!-- 上传文件最大1G -->
+	<controller maxFileSize="1024M">
+		<set-property property="processorClass"
+			value="org.springframework.web.struts.DelegatingRequestProcessor" />
+	</controller>
+
+	<message-resources parameter="i18n/messages" />
+	<message-resources key="base" parameter="i18n/base" />
+	<message-resources key="dms" parameter="i18n/dms" />
+	<message-resources key="page" parameter="i18n/page" />
+	<message-resources key="code" parameter="i18n/code" />
+
+	<plug-in className="org.springframework.web.struts.ContextLoaderPlugIn" />
+
+	<plug-in className="org.apache.struts.validator.ValidatorPlugIn">
+		<set-property property="pathnames"
+			value="/WEB-INF/validator-rules.xml,
+			/WEB-INF/modules/validation-base.xml,
+			/WEB-INF/modules/validation-mdm.xml,
+			/WEB-INF/modules/validation-server.xml,
+			/WEB-INF/modules/validation-order.xml"/>
+	</plug-in>
+</struts-config>

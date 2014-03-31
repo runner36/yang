@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>Monthly Price Monitor</title>
+	<header>
+		<column title="Sku"  property="0" />
+		<column title="Normal Price" property="1" cell="number" format="0.00" align="center"/>
+		<column title=">=3% (EA)" property="2"  cell="number" format="0.00" align="center"/>
+		<column title=">=3% Outlet"  property="3"  align="center"/>
+		<column title="&lt;=3% (EA)" property="4"  cell="number" format="0.00"  align="center"/>
+		<column title="&lt;=3% Outlet"  property="5"  align="center"/>
+	</header>
+	<content>
+		<param id="distId" initValue="" defaultValue="" template=" and dc.DIST_ID in ($distId$)">$distId$</param>
+		<param id="startdate" template="and dds.BILL_DATE>='$startdate$'">$startdate$</param>
+		<param id="enddate" template="and dds.BILL_DATE&lt;='$enddate$ 23:59:59'">$enddate$</param>
+		<param id="skuName" template="AND mp.prod_alias in ($skuName$)" dataType="char">$skuName$</param>
+		
+		<param id="orgId" template=" AND md.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="simsOrgId" template=" and ms.ORG_ID in ($simsOrgId$) ">$simsOrgId$</param>
+		<!-- 权限 -->
+		<param id="orgSubCode" template=" AND bo.SUB_CODE like '$orgSubCode$%' ">$orgSubCode$</param>
+		<sql>
+<![CDATA[
+with tab as (
+	SELECT 	top(99999999999999) 
+			outtable.prod_alias, outtable.PROD_PRICE, 
+			outtable.a, outtable.aOutlet, 
+			outtable.b, outtable.bOutlet  
+	FROM	(
+			SELECT 	mp.prod_alias, mp.PROD_PRICE/mp.PROD_CONTENT/mp.PROD_MIN_CONTENT as PROD_PRICE, mp.SORT
+			
+					--,CASE WHEN dds.PROD_PRICE>=(ddp.PROD_PRICE+ddp.PROD_PRICE*0.03) THEN  dds.PROD_PRICE   END  'a'
+					--,CASE WHEN dds.PROD_PRICE>=(ddp.PROD_PRICE+ddp.PROD_PRICE*0.03) THEN  dds.STORE_NAME ELSE ''  END  'aOutlet'
+					--,CASE WHEN dds.PROD_PRICE<=(ddp.PROD_PRICE-ddp.PROD_PRICE*0.03) THEN  dds.PROD_PRICE   END  'b'
+					--,CASE WHEN dds.PROD_PRICE<=(ddp.PROD_PRICE-ddp.PROD_PRICE*0.03) THEN  dds.STORE_NAME ELSE ''  END  'bOutlet'
+	
+					--,CASE WHEN (dds.PROD_PRICE-(mp.PROD_PRICE*dds.PROD_QUANTITY))/(mp.PROD_PRICE*dds.PROD_QUANTITY) >= 0.03 THEN dds.PROD_PRICE END 'a'
+					--,CASE WHEN (dds.PROD_PRICE-(mp.PROD_PRICE*dds.PROD_QUANTITY))/(mp.PROD_PRICE*dds.PROD_QUANTITY) >= 0.03 THEN dds.STORE_NAME END 'aOutlet'
+					--,CASE WHEN (dds.PROD_PRICE-(mp.PROD_PRICE*dds.PROD_QUANTITY))/(mp.PROD_PRICE*dds.PROD_QUANTITY) <= 0.03 THEN dds.PROD_PRICE END 'b'
+					--,CASE WHEN (dds.PROD_PRICE-(mp.PROD_PRICE*dds.PROD_QUANTITY))/(mp.PROD_PRICE*dds.PROD_QUANTITY) <= 0.03 THEN dds.STORE_NAME END 'bOutlet'
+					
+					--,CASE WHEN dds.PROD_PRICE>=((mp.PROD_PRICE*dds.PROD_QUANTITY)+(mp.PROD_PRICE*dds.PROD_QUANTITY)*0.03) THEN  dds.PROD_PRICE   END  'a'
+					--,CASE WHEN dds.PROD_PRICE>=((mp.PROD_PRICE*dds.PROD_QUANTITY)+(mp.PROD_PRICE*dds.PROD_QUANTITY)*0.03) THEN  dds.STORE_NAME ELSE ''  END  'aOutlet'
+					--,CASE WHEN dds.PROD_PRICE<=((mp.PROD_PRICE*dds.PROD_QUANTITY)-(mp.PROD_PRICE*dds.PROD_QUANTITY)*0.03) THEN  dds.PROD_PRICE   END  'b'
+					--,CASE WHEN dds.PROD_PRICE<=((mp.PROD_PRICE*dds.PROD_QUANTITY)-(mp.PROD_PRICE*dds.PROD_QUANTITY)*0.03) THEN  dds.STORE_NAME ELSE ''  END  'bOutlet'	
+					
+					--,CASE WHEN (dds.PROD_PRICE-mp.PROD_PRICE)/(mp.PROD_PRICE) >= 0.03 THEN dds.PROD_PRICE END 'a'
+					--,CASE WHEN (dds.PROD_PRICE-mp.PROD_PRICE)/(mp.PROD_PRICE) >= 0.03 THEN dds.STORE_NAME END 'aOutlet'
+					--,CASE WHEN (dds.PROD_PRICE-mp.PROD_PRICE)/(mp.PROD_PRICE) <= 0.03 THEN dds.PROD_PRICE END 'b'
+					--,CASE WHEN (dds.PROD_PRICE-mp.PROD_PRICE)/(mp.PROD_PRICE) <= 0.03 THEN dds.STORE_NAME END 'bOutlet'
+					
+					,CASE WHEN ((dds.PROD_PRICE/dbo.fn_getUnitConvRate(dpm.TARGET_UNIT_ID,mp.PROD_BASEUNIT_ID,mp.PROD_CODE))-(mp.PROD_PRICE/mp.PROD_CONTENT/mp.PROD_MIN_CONTENT))/(mp.PROD_PRICE/mp.PROD_CONTENT/mp.PROD_MIN_CONTENT) >= 0.03 THEN (dds.PROD_PRICE/dbo.fn_getUnitConvRate(dpm.TARGET_UNIT_ID,mp.PROD_BASEUNIT_ID,mp.PROD_CODE)) END 'a'
+					,CASE WHEN ((dds.PROD_PRICE/dbo.fn_getUnitConvRate(dpm.TARGET_UNIT_ID,mp.PROD_BASEUNIT_ID,mp.PROD_CODE))-(mp.PROD_PRICE/mp.PROD_CONTENT/mp.PROD_MIN_CONTENT))/(mp.PROD_PRICE/mp.PROD_CONTENT/mp.PROD_MIN_CONTENT) >= 0.03 THEN ms.STORE_NAME END 'aOutlet'
+					,CASE WHEN ((dds.PROD_PRICE/dbo.fn_getUnitConvRate(dpm.TARGET_UNIT_ID,mp.PROD_BASEUNIT_ID,mp.PROD_CODE))-(mp.PROD_PRICE/mp.PROD_CONTENT/mp.PROD_MIN_CONTENT))/(mp.PROD_PRICE/mp.PROD_CONTENT/mp.PROD_MIN_CONTENT) <= 0.03 THEN (dds.PROD_PRICE/dbo.fn_getUnitConvRate(dpm.TARGET_UNIT_ID,mp.PROD_BASEUNIT_ID,mp.PROD_CODE)) END 'b'
+					,CASE WHEN ((dds.PROD_PRICE/dbo.fn_getUnitConvRate(dpm.TARGET_UNIT_ID,mp.PROD_BASEUNIT_ID,mp.PROD_CODE))-(mp.PROD_PRICE/mp.PROD_CONTENT/mp.PROD_MIN_CONTENT))/(mp.PROD_PRICE/mp.PROD_CONTENT/mp.PROD_MIN_CONTENT) <= 0.03 THEN ms.STORE_NAME END 'bOutlet'
+					
+					
+			FROM 	DMS_DATA_SALE dds 
+					INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID=dc.CLIENT_ID
+					--产品
+					INNER JOIN DMS_PROD_MAPPING dpm ON dpm.CLIENT_ID=dc.CLIENT_ID AND dpm.DIST_PROD_CODE=dds.PROD_CODE and dpm.DIST_PROD_UNIT=dds.PROD_UNIT AND dds.PROD_NAME=dpm.DIST_PROD_NAME
+					INNER JOIN MDM_PRODUCT mp ON mp.PROD_CODE= dpm.TARGET_PROD_CODE --AND mp.PROD_PRICEUNIT_ID=dpm.TARGET_UNIT_ID
+					--门店
+					INNER JOIN DMS_STORE_MAPPING dsm ON dsm.CLIENT_ID=dds.CLIENT_ID AND dsm.DIST_STORE_CODE=dds.STORE_CODE
+					INNER JOIN MDM_STORE ms ON ms.STORE_CODE= dsm.TARGET_STORE_CODE 
+					INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID AND ms.DIST_ID=md.DIST_ID
+					LEFT JOIN BASE_ORG bo ON bo.ORG_ID=md.ORG_ID
+					
+			WHERE 	dds.state='1'  $distId$ $startdate$ $enddate$ $skuName$ $orgId$ $simsOrgId$ $orgSubCode$
+					and mp.PROD_CODE not in ('zengpin','qita','tingchan')
+	)AS outtable 
+
+	WHERE 		outtable.aOutlet!='' or outtable.bOutlet!=''
+	GROUP BY  	outtable.prod_alias, outtable.PROD_PRICE, outtable.a, outtable.aOutlet, outtable.b, outtable.bOutlet, outtable.SORT
+
+)
+select * from tab
+
+]]>
+		</sql>
+	</content>
+	
+</config>

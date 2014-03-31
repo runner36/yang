@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>新老客户销量占比</title>
+	
+	<header>
+		<column property="0" title="大区" style="text-align:left"/>
+		<column property="1" title="省" style="text-align:left"/>
+		<column property="2" title="城市" style="text-align:left"/>
+		<column property="3" title="经销商名称" style="text-align:left"/>
+		<column property="4" title="经销商编码" style="text-align:left"/>
+		<column property="5" title="客户分类" style="text-align:left" />
+		<column property="6" title="渠道" style="text-align:left" />
+		
+		<column property="7" title="销售额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="8" title="原有客户,数量" style="text-align:right" cell="number" format="#0"/>
+		<column property="9" title="原有客户,销售贡献率" style="text-align:right"/>
+		<column property="10" title="新增客户,数量" style="text-align:right" cell="number" format="#0"/>
+		<column property="11" title="新增客户,销售贡献率" style="text-align:right"/>
+		<!--  
+		<column property="12" title="年销售额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="13" title="原有客户（本年至今）,数量" style="text-align:right" cell="number" format="#0"/>
+		<column property="14" title="原有客户（本年至今）,销售贡献率" style="text-align:right"/>
+		<column property="15" title="新增客户（本年至今）,数量" style="text-align:right" cell="number" format="#0"/>
+		<column property="16" title="新增客户（本年至今）,销售贡献率" style="text-align:right"/>		
+	-->
+	</header>
+	
+	<content>
+		<!-- 开始时间 结束时间 -->
+        <param id="YearMon" isDisplay="1" displayName="开始时间" template="">$YearMon$</param>
+		<!-- 组织 -->
+		<param id="orgId" template=" and ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="orgName" isDisplay="1" displayName="组织" template="">$orgName$</param>
+		<!-- 渠道 -->
+		<param id="channelId" template=" and STORE_CHANNEL_ID in ($channelId$) ">$channelId$</param>
+		<param id="channelName" isDisplay="1" displayName="渠道" template="">$channelName$</param>
+		<!-- 门店类型 -->
+		<param id="storeTypeId" template=" and STORE_TYPE_ID in ($storeTypeId$) ">$storeTypeId$</param>
+		<param id="storeTypeName" isDisplay="1" displayName="门店类型"  template="">$storeTypeName$</param>
+		<!-- 经销商 -->
+		<param id="distId" template=" and DIST_ID in ($distId$) ">$distId$</param>
+		<param id="distName" isDisplay="1" displayName="经销商名称" template="">$distName$</param>
+		<param id="distCode" isDisplay="1" displayName="经销商编码" template=" and DIST_CODE like '%$distCode$%' ">$distCode$</param>
+				
+		<sql>
+          <![CDATA[
+
+			SELECT 	
+					region, 
+					province, 
+					city, 
+					dist_Name, 
+					dist_Code, 
+					store_Channel,
+					store_Type,
+					amount,
+					soc_customerNum, 
+					CASE WHEN amount=0 THEN '0.00%' 
+						ELSE CASE WHEN isnull(sot_amount,0)=0 THEN '0.00%'
+						ELSE CAST(CAST(isnull(sot_amount,0)/amount*100 AS DECIMAL(38,2)) AS VARCHAR)+'%' 
+					END END, 
+					snt_customerNum,
+					CASE WHEN amount=0 THEN '0.00%' 
+						ELSE CASE WHEN isnull(snt_amount,0)=0 THEN '0.00%'
+						ELSE CAST(CAST(isnull(snt_amount,0)/amount*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'  
+					END END,
+					ys_amount,
+					yoc_customerNum,
+					CASE WHEN ys_amount=0 THEN '0.00%' 
+						ELSE CASE WHEN isnull(yot_amount,0)=0 THEN '0.00%'
+						ELSE CAST(CAST(isnull(yot_amount,0)/ys_amount*100 AS DECIMAL(38,2)) AS VARCHAR)+'%' 
+					END END,
+					ynt_customerNum,
+					CASE WHEN ys_amount=0 THEN '0.00%' 
+						ELSE CASE WHEN isnull(ynt_amount,0)=0 THEN '0.00%'
+						ELSE CAST(CAST(isnull(ynt_amount,0)/ys_amount*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'  
+					END END	
+			
+			FROM Sales_Accounted 
+			WHERE 	BILL_DATE='$YearMon$' $orgId$ $channelId$ $storeTypeId$ $distId$ $distCode$	
+			UNION ALL
+			
+			SELECT 	'合计：','','','','','','',
+					sum(amount),
+					sum(soc_customerNum), 
+					CASE WHEN sum(amount)=0 THEN '0.00%' 
+						ELSE CASE WHEN isnull(sum(sot_amount),0)=0 THEN '0.00%'
+						ELSE CAST(CAST(isnull(sum(sot_amount),0)/sum(amount)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%' 
+					END END, 
+					sum(snt_customerNum),
+					CASE WHEN sum(amount)=0 THEN '0.00%' 
+						ELSE CASE WHEN isnull(sum(snt_amount),0)=0 THEN '0.00%'
+						ELSE CAST(CAST(isnull(sum(snt_amount),0)/sum(amount)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'  
+					END END,
+					sum(ys_amount),
+					sum(yoc_customerNum),
+					CASE WHEN sum(ys_amount)=0 THEN '0.00%' 
+						ELSE CASE WHEN isnull(sum(yot_amount),0)=0 THEN '0.00%'
+						ELSE CAST(CAST(isnull(sum(yot_amount),0)/sum(ys_amount)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%' 
+					END END,
+					sum(ynt_customerNum),
+					CASE WHEN sum(ys_amount)=0 THEN '0.00%' 
+						ELSE CASE WHEN isnull(sum(ynt_amount),0)=0 THEN '0.00%'
+						ELSE CAST(CAST(isnull(sum(ynt_amount),0)/sum(ys_amount)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'  
+					END END	
+					
+			FROM Sales_Accounted 			
+			WHERE BILL_DATE='$YearMon$' $orgId$ $channelId$ $storeTypeId$ $distId$ $distCode$
+          ]]>
+		</sql>
+	</content>
+	
+</config>

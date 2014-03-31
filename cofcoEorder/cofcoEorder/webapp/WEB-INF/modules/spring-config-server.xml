@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+<!-- 管理后台的Spring Servlet配置文件 -->
+<beans default-autowire="byName" default-lazy-init="true">
+	<bean name="/server/dmsDistributor" class="com.winchannel.dms.server.web.DmsDistributorAction"/>
+	<bean name="/server/dmsSoftware" class="com.winchannel.dms.server.web.DmsSoftwareAction"/>
+	<bean name="/server/dmsClient" class="com.winchannel.dms.server.web.DmsClientAction"/>
+	<bean name="/server/dmsProdMapping" class="com.winchannel.dms.server.web.DmsProdMappingAction"/>
+	<bean name="/server/dmsStoreMapping" class="com.winchannel.dms.server.web.DmsStoreMappingAction"/>
+	<bean name="/server/dmsRunLog" class="com.winchannel.dms.server.web.DmsRunLogAction"/>
+	<bean name="/server/dmsClientJob" class="com.winchannel.dms.server.web.DmsClientJobAction"/>
+	
+	<bean name="/server/dmsDataPurchase" class="com.winchannel.dms.server.web.DmsDataPurchaseAction"/>
+	<bean name="/server/dmsDataSale" class="com.winchannel.dms.server.web.DmsDataSaleAction"/>
+	<bean name="/server/dmsDataStock" class="com.winchannel.dms.server.web.DmsDataStockAction"/>
+	<bean name="/server/dmsDataStore" class="com.winchannel.dms.server.web.DmsDataStoreAction"/>
+	<bean name="/server/dmsDataProduct" class="com.winchannel.dms.server.web.DmsDataProductAction"/>
+	<bean name="/server/dmsDataInout" class="com.winchannel.dms.server.web.DmsDataInoutAction"/>
+	<bean name="/server/dmsDataOrder" class="com.winchannel.dms.server.web.DmsDataOrderAction"/>
+	
+	<bean name="/clientService" class="com.winchannel.dms.server.web.DmsClientServiceAction"/>
+	<bean name="/tree/dmsTree" class="com.winchannel.dms.server.web.DmsTreeAction"/>
+
+	<bean name="/server/dmsDataWeekly" class="com.winchannel.dms.server.web.DmsDataWeeklyAction"/>
+	<bean name="/server/dmsDataMonthly" class="com.winchannel.dms.server.web.DmsDataMonthlyAction"/>
+	
+	<bean name="/server/dmsLocationMapping" class="com.winchannel.dms.server.web.DmsLocationMappingAction"/>
+	<bean name="/server/dmsStockDateMapping" class="com.winchannel.dms.server.web.DmsStockDateMappingAction"/>
+	
+	
+	<bean name="/server/dmsTurnoverDaysCurve" class="com.winchannel.dms.server.web.DmsTurnoverDaysCurveAction"/><!-- /server/dmsReport -->
+	<bean name="/report/salesFlowReportAction" class="com.winchannel.gsk.report.web.SalesFlowReportAction"/>
+	<bean name="/server/dmsMessOrg" class="com.winchannel.dms.server.web.DmsMessageAction"/> 
+    <bean name="/server/dmsMessage" class="com.winchannel.dms.server.web.DmsMessageAction"/>
+    <bean name="/report/flexReport" class="com.winchannel.dms.report.web.FlexReportAction"/>
+    <bean name="/server/dmsProdMappingLog" class="com.winchannel.dms.server.web.DmsProdMappingLogAction"/>
+    <!--
+    <bean name="/server/dmsProdMappingStatus" class="com.winchannel.dms.server.web.DmsProdMappingStatusAction"/>
+    -->
+    <bean name="/server/productFeatureType" class="com.winchannel.dms.feature.product.web.ProductFeatureTypeAction">
+    	<property name="featureTypeManager" ref="productFeatureTypeManager"/>
+    </bean>
+    <bean name="/server/productFeature" class="com.winchannel.dms.feature.product.web.ProductFeatureAction">
+    	<property name="featureManager" ref="productFeatureManager"/>
+    	<property name="featureTypeManager" ref="productFeatureTypeManager"/>
+    </bean>
+    <bean name="/server/productFeatureKeyword" class="com.winchannel.dms.feature.product.web.ProductFeatureKeywordAction">
+    	<property name="featureKeywordManager" ref="productFeatureKeywordManager"/>
+    	<property name="featureManager" ref="productFeatureManager"/>
+    </bean>
+    
+    
+	<bean name="/server/mdmProductFeatureExtraction" class="com.winchannel.dms.feature.product.web.MdmProductFeatureExtractionAction">
+    	<property name="featureExtractionManager" ref="mdmProductFeatureExtractionManager"/>
+    	<property name="featureTypeManager" ref="productFeatureTypeManager"/>
+    </bean>
+    
+    <bean name="/server/activeProductFeatureExtraction" class="com.winchannel.dms.feature.product.web.ActiveProductFeatureExtractionAction">
+    	<property name="featureExtractionManager" ref="activeProductFeatureExtractionManager"/>
+    	<property name="featureTypeManager" ref="productFeatureTypeManager"/>
+    </bean>
+    
+    
+</beans>

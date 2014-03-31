@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title bundle="page" key="customize.title.rptCustStatistics">门店日结统计表</title>
+	
+	<header>
+		<column property="8" title="经销商编码" bundle="page" key="common.distCode"/>
+		<column property="9" title="经销商名称" bundle="page" key="common.distName"/>
+		<column property="1" title="经销商客户编码" bundle="page" key="common.distStoreCode"/>
+<!--	<column property="8" title="经销商客户名称" bundle="page" key="common.distStoreName"/>		-->
+		<column property="2" title="首次销售日期" bundle="page" key="common.firstSaleDate" cell="date" format="yyyy-MM-dd"/>
+		<column property="3" title="最近一次销售日期" bundle="page" key="common.lastSaleDate" cell="date" format="yyyy-MM-dd"/>
+		<column property="4" title="最近一次销售数量" bundle="page" key="common.lastSaleQuantity" cell="number" format="0.00" />
+		<column property="5" title="最近一次销售金额" bundle="page" key="common.lastSaleAmount" cell="number" format="0.000" />
+		<column property="6" title="原始数据最近更新日期" bundle="page" key="common.origianlDataUpdateTime" cell="date" format="yyyy-MM-dd"/>
+		<column property="7" title="记录最近更新时间" bundle="page" key="common.recordLastUpdate" cell="date" format="yyyy-MM-dd HH:mm"/>
+	</header>
+	
+	<content>
+		<param id="distId" template="and dist.dist_id in ($distId$)">$distId$</param>
+		<param id="distCode" template="and dist.dist_code like '%$distCode$%'">$distCode$</param>
+<!--	<param id="storeName" template="and data.store_name like '%$storeName$%'">$storeName$</param>-->
+		<param id="storeCode" template="and data.store_code='$storeCode$'">$storeCode$</param>
+		<param id="billDateTime1" template="and data.Recent_Sales_date>='$billDateTime1$'">$billDateTime1$</param>
+		<param id="billDateTime2" template="and data.Recent_Sales_date&lt;='$billDateTime2$ 23:59:59'">$billDateTime2$</param>	
+		<sql>
+		<![CDATA[
+		select
+			data.DIST_ID,
+			data.STORE_CODE,
+			data.First_Sale_date,
+			data.Recent_Sales_date,
+			data.Recent_Sales_Quantity,
+			data.Recent_Sales_Amount,
+			data.Data_UPDATE_TIME,
+			data.UPDATE_TIME,
+			dist.dist_code,
+			dist.dist_name
+	
+		from rpt_cust_statistics data
+		inner join mdm_distributor dist on data.dist_id=dist.dist_id
+		where 1=1 $distId$ $distCode$ $storeCode$ $billDateTime1$ $billDateTime2$
+		order by data.Recent_Sales_date desc,dist.dist_code,data.STORE_CODE
+		]]>
+		</sql>
+	</content>
+	
+</config>

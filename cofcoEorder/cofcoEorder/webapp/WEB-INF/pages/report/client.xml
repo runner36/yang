@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>client</title>
+	
+	<header>
+		<column property="0" title="经销商编码" bundle="page" key="common.distCode"  />
+		<column property="1" title="经销商名称" bundle="page" key="common.distName"  />
+		<column property="2" title="软件名称"  />
+		<column property="3" title="软件版本"  />
+		<column property="4" title="上传状态"  />
+		
+		<column property="5" title="${mr['page.common.uploadTime']}"  />
+		<column property="6" title="上传数据条数"   align="right" cell="number"/>
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH, _FIRST_DAY_OF_WEEK -->
+		<param id="_orgAuthExp" initValue="" defaultValue="">$orgAuth$</param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="orgSubCode" template="and ddr.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+		<param id="distId" template="and ddr.dist_id in ($distId$)">$distId$</param>
+		
+		<param id="distCode" template="and ddr.dist_Code like '%$distCode$%'">$distCode$</param>
+		<param id="prodCode" template="dp.PROD_CODE like '%$prodCode%'">$prodCode$</param>
+		<param id="year1">$year1$</param>
+		<param id="year2">$year2$</param>
+		<param id="month1">$month1$</param>
+		<param id="month2">$month2$</param>
+		<param id="week1">$week1$</param>
+		<param id="week2">$week2$</param>
+		<!-- 
+		<param id="billDate1" template="and lon.bill_date>='$billDate1$'">$billDate1$</param>
+		<param id="billDate2" template="and lon.bill_date&lt;='$billDate2$ 23:59:59'">$billDate2$</param>
+		 -->
+		<sql>
+<![CDATA[
+SELECT 
+	ddr.DIST_CODE,
+	ddr.DIST_NAME,
+	lon.SOFT_NAME,
+	lon.SOFT_VERSION,
+	lon.UPLOAD_RESULT,
+ --	lon.upload_time,
+		dbo.fn_getMarsWeekDayTime(convert(VARCHAR(20),lon.UPLOAD_TIME,120)) AS uploadtimes,
+	isnull(lon.UPLOAD_QUANTITY,0) AS uploadnum
+FROM DMS_RUN_LOG lon
+	INNER JOIN VIEW_ORG_DIST ddr ON ddr.client_id=lon.CLIENT_ID
+
+	WHERE 1=1
+	 and lon.UPLOAD_TIME between 
+	(select cal_date from MDM_CALENDAR where cal_year='$year1$' and cal_month='$month1$' and cal_week='$week1$' and cal_day='1') and
+	(select cal_date from MDM_CALENDAR where cal_year='$year1$' and cal_month='$month2$' and cal_week='$week2$' and cal_day='7')
+    $orgSubCode$ $distId$ $distCode$
+]]>
+		</sql>
+	</content>
+	
+</config>

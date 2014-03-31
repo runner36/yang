@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>monthly by banner</title>
+	<header>
+		<column title="Banner"  property="0" width="350"/>
+		<column title="September,LY" property="1" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="September,TY" property="2" width="50" cell="number" format="0.00" align="center"/>
+		<column title="September,%"  property="3" width="50" align="center"/>
+		<column title="October,LY" property="4" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="October,TY" property="5" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="October,%"  property="6" width="50" align="center"/>
+		<column title="November,LY" property="7" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="November,TY" property="8" width="50"  cell="number" format="0.00" align="center"/>
+		<column title="November,%"  property="9" width="50" align="center"/>
+		<column title="December,LY" property="10" width="50" cell="number" format="0.00" align="center"/>
+		<column title="December,TY" property="11" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="December,%"  property="12" width="50" align="center"/>
+		<column title="January,LY" property="13" width="50" cell="number" format="0.00"   align="center"/>
+		<column title="January,TY" property="14" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="January,%"  property="15" width="50" align="center"/>
+		<column title="Feburary,LY" property="16" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="Feburary,TY" property="17" width="50"  cell="number" format="0.00" align="center"/>
+		<column title="Feburary,%"  property="18" width="50" align="center"/>
+		<column title="March,LY" property="19" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="March,TY" property="20" width="50" cell="number" format="0.00" align="center"/>
+		<column title="March,%"  property="21" width="50" align="center"/>
+		<column title="April,LY" property="22" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="April,TY" property="23" width="50" cell="number" format="0.00" align="center"/>
+		<column title="April,%"  property="24" width="50" align="center"/>
+		<column title="May,LY" property="25" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="May,TY" property="26" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="May,%"  property="27" width="50" align="center"/>
+		<column title="June,LY"  property="28" width="50" cell="number" format="0.00" align="center"/>
+		<column title="June,TY"  property="29" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="June,%"  property="30" width="50" align="center"/>
+		<column title="July,LY"  property="31" width="50" cell="number" format="0.00" align="center"/>
+		<column title="July,TY"  property="32" width="50"  cell="number" format="0.00" align="center"/>
+		<column title="July,%"  property="33" width="50" align="center"/>
+		<column title="August,LY"  property="34" width="50" cell="number" format="0.00" align="center"/>
+		<column title="August,TY"  property="35" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="August,%"  property="36" width="50" align="center"/>
+		<column title="YTD,LY"  property="37" width="50" cell="number" format="0.00"  align="center"/>
+		<column title="YTD,TY"  property="38" width="50" cell="number" format="0.00" align="center"/>
+		<column title="YTD,%"  property="39" width="50" align="center"/>
+		<column title="Share"  property="40" width="50" align="center"/>
+	</header>
+	<content>
+		<param id="tyear" initValue="" defaultValue="" template="$tyear$">$tyear$</param>
+		<param id="upYear" initValue="" defaultValue="" template="$upYear$">$upYear$</param>
+		<param id="downYear" initValue="" defaultValue="" template="$downYear$">$downYear$</param>
+		<param id="distId" initValue="" defaultValue="" template=" and dc.DIST_ID=$distId$ ">$distId$</param>
+		<param id="orgId" initValue="" defaultValue="" template=" and ms.ORG_ID=$orgId$ ">$orgId$</param>
+		<param id="banner" initValue="" defaultValue="" template=" AND bdi.ITEM_NAME='$banner$' ">$banner$</param>
+		<sql>
+<![CDATA[
+with comTable as (
+SELECT 
+	bdi.ITEM_NAME,
+	SUBSTRING( convert(varchar(19),bill_date,121),1,7) AS billdate,
+  
+	isnull(dds.PROD_QUANTITY,0) PROD_QUANTITY
+	
+	FROM BASE_DICT_ITEM  bdi
+	inner JOIN MDM_STORE ms ON ms.CORP_ID=bdi.DICT_ITEM_ID
+	INNER JOIN DMS_STORE_MAPPING dsm ON  dsm.TARGET_STORE_CODE=ms.STORE_CODE
+	INNER JOIN DMS_DATA_SALE dds ON  dds.CLIENT_ID=dsm.CLIENT_ID AND dds.STORE_CODE=dsm.DIST_STORE_CODE
+	INNER JOIN DMS_CLIENT dc ON dc.CLIENT_ID=dds.CLIENT_ID AND dsm.CLIENT_ID=dc.CLIENT_ID
+	WHERE dict_id='storeCorp'
+	$banner$
+	$orgId$
+	$distId$
+),
+tableba AS(
+	SELECT 'Grand Total' AS 'Grand Total', a,a1,a2,b,b1,b2,
+	c,c1,c2,d,d1,d2,e,e1,e2,f,f1,f2,g,g1,g2,h,h1,h2,i,i1,i2,j,j1,j2,k,k1,k2,l,l1,l2
+  ,(a+b+c+d+e+f+g+h+i+j+k+l) AS sumly,(a1+b1+c1+d1+e1+f1+g1+h1+i1+j1+k1+l1) AS sumty
+  ,CASE WHEN (a+b+c+d+e+f+g+h+i+j+k+l)>0 THEN convert(VARCHAR(20),((a1+b1+c1+d1+e1+f1+g1+h1+i1+j1+k1+l1)/(a+b+c+d+e+f+g+h+i+j+k+l)*100))+'%' ELSE '0' END '%a'
+   ,'100%' AS sumty1
+	FROM (
+		SELECT 
+		isnull([$downYear$-09],0) a,
+		isnull([$upYear$-09],0) a1,
+		CASE WHEN isnull([$downYear$-09],0)<=0 THEN '0%' ELSE convert(VARCHAR(30),((isnull([$upYear$-09],0)/[$downYear$-09])*100))+'%' END a2,
+	    isnull([$downYear$-10],0) b, 
+		isnull([$upYear$-10],0) b1,
+		CASE WHEN isnull([$downYear$-10],0)<=0 THEN '0%' ELSE convert(VARCHAR(30),((isnull([$upYear$-10],0)/[$downYear$-10])*100))+'%' END b2,
+		
+		isnull([$downYear$-11],0) c, 
+		isnull([$upYear$-11],0) c1,
+		CASE WHEN isnull([$downYear$-11],0)<=0 THEN '0%' ELSE convert(VARCHAR(30),((isnull([$upYear$-11],0)/[$downYear$-11])*100))+'%' END c2,
+		
+		isnull([$downYear$-12],0) d, 
+		isnull([$upYear$-12],0) d1,
+		CASE WHEN isnull([$downYear$-12],0)<=0 THEN '0%' ELSE convert(VARCHAR(30),((isnull([$upYear$-12],0)/[$downYear$-12])*100))+'%' END d2,
+		
+		isnull([$upYear$-01],0) e, 
+		isnull([$tyear$-01],0) e1,
+		CASE WHEN isnull([$upYear$-01],0)<=0 THEN '0%' ELSE convert(VARCHAR(30),((isnull([$tyear$-01],0)/[$upYear$-01])*100))+'%' END e2,
+		
+		isnull([$upYear$-02],0) f, 
+		isnull([$tyear$-02],0) f1,
+		CASE WHEN isnull([$upYear$-02],0)<=0 THEN '0%' ELSE convert(VARCHAR(30),((isnull([$tyear$-02],0)/[$upYear$-02])*100))+'%' END f2,
+		
+		isnull([$upYear$-03],0) g,
+		isnull([$tyear$-03],0) g1,
+		CASE WHEN isnull([$upYear$-03],0)<=0 THEN '0%' ELSE convert(VARCHAR(30),((isnull([$tyear$-03],0)/[$upYear$-03])*100))+'%' END g2,
+		
+		isnull([$upYear$-04],0) h, 
+		isnull([$tyear$-04],0) h1,
+		CASE WHEN isnull([$upYear$-04],0)<=0 THEN '0%' ELSE convert(VARCHAR(30),((isnull([$tyear$-04],0)/[$upYear$-04])*100))+'%' END  h2,
+		
+		
+		isnull([$upYear$-05],0) i, 
+		isnull([$tyear$-05],0) i1,
+		CASE WHEN isnull([$upYear$-05],0)<=0 THEN '0%' ELSE convert(VARCHAR(30),((isnull([$tyear$-05],0)/[$upYear$-05])*100))+'%' END i2,
+		
+		isnull([$upYear$-06],0) j, 
+		isnull([$tyear$-06],0) j1,
+		CASE WHEN isnull([$upYear$-06],0)<=0 THEN '0%' ELSE convert(VARCHAR(30),((isnull([$tyear$-06],0)/[$upYear$-06])*100))+'%' END j2,
+		
+		isnull([$upYear$-07],0) k, 
+		isnull([$tyear$-07],0) k1,
+		CASE WHEN isnull([$upYear$-07],0)<=0 THEN '0%' ELSE convert(VARCHAR(30),((isnull([$tyear$-07],0)/[$upYear$-07])*100))+'%' END k2,
+		
+		
+		isnull([$upYear$-08],0) l,
+		isnull([$tyear$-08],0) l1,
+		CASE WHEN isnull([$upYear$-08],0)<=0 THEN '0%' ELSE convert(VARCHAR(30),((isnull([$tyear$-08],0)/[$upYear$-08])*100))+'%' END l2
+		
+	FROM 
+	(
+		SELECT billdate,PROD_QUANTITY FROM comTable
+	) p
+	PIVOT
+	(
+	   	sum(PROD_QUANTITY)
+		FOR billdate IN
+	( [$downYear$-09], [$upYear$-09],[$downYear$-10], [$upYear$-10],[$downYear$-11], [$upYear$-11],[$downYear$-12], [$upYear$-12],[$upYear$-01], [$tyear$-01]
+	,[$upYear$-02], [$tyear$-02],[$upYear$-03], [$tyear$-03],[$upYear$-04], [$tyear$-04],[$upYear$-05], [$tyear$-05],[$upYear$-06], [$tyear$-06],[$upYear$-07], [$tyear$-07]
+	,[$upYear$-08], [$tyear$-08]
+	)) AS pvt2
+	
+	) OUTtable2
+)
+
+SELECT ITEM_NAME,a,a1,a2,b,b1,b2,
+c,c1,c2,d,d1,d2,e,e1,e2,f,f1,f2,g,g1,g2,h,h1,h2,i,i1,i2,j,j1,j2,k,k1,k2,l,l1,l2
+,(a+b+c+d+e+f+g+h+i+j+k+l) AS sumly,
+(a1+b1+c1+d1+e1+f1+g1+h1+i1+j1+k1+l1) AS sumty
+,CASE WHEN (a+b+c+d+e+f+g+h+i+j+k+l)>0 THEN convert(VARCHAR(20),((a1+b1+c1+d1+e1+f1+g1+h1+i1+j1+k1+l1)/(a+b+c+d+e+f+g+h+i+j+k+l)*100))+'%' ELSE '0' END
+, CASE WHEN (SELECT sumty FROM tableba)!=0 THEN convert(VARCHAR(20),convert(DECIMAL(18,2),(a1+b1+c1+d1+e1+f1+g1+h1+i1+j1+k1+l1)/(SELECT sumty FROM tableba)*100))+'%' ELSE '0%' END sum1
+FROM (
+SELECT ITEM_NAME 
+,isnull([$downYear$-09],0) a
+,isnull([$upYear$-09],0) a1
+,CASE  WHEN isnull([$downYear$-09],0)=0 THEN  CASE WHEN isnull([$upYear$-09],0)=0 THEN '-' ELSE '<font color=green>NEW</font>' END   ELSE  CASE WHEN isnull([$upYear$-09],0)=0 THEN  '-' ELSE CASE WHEN (((isnull([$upYear$-09],0)/[$downYear$-09])*100))<0 THEN '<font color=RED>'+convert(VARCHAR(30),((isnull([$upYear$-09],-1)/[$downYear$-09])*100))+'%'+'</font>' ELSE convert(VARCHAR(30),((isnull([$upYear$-09],0)/[$downYear$-09])*100))+'%' END END  END a2
+,isnull([$downYear$-10],0) b
+,isnull([$upYear$-10],0) b1
+,CASE  WHEN isnull([$downYear$-10],0)=0 THEN  CASE WHEN isnull([$upYear$-10],0)=0 THEN '-' ELSE '<font color=green>NEW</font>' END   ELSE  CASE WHEN isnull([$upYear$-10],0)=0 THEN  '-' ELSE CASE WHEN (((isnull([$upYear$-10],0)/[$downYear$-10])*100))<0 THEN '<font color=RED>'+convert(VARCHAR(30),((isnull([$upYear$-10],-1)/[$downYear$-10])*100))+'%'+'</font>' ELSE convert(VARCHAR(30),((isnull([$upYear$-10],0)/[$downYear$-10])*100))+'%' END END  END b2
+,isnull([$downYear$-11],0) c
+,isnull([$upYear$-11],0) c1
+,CASE  WHEN isnull([$downYear$-11],0)=0 THEN  CASE WHEN isnull([$upYear$-11],0)=0 THEN '-' ELSE '<font color=green>NEW</font>' END   ELSE  CASE WHEN isnull([$upYear$-11],0)=0 THEN  '-' ELSE CASE WHEN (((isnull([$upYear$-11],0)/[$downYear$-11])*100))<0 THEN '<font color=RED>'+convert(VARCHAR(30),((isnull([$upYear$-11],-1)/[$downYear$-11])*100))+'%'+'</font>' ELSE convert(VARCHAR(30),((isnull([$upYear$-11],0)/[$downYear$-11])*100))+'%' END END  END c2
+,isnull([$downYear$-12],0) d
+,isnull([$upYear$-12],0) d1
+,CASE  WHEN isnull([$downYear$-12],0)=0 THEN  CASE WHEN isnull([$upYear$-12],0)=0 THEN '-' ELSE '<font color=green>NEW</font>' END   ELSE  CASE WHEN isnull([$upYear$-12],0)=0 THEN  '-' ELSE CASE WHEN (((isnull([$upYear$-12],0)/[$downYear$-12])*100))<0 THEN '<font color=RED>'+convert(VARCHAR(30),((isnull([$upYear$-12],-1)/[$downYear$-12])*100))+'%'+'</font>' ELSE convert(VARCHAR(30),((isnull([$upYear$-12],0)/[$downYear$-12])*100))+'%' END END  END d2
+
+,isnull([$upYear$-01],0) e
+,isnull([$tyear$-01],0) e1
+,CASE  WHEN isnull([$upYear$-01],0)=0 THEN  CASE WHEN isnull([$tyear$-01],0)=0 THEN '-' ELSE '<font color=green>NEW</font>' END   ELSE  CASE WHEN isnull([$tyear$-01],0)=0 THEN  '-' ELSE CASE WHEN (((isnull([$tyear$-01],0)/[$upYear$-01])*100))<0 THEN '<font color=RED>'+convert(VARCHAR(30),((isnull([$tyear$-01],-1)/[$upYear$-01])*100))+'%'+'</font>' ELSE convert(VARCHAR(30),((isnull([$tyear$-01],0)/[$upYear$-01])*100))+'%' END END  END e2
+
+,isnull([$upYear$-02],0) f
+,isnull([$tyear$-02],0) f1
+,CASE  WHEN isnull([$upYear$-02],0)=0 THEN  CASE WHEN isnull([$tyear$-02],0)=0 THEN '-' ELSE '<font color=green>NEW</font>' END   ELSE  CASE WHEN isnull([$tyear$-02],0)=0 THEN  '-' ELSE CASE WHEN (((isnull([$tyear$-02],0)/[$upYear$-02])*100))<0 THEN '<font color=RED>'+convert(VARCHAR(30),((isnull([$tyear$-02],-1)/[$upYear$-02])*100))+'%'+'</font>' ELSE convert(VARCHAR(30),((isnull([$tyear$-02],0)/[$upYear$-02])*100))+'%' END END  END f2
+
+,isnull([$upYear$-03],0) g
+,isnull([$tyear$-03],0) g1
+,CASE  WHEN isnull([$upYear$-03],0)=0 THEN  CASE WHEN isnull([$tyear$-03],0)=0 THEN '-' ELSE '<font color=green>NEW</font>' END   ELSE  CASE WHEN isnull([$tyear$-03],0)=0 THEN  '-' ELSE CASE WHEN (((isnull([$tyear$-03],0)/[$upYear$-03])*100))<0 THEN '<font color=RED>'+convert(VARCHAR(30),((isnull([$tyear$-03],-1)/[$upYear$-03])*100))+'%'+'</font>' ELSE convert(VARCHAR(30),((isnull([$tyear$-03],0)/[$upYear$-03])*100))+'%' END END  END g2
+
+,isnull([$upYear$-04],0) h
+,isnull([$tyear$-04],0) h1
+,CASE  WHEN isnull([$upYear$-04],0)=0 THEN  CASE WHEN isnull([$tyear$-04],0)=0 THEN '-' ELSE '<font color=green>NEW</font>' END   ELSE  CASE WHEN isnull([$tyear$-04],0)=0 THEN  '-' ELSE CASE WHEN (((isnull([$tyear$-04],0)/[$upYear$-04])*100))<0 THEN '<font color=RED>'+convert(VARCHAR(30),((isnull([$tyear$-04],-1)/[$upYear$-04])*100))+'%'+'</font>' ELSE convert(VARCHAR(30),((isnull([$tyear$-04],0)/[$upYear$-04])*100))+'%' END END  END h2
+
+,isnull([$upYear$-05],0) i
+,isnull([$tyear$-05],0) i1
+
+,CASE  WHEN isnull([$upYear$-05],0)=0 THEN  CASE WHEN isnull([$tyear$-05],0)=0 THEN '-' ELSE '<font color=green>NEW</font>' END   ELSE  CASE WHEN isnull([$tyear$-05],0)=0 THEN  '-' ELSE CASE WHEN (((isnull([$tyear$-05],0)/[$upYear$-05])*100))<0 THEN '<font color=RED>'+convert(VARCHAR(30),((isnull([$tyear$-05],-1)/[$upYear$-05])*100))+'%'+'</font>' ELSE convert(VARCHAR(30),((isnull([$tyear$-05],0)/[$upYear$-05])*100))+'%' END END  END i2
+
+,isnull([$upYear$-06],0) j
+,isnull([$tyear$-06],0) j1
+,CASE  WHEN isnull([$upYear$-06],0)=0 THEN  CASE WHEN isnull([$tyear$-06],0)=0 THEN '-' ELSE '<font color=green>NEW</font>' END   ELSE  CASE WHEN isnull([$tyear$-06],0)=0 THEN  '-' ELSE CASE WHEN (((isnull([$tyear$-06],0)/[$upYear$-06])*100))<0 THEN '<font color=RED>'+convert(VARCHAR(30),((isnull([$tyear$-06],-1)/[$upYear$-06])*100))+'%'+'</font>' ELSE convert(VARCHAR(30),((isnull([$tyear$-06],0)/[$upYear$-06])*100))+'%' END END  END j2
+
+,isnull([$upYear$-07],0) k
+,isnull([$tyear$-07],0) k1
+
+,CASE  WHEN isnull([$upYear$-07],0)=0 THEN  CASE WHEN isnull([$tyear$-07],0)=0 THEN '-' ELSE '<font color=green>NEW</font>' END   ELSE  CASE WHEN isnull([$tyear$-07],0)=0 THEN  '-' ELSE CASE WHEN (((isnull([$tyear$-07],0)/[$upYear$-07])*100))<0 THEN '<font color=RED>'+convert(VARCHAR(30),((isnull([$tyear$-07],-1)/[$upYear$-07])*100))+'%'+'</font>' ELSE convert(VARCHAR(30),((isnull([$tyear$-07],0)/[$upYear$-07])*100))+'%' END END  END k2
+
+,isnull([$upYear$-08],0) l
+,isnull([$tyear$-08],0) l1
+,CASE  WHEN isnull([$upYear$-08],0)=0 THEN  CASE WHEN isnull([$tyear$-08],0)=0 THEN '-' ELSE '<font color=green>NEW</font>' END   ELSE  CASE WHEN isnull([$tyear$-08],0)=0 THEN  '-' ELSE CASE WHEN (((isnull([$tyear$-08],0)/[$upYear$-08])*100))<0 THEN '<font color=RED>'+convert(VARCHAR(30),((isnull([$tyear$-08],-1)/[$upYear$-08])*100))+'%'+'</font>' ELSE convert(VARCHAR(30),((isnull([$tyear$-08],0)/[$upYear$-08])*100))+'%' END END  END l2
+
+FROM 
+(
+	 SELECT ITEM_NAME,billdate,PROD_QUANTITY FROM comTable
+) p
+PIVOT
+(
+   	sum(PROD_QUANTITY)
+	FOR billdate IN
+( [$downYear$-09], [$upYear$-09],[$downYear$-10], [$upYear$-10],[$downYear$-11], [$upYear$-11],[$downYear$-12], [$upYear$-12],[$upYear$-01], [$tyear$-01]
+,[$upYear$-02], [$tyear$-02],[$upYear$-03], [$tyear$-03],[$upYear$-04], [$tyear$-04],[$upYear$-05], [$tyear$-05],[$upYear$-06], [$tyear$-06],[$upYear$-07], [$tyear$-07]
+,[$upYear$-08], [$tyear$-08]
+)
+) AS pvt
+
+) AS OUTtable
+
+UNION ALL
+SELECT * FROM tableba  
+]]>
+		</sql>
+	</content>
+	
+</config>

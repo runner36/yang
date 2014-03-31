@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>经销商进销存汇总</title>
+	
+	<header>
+		<column property="0" title="经销商编码" bundle="page" class="dd"  />
+		<column property="1" title="经销商名称" bundle="page"  style="text-align:left;" />
+		<column property="2" title="期初日期"  cell="date" format="yyyy-MM-dd"/>
+		<column property="3" title="期末日期"  cell="date" format="yyyy-MM-dd"/>
+		<column property="4" title="客户端数" bundle="page" />
+		<column property="24" title="状态"  style="text-align:center;"/>
+		<column property="5" title="经销商进销存（已匹配、标准金额）,期初库存"  cell="currency" format="0"/>
+		<column property="6" title="经销商进销存（已匹配、标准金额）,期间到货"  cell="currency" format="0"/>
+		<column property="7" title="经销商进销存（已匹配、标准金额）,期间销售"  cell="currency" format="0"/>
+		<column property="8" title="经销商进销存（已匹配、标准金额）,零价销售" cell="number" format="0.00%" />
+		<column property="9" title="经销商进销存（已匹配、标准金额）,期末库存"   cell="currency" format="0"/>
+		<column property="10" title="经销商进销存（已匹配、标准金额）,销售毛利"  cell="number" format="0.00%" />
+		<column property="11" title="经销商进销存（已匹配、标准金额）,库存差异天数"  cell="number" format="0" />
+		<column property="12" title="经销商进销存（已匹配、标准金额）,库存天数"  cell="number" format="0" />
+		<column property="13" title="经销商进销存（已匹配、标准金额）,销售/到货"  cell="number" format="0.00%"/>
+		<column property="14" title="未匹配、经销商金额,期间到货"  cell="currency" format="0"/>
+		<column property="15" title="未匹配、经销商金额,期间销售" cell="number" format="0.00%"/>
+		<column property="16" title="厂家发货（标准金额）,厂家发货" cell="currency" format="0"/>
+		<column property="17" title="厂家发货（标准金额）,未匹SKU数" />
+		<column property="18" title="厂家发货（标准金额）,销售/发货"  cell="number" format="0.00%"/>
+		<column property="19" title="厂家发货（标准金额）,到货/发货"  cell="number" format="0.00%"/>
+		<column property="20" title="相关日期,最后发货日期"  cell="date" format="yyyy-MM-dd"  />
+		<column property="21" title="相关日期,最早销售日期"  cell="date" format="yyyy-MM-dd"  />
+		<column property="22" title="相关日期,最后销售日期" cell="date" format="yyyy-MM-dd" />
+		<column property="23" title="备注" />
+	</header>
+	
+	<content>
+        <!-- 期初日期 期末日期 -->
+        <param id="beginDate" initValue="" defaultValue="">$beginDate$</param>
+		<param id="endDate" initValue="" defaultValue="" >$endDate$</param>
+		<param id="distId" initValue="" defaultValue="" template=" AND INV.DIST_ID IN ($distId$)">$distId$</param>
+		<param id="g_gross" initValue="" defaultValue="">$g_gross$</param>
+		<param id="l_gross" initValue="" defaultValue="">$l_gross$</param>
+		<param id="g_s_days" initValue="" defaultValue="">$g_s_days$</param>
+		<param id="l_s_days" initValue="" defaultValue="">$l_s_days$</param>
+		<param id="g_s_p" initValue="" defaultValue="">$g_s_p$</param>
+		<param id="l_s_p" initValue="" defaultValue="">$l_s_p$</param>
+		<param id="g_p_d" initValue="" defaultValue="">$g_p_d$</param>
+		<param id="l_p_d" initValue="" defaultValue="">$l_p_d$</param>
+		<param id="force" initValue="" defaultValue="">$force$</param>
+		<sql>
+            <![CDATA[ 
+WITH STOCK_DATE AS
+(
+	SELECT 
+		INV.DIST_ID
+		,CASE WHEN '1'!='$force$' THEN MIN(INV.STOCK_DATE) ELSE '$beginDate$' END AS S_DATE
+		,CASE WHEN '1'!='$force$' THEN MAX(INV.STOCK_DATE) ELSE '$endDate$' END AS E_DATE 
+	FROM RPT_DATA_STOCK INV
+	WHERE INV.STOCK_DATE BETWEEN '$beginDate$' AND '$endDate$' $distId$
+	GROUP BY INV.DIST_ID
+)
+, PARENT_PRODUCT AS
+(
+	SELECT A.PROD_CODE AS PROD_CODE,B.PROD_CODE AS PARENT FROM MDM_PRODUCT A
+	LEFT JOIN MDM_PRODUCT B
+	ON A.PARENT_ID=B.PROD_ID
+	WHERE B.PROD_ID IS NOT NULL
+)
+
+,NO_MAPPING_SKU AS
+(
+	SELECT X.DIST_ID,COUNT(1) AS NO_MAPPING_SKU
+	FROM
+	(
+		SELECT A.*
+		FROM
+		(
+			SELECT 
+				DIST.DIST_ID,
+				SALE.TARGET_PROD_CODE,
+				B.PARENT
+			FROM RPT_DATA_SALE SALE
+			LEFT JOIN PARENT_PRODUCT B
+				ON SALE.TARGET_PROD_CODE=B.PROD_CODE
+			INNER JOIN DMS_CLIENT CLIENT
+				ON CLIENT.DIST_ID=SALE.DIST_ID
+				AND CLIENT.CLIENT_CODE='principle'
+			INNER JOIN MDM_DISTRIBUTOR DIST
+				ON SALE.TARGET_STORE_CODE=DIST.DIST_CODE
+			INNER JOIN STOCK_DATE AREA
+				ON DIST.DIST_ID=AREA.DIST_ID
+			WHERE SALE.BILL_DATE BETWEEN AREA.S_DATE AND AREA.E_DATE
+			GROUP BY DIST.DIST_ID,SALE.TARGET_PROD_CODE,B.PARENT
+		) A
+		LEFT JOIN
+		(
+			SELECT 
+				DIST.P_DIST_ID AS DIST_ID,PM.TARGET_PROD_CODE
+			FROM DMS_PROD_MAPPING PM
+			LEFT JOIN DMS_CLIENT B
+				ON PM.CLIENT_ID=B.CLIENT_ID		
+			LEFT JOIN
+				(
+					SELECT DIST.DIST_ID,P_DIST.DIST_ID AS P_DIST_ID
+					FROM DMS_STORE_MAPPING SM 
+					INNER JOIN DMS_CLIENT CLIENT
+					ON SM.CLIENT_ID=CLIENT.CLIENT_ID
+					AND CLIENT.CLIENT_CODE='principle'
+					INNER JOIN MDM_DISTRIBUTOR DIST
+					ON DIST.DIST_CODE=SM.DIST_STORE_CODE
+					INNER JOIN MDM_DISTRIBUTOR P_DIST
+					ON P_DIST.DIST_CODE=SM.TARGET_STORE_CODE
+				) DIST 
+				ON DIST.DIST_ID=B.DIST_ID
+			GROUP BY DIST.P_DIST_ID,PM.TARGET_PROD_CODE
+		) B
+		ON A.DIST_ID=B.DIST_ID
+		AND (A.TARGET_PROD_CODE=B.TARGET_PROD_CODE OR A.PARENT=B.TARGET_PROD_CODE)
+		WHERE B.DIST_ID IS NULL
+	) X
+	GROUP BY X.DIST_ID
+),DIST_CLIENT AS(
+	SELECT CLIENT.DIST_ID,COUNT(1) AS CLIENT_NUM 
+	FROM DMS_CLIENT CLIENT
+	GROUP BY CLIENT.DIST_ID
+)
+
+,SALE AS(
+	SELECT 
+		SUMDATE.DIST_ID,
+		SUM(SUMDATE.GROSS_SALES)*1.17 AS GROSS_SALES,
+		SUM(CASE WHEN SUMDATE.TARGET_PROD_CODE IS NULL THEN SUMDATE.PROD_AMOUNT ELSE 0 END) AS UN_MAPPED_AMT,
+		SUM(CASE WHEN SUMDATE.TARGET_PROD_CODE IS NOT NULL THEN SUMDATE.PROD_AMOUNT ELSE 0 END) AS PROD_AMOUNT,
+		SUM(CASE WHEN SUMDATE.PROD_AMOUNT=0 THEN SUMDATE.GROSS_SALES ELSE 0 END) AS ZERO_SALE_GROSS,
+		MAX(SUMDATE.BILL_DATE) AS LAST_SALE,
+		MIN(SUMDATE.BILL_DATE) AS FIRST_SALE
+	FROM RPT_DATA_SALE SUMDATE
+	INNER JOIN STOCK_DATE AREA
+		ON SUMDATE.DIST_ID=AREA.DIST_ID
+	WHERE SUMDATE.BILL_DATE BETWEEN AREA.S_DATE AND AREA.E_DATE
+	GROUP BY SUMDATE.DIST_ID
+)
+
+,PURCHASE AS(
+	SELECT 
+		SUMDATE.DIST_ID,
+		SUM(SUMDATE.GROSS_SALES)*1.17 AS GROSS_SALES,
+		SUM(CASE WHEN SUMDATE.TARGET_PROD_CODE IS NULL THEN SUMDATE.PROD_AMOUNT ELSE 0 END) AS UN_MAPPED_AMT,
+		SUM(CASE WHEN SUMDATE.TARGET_PROD_CODE IS NOT NULL THEN SUMDATE.PROD_AMOUNT ELSE 0 END) AS PROD_AMOUNT,
+		SUM(CASE WHEN SUMDATE.PROD_AMOUNT=0 THEN SUMDATE.GROSS_SALES ELSE 0 END) AS ZERO_SALE_GROSS,
+		MAX(SUMDATE.BILL_DATE) AS LAST_SALE,
+		MIN(SUMDATE.BILL_DATE) AS FIRST_SALE
+	FROM RPT_DATA_PURCHASE SUMDATE
+	INNER JOIN STOCK_DATE AREA
+		ON SUMDATE.DIST_ID=AREA.DIST_ID
+	WHERE SUMDATE.BILL_DATE BETWEEN AREA.S_DATE AND AREA.E_DATE
+	GROUP BY SUMDATE.DIST_ID
+)
+
+,DELIVERY AS(
+	SELECT 
+		DIST.DIST_ID,
+		SUM(SALE.GROSS_SALES) AS GROSS_SALES,
+		MAX(SALE.BILL_DATE) AS LAST_DLRY
+	FROM RPT_DATA_SALE SALE
+	INNER JOIN DMS_CLIENT CLIENT
+		ON CLIENT.DIST_ID=SALE.DIST_ID
+		AND CLIENT.CLIENT_CODE='principle'
+	INNER JOIN MDM_DISTRIBUTOR DIST
+		ON SALE.TARGET_STORE_CODE=DIST.DIST_CODE
+	INNER JOIN STOCK_DATE AREA
+		ON DIST.DIST_ID=AREA.DIST_ID
+	WHERE SALE.BILL_DATE BETWEEN AREA.S_DATE AND AREA.E_DATE
+	GROUP BY DIST.DIST_ID
+)
+
+,INOUT AS(
+	SELECT 
+		SUMDATE.DIST_ID,
+		SUM(SUMDATE.GROSS_SALES) AS GROSS_SALES
+	FROM RPT_DATA_INOUT SUMDATE
+	INNER JOIN STOCK_DATE AREA
+		ON SUMDATE.DIST_ID=AREA.DIST_ID
+	WHERE SUMDATE.BILL_DATE BETWEEN AREA.S_DATE AND AREA.E_DATE
+	GROUP BY SUMDATE.DIST_ID
+)
+
+,S_STOCK AS
+(
+	SELECT 
+		A.DIST_ID
+		,SUM(INV.GROSS_SALES) AS STOCK_GROSS
+	FROM RPT_DATA_STOCK INV
+	INNER JOIN STOCK_DATE A
+		ON INV.DIST_ID=A.DIST_ID
+	WHERE INV.STOCK_DATE=A.S_DATE
+	GROUP BY A.DIST_ID
+)
+
+,E_STOCK AS
+(
+	SELECT 
+		A.DIST_ID
+		,SUM(INV.GROSS_SALES) AS STOCK_GROSS
+	FROM RPT_DATA_STOCK INV
+	INNER JOIN STOCK_DATE A
+		ON INV.DIST_ID=A.DIST_ID
+	WHERE INV.STOCK_DATE=A.E_DATE
+	GROUP BY A.DIST_ID
+)
+
+,RES AS
+(
+SELECT
+	DIST.DIST_CODE
+	,DIST.DIST_NAME
+	,A.S_DATE
+	,A.E_DATE
+	,CLIENT.CLIENT_NUM
+	,SS.STOCK_GROSS AS S_STOCK_GROSS
+	,P.GROSS_SALES AS PURCHASE_GROSS
+	,S.GROSS_SALES AS SALE_GROSS
+	,CASE WHEN S.ZERO_SALE_GROSS IS NULL OR S.GROSS_SALES=0 THEN NULL ELSE S.ZERO_SALE_GROSS/S.GROSS_SALES END AS Z_S_RATE
+	,ES.STOCK_GROSS AS E_STOCK_GROSS
+	,CASE WHEN S.PROD_AMOUNT IS NULL OR S.GROSS_SALES=0 THEN NULL ELSE S.PROD_AMOUNT/S.GROSS_SALES-1 END AS GROSS_RATE
+	,CASE WHEN S.GROSS_SALES IS NOT NULL AND S.GROSS_SALES !=0 THEN ABS(SS.STOCK_GROSS+ISNULL(P.GROSS_SALES,0)+ISNULL(I.GROSS_SALES,0)-S.GROSS_SALES-ES.STOCK_GROSS)/S.GROSS_SALES*(DATEDIFF(DAY,A.S_DATE,A.E_DATE)) ELSE NULL END AS GAP_STOCK_DAYS
+	,CASE WHEN S.GROSS_SALES IS NOT NULL AND S.GROSS_SALES !=0 
+	--AND DATEDIFF(DAY,S.S_DATE,S.E_DATE)>28 
+	THEN (SS.STOCK_GROSS+ES.STOCK_GROSS)/2*(DATEDIFF(DAY,A.S_DATE,A.E_DATE))/S.GROSS_SALES ELSE NULL END AS STOCK_DAYS
+	,CASE WHEN S.GROSS_SALES IS NULL OR P.GROSS_SALES=0 THEN NULL ELSE S.GROSS_SALES/P.GROSS_SALES END AS S_P_RATE
+	,P.UN_MAPPED_AMT
+	,CASE WHEN S.UN_MAPPED_AMT IS NULL OR S.GROSS_SALES=0 THEN NULL ELSE S.UN_MAPPED_AMT/(S.UN_MAPPED_AMT+S.GROSS_SALES) END AS S_U_RATE
+	,D.GROSS_SALES
+	,NMS.NO_MAPPING_SKU
+	,CASE WHEN S.GROSS_SALES IS NULL OR D.GROSS_SALES=0 THEN NULL ELSE S.GROSS_SALES/D.GROSS_SALES END AS S_D_RATE
+	,CASE WHEN P.GROSS_SALES IS NULL OR D.GROSS_SALES=0 THEN NULL ELSE P.GROSS_SALES/D.GROSS_SALES END AS P_D_RATE
+	,D.LAST_DLRY
+	,S.FIRST_SALE
+	,S.LAST_SALE
+	,DIST.REMARK
+FROM STOCK_DATE A
+LEFT JOIN SALE S ON A.DIST_ID=S.DIST_ID
+LEFT JOIN PURCHASE P ON A.DIST_ID=P.DIST_ID
+LEFT JOIN DELIVERY D ON A.DIST_ID=D.DIST_ID
+LEFT JOIN INOUT I ON A.DIST_ID=I.DIST_ID
+LEFT JOIN S_STOCK SS ON A.DIST_ID=SS.DIST_ID
+LEFT JOIN E_STOCK ES ON A.DIST_ID=ES.DIST_ID
+LEFT JOIN MDM_DISTRIBUTOR DIST ON A.DIST_ID=DIST.DIST_ID
+LEFT JOIN DIST_CLIENT CLIENT ON A.DIST_ID=CLIENT.DIST_ID
+LEFT JOIN NO_MAPPING_SKU NMS ON A.DIST_ID=NMS.DIST_ID
+)
+SELECT 
+ 	RES.*,
+ 	CASE WHEN 
+ 	RES.S_STOCK_GROSS>=0 
+ 	AND RES.E_STOCK_GROSS>=0 
+ 	AND (RES.SALE_GROSS IS NULL OR RES.SALE_GROSS>=0)
+	AND (RES.PURCHASE_GROSS IS NULL OR RES.PURCHASE_GROSS>=0) 
+	AND (RES.GROSS_RATE>$g_gross$ AND RES.GROSS_RATE<$l_gross$)
+	AND (RES.STOCK_DAYS>$g_s_days$ AND RES.STOCK_DAYS<$l_s_days$)
+	AND (RES.S_P_RATE>$g_s_p$ AND RES.S_P_RATE<$l_s_p$)
+	AND (RES.P_D_RATE>$g_p_d$ AND RES.P_D_RATE<$l_p_d$)
+	--AND RES.NO_MAPPING_SKU IS NULL
+	THEN '正常' ELSE '异常' END AS STAUTE
+FROM RES RES
+ 
+          ]]>
+		</sql>
+	</content>
+	
+</config>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts-config PUBLIC
+		"-//Apache Software Foundation//DTD Struts Configuration 1.2//EN"
+		"http://struts.apache.org/dtds/struts-config_1_2.dtd">
+<struts-config>
+	<form-beans>
+		<form-bean name="mdmProductForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="mdmDistributorForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="mdmStoreForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="mdmCalendarForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="mdmConversionForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="mdmAfsProductForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="mdmAfsLocationForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+	</form-beans>
+
+	<action-mappings>
+		<!--使用通配符-->
+		<action path="/mdm/*" name="{1}Form" parameter="method" scope="request" validate="false">
+			<forward name="index" path="/WEB-INF/pages/mdm/{1}Index.jsp"/>
+			<forward name="list" path="/WEB-INF/pages/mdm/{1}List.jsp"/>
+			<forward name="edit" path="/WEB-INF/pages/mdm/{1}Edit.jsp"/>
+			<forward name="view" path="/WEB-INF/pages/mdm/{1}View.jsp"/>
+			<forward name="importProd" path="/WEB-INF/pages/mdm/importProdList.jsp"/>
+			<forward name="importStore" path="/WEB-INF/pages/mdm/importStoreList.jsp"/>
+			<forward name="importDistri" path="/WEB-INF/pages/mdm/importDistributorList.jsp"/>
+			<forward name="importCalendar" path="/WEB-INF/pages/mdm/importCalendarList.jsp"/>
+			<forward name="importConv" path="/WEB-INF/pages/mdm/importConvList.jsp"/>
+			
+			<forward name="success" path="/mdm/{1}.do?method=list"/>
+			<forward name="successSp" path="/mdm/{1}.do?method=listSp"/>
+			<forward name="editSp" path="/WEB-INF/pages/mdm/{1}EditSp.jsp"/>
+			<forward name="listSp" path="/WEB-INF/pages/mdm/{1}ListSp.jsp"/>
+		</action>
+		<action path="/tree/mdmTree" parameter="method" scope="request" validate="false"/>
+	</action-mappings>
+</struts-config>

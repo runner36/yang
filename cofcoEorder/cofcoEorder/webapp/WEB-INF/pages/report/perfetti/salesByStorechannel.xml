@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>销售周报（按渠道）</title>
+	
+	<header>
+		<column title="大区" width="250"/>
+		<column title="办事处" width="200"/>
+		<column title="业务单元" width="100"/>
+		<column title="经销商" width="200"/>
+		<column title="渠道" width="100"/>
+		<column title="销售数量(箱)" width="100" align="right" cell="number" format="0.00"/>
+		<column title="销售金额(出厂价含税元)" width="160" align="right" cell="number" format="0.00"/>
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH, _FIRST_DAY_OF_WEEK -->
+		<param id="_orgAuthExp" initValue="" defaultValue="">$orgAuth$</param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="orgSubCode" template="and org.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+		<param id="distId" template="and dist.dist_id in ($distId$)">$distId$</param>
+		<param id="billDate1" template="and sale.bill_date>='$billDate1$'">$billDate1$</param>
+		<param id="billDate2" template="and sale.bill_date&lt;='$billDate2$ 23:59:59'">$billDate2$</param>
+		<sql>
+<![CDATA[
+WITH total AS(
+select convert(varchar(12),org.pi2) AS pid2,org.pn2,sum(box) AS box,sum(box*prod.prod_price) AS money
+from rpt_data_sale sale
+	inner join mdm_distributor dist on sale.dist_id=dist.dist_id
+	inner join base_org org on dist.org_id=org.org_id
+	inner join mdm_product prod on sale.target_prod_code=prod.prod_code 
+	where 1=1 $orgSubCode$ $orgAuth$ $billDate1$ $billDate2$ $distId$
+group by org.pi2,org.pn2 
+)
+
+SELECT 0,total.pid2,total.pn2,'','','','',box,MONEY FROM total 
+UNION ALL
+SELECT 0,min(total.pid2)+'a',min(total.pn2)+CAST(count(*) AS VARCHAR(12))+'家大区合计','','','','',sum(box),sum(money)
+FROM total INNER JOIN BASE_ORG org ON total.pid2=org.ORG_ID
+WHERE org.ORG_ID IN (4,17,42,47,49)
+GROUP BY substring(org.ORG_CODE,0,4)
+
+union ALL
+select convert(varchar(12),org.pi2),convert(varchar(12),org.pi3) AS pid3,org.pn2,org.pn3,'','','',sum(box) AS box,sum(box*prod.prod_price) AS money
+from rpt_data_sale sale
+	inner join mdm_distributor dist on sale.dist_id=dist.dist_id
+	inner join base_org org on dist.org_id=org.org_id
+	inner join mdm_product prod on sale.target_prod_code=prod.prod_code 
+	where 1=1 $orgSubCode$ $orgAuth$ $billDate1$ $billDate2$ $distId$
+group by org.pi2,org.pi3,org.pn2,org.pn3
+
+UNION ALL 
+select convert(varchar(12),org.pi3),convert(varchar(12),org.pi4),org.pn2,org.pn3, org.PN4,'','',sum(box),sum(box*prod.prod_price)
+from rpt_data_sale sale
+	inner join mdm_distributor dist on sale.dist_id=dist.dist_id
+	inner join base_org org on dist.org_id=org.org_id
+	inner join mdm_product prod on sale.target_prod_code=prod.prod_code	 
+   where 1=1 $orgSubCode$ $orgAuth$ $billDate1$ $billDate2$ $distId$
+group by org.pi2,org.pi3,org.pn2,org.pn3,org.PN4 ,org.PI4 
+
+
+UNION ALL 
+select convert(varchar(12),org.pi4),convert(varchar(12),dist.DIST_ID),org.pn2,org.pn3, org.PN4, dist.DIST_NAME,'',sum(box),sum(box*prod.prod_price)
+from rpt_data_sale sale
+	inner join mdm_distributor dist on sale.dist_id=dist.dist_id
+	inner join base_org org on dist.org_id=org.org_id
+	inner join mdm_product prod on sale.target_prod_code=prod.prod_code	
+	where 1=1 $orgSubCode$ $orgAuth$ $billDate1$ $billDate2$ $distId$
+group by org.pi2,org.pi3,org.pn2,org.pn3,org.PN4 ,org.PI4 ,dist.DIST_ID,dist.DIST_NAME
+
+UNION ALL 
+select convert(varchar(12),dist.DIST_ID),convert(varchar(12),dist.DIST_ID)+'a'+convert(varchar(12),channel.DICT_ITEM_ID),org.pn2,org.pn3, org.PN4, dist.DIST_NAME,channel.ITEM_NAME,sum(box),sum(box*prod.prod_price)
+from rpt_data_sale sale
+	inner join mdm_distributor dist on sale.dist_id=dist.dist_id
+	inner join base_org org on dist.org_id=org.org_id
+	inner join mdm_product prod on sale.target_prod_code=prod.prod_code	 
+   inner join mdm_store store on sale.target_store_code=store.store_code
+	inner join base_dict_item channel on store.channel_id=channel.dict_item_id
+   	where 1=1 $orgSubCode$ $orgAuth$ $billDate1$ $billDate2$ $distId$
+group by org.pi2,org.pi3,org.pn2,org.pn3,org.PN4 ,org.PI4 ,dist.DIST_ID,dist.DIST_NAME,channel.DICT_ITEM_ID,channel.ITEM_NAME
+
+
+]]>
+		</sql>
+	</content>
+	
+</config>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>三级销售数据扣减</title>
+	<header>
+		<column property="0" title="经销商编码"/>
+		<column property="1" title="经销商名称"/>
+		<column property="2" title="流水号"/>
+		<column property="3" title="录入日期" cell="date" format="yyyy-MM-dd"/>
+		<column property="4" title="PVMC客户名称"/>
+		<column property="5" title="PVMC客户编码" />
+		<column property="6" title="PVMC客户渠道"/>
+		<column property="7" title="PVMC产品编码"/>
+		<column property="8" title="PVMC产品名称"/>
+		<column property="9" title="PVMC产品箱数" cell="number" format="0.00"  />
+		<column property="10" title="回传状态" />
+		<column property="11" title="回传时间" cell="date" format="yyyy-MM-dd"/>
+	</header>
+	<content>
+	<param id="billsNum" template=" and d.BILLS_NUM like '$billsNum$%'">$billsNum$</param>
+	<param id="billDate1" template="and d.CREATED>='$billDate1$'">$billDate1$</param>
+	<param id="billDate2" template="and d.CREATED&lt;='$billDate2$ 23:59:59'">$billDate2$</param>
+	<param id="isLoad" template=" and t.IS_LOAD='$isLoad$'">$isLoad$</param>
+	<param id="proCode" template=" and d.PROD_CODE like '$proCode$%'">$proCode$</param>
+	<param id="proName" template=" and d.PROD_NAME like '%$proName$%'">$proName$</param>
+	<param id="storeCode" template=" and s.STORE_CODE like '$storeCode$%'">$storeCode$</param>
+	<param id="storeName" template=" and s.STORE_NAME like '%$storeName$%'">$storeName$</param>
+	<param id="distCode" template=" and M.DIST_CODE like '$distCode$%'">$distCode$</param>
+	<param id="distName" template=" and M.DIST_NAME like '%$distName$%'">$distName$</param>
+	<param id="backDate1" template="and t.LOAD_TIME>='$backDate1$'">$backDate1$</param>
+	<param id="backDate2" template="and t.LOAD_TIME&lt;='$backDate2$ 23:59:59'">$backDate2$</param>
+	<sql>
+<![CDATA[
+SELECT 
+M.DIST_CODE,
+M.DIST_NAME,
+d.BILLS_NUM,
+d.CREATED,
+s.STORE_NAME,
+s.STORE_CODE,
+i.ITEM_NAME,
+d.PROD_CODE,
+d.PROD_NAME,
+t.BOX,
+CASE t.IS_LOAD WHEN 1 THEN '已回传' ELSE '未回传' END is_load ,
+t.LOAD_TIME
+FROM RPT_DATA_SALE t inner JOIN DMS_DATA_INPUT d  ON t.input_id=d.ID INNER JOIN mdm_Distributor M ON M.DIST_ID=D.DIST_ID 
+INNER JOIN MDM_STORE  s ON t.TARGET_STORE_CODE=s.STORE_CODE INNER JOIN BASE_DICT_ITEM i ON i.DICT_ITEM_ID=d.CHANNEL_ID
+WHERE  t.CLIENT_ID IS NULL $billsNum$ $billDate1$ $billDate2$ $isLoad$ $proCode$ $proName$ $storeCode$ $storeName$ $distCode$ $distName$ $backDate1$ $backDate2$
+]]>
+		</sql>
+	</content>
+	
+</config>

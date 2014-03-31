@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>selloutone</title>
+	
+	<header>
+		<column property="0" title="玛氏时间" />
+		<column property="1" title="经销商名称" />
+		<column property="2" title="玛氏商店编号"/>
+		<column property="3" title="商店名称"/>
+		<column property="4" title="负责人姓名"/>
+		
+		<column property="5" title="商店类型" />
+		<column property="6" title="SF销售数量（退货后）" align="right" cell="currency" format="0.########"/>
+		<column property="7" title="SF-MARS销售净额（退货后）" align="right" cell="number" format="0.00"/>
+		<column property="8" title="SF-DTR销售净额(退货后)" align="right" cell="number" format="0.00"/>
+		<column property="9" title="SF退货数量" align="right" cell="currency" format="0.########"/>
+		
+		<column property="10" title="SF-MARS退货金额" align="right" cell="number" format="0.00"/>
+		<column property="11" title="SF-DTR退货额" align="right" cell="number" format="0.00"/>
+		<column property="12" title="PC销售数量（退货后)" align="right" cell="currency" format="0.########"/>
+		<column property="13" title="PC-MARS销售净额（退货后）" align="right" cell="number" format="0.00"/>
+		<column property="14" title="PC-DTR销售净额（退货后）" align="right" cell="number" format="0.00"/>
+		<column property="15" title="PC退货数量" align="right" cell="currency" format="0.########"/>
+		<column property="16" title="PC-MARS退货金额" align="right" cell="number" format="0.00"/>
+		<column property="17" title="PC-DTR退货金额" align="right" cell="number" format="0.00"/>
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH, _FIRST_DAY_OF_WEEK -->
+		<param id="_orgAuthExp" initValue="" defaultValue="">$orgAuth$</param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="orgSubCode" template="and org.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+		<param id="distId" template="and ddr.dist_id in ($distId$)">$distId$</param>
+		
+		<param id="distCode" template="and ddr.dist_Code like '%$distCode$%'">$distCode$</param>
+		
+		<param id="storeCode" template="and ds.STORE_CODE like '%$storeCode$%'">$storeCode$</param>
+		<param id="prodCode" template="t.PROD_CODE like '%$prodCode$%'">$prodCode$</param>
+		<param id="category" template="t.PROD_CATEGORY IN('Snackfood','Petcare')">$category$</param>
+		
+		<param id="year1">$year1$</param>
+		<param id="year2">$year2$</param>
+		<param id="month1">$month1$</param>
+		<param id="month2">$month2$</param>
+		<param id="week1">$week1$</param>
+		<param id="week2">$week2$</param>
+		<!-- 
+			<param id="billDate1" template="and S.bill_date>='(select cal_date from MDM_CALENDAR where cal_year='">$billDate1$</param>
+			<param id="billDate2" template="and S.bill_date&lt;='$billDate2$ 23:59:59'">$billDate2$</param>
+		 -->
+		<sql>
+<![CDATA[
+SELECT 
+  	dbo.fn_getMarsWeekDay(convert(VARCHAR(20),s.bill_date,120)),
+	ddr.dist_name,
+	ds.STORE_CODE,
+	ds.STORE_name,
+	--e.emp_name,
+	ds.linkman,
+   --	ds.STORE_TYPE AS STORE_TYPE,
+   dt.item_name,
+	-------S销售，SR退货
+	sum(CASE WHEN s.PROD_QUANTITY>=0 AND t1.item_name IN ('Snackfood') THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',t.PROD_CODE,s.PROD_QUANTITY),0) ELSE 0 END)
+		-abs(sum(CASE WHEN s.PROD_QUANTITY<0 AND t1.item_name IN ('Snackfood') THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',t.PROD_CODE,s.PROD_QUANTITY),0) ELSE 0 END)) AS salesf1,
+	sum(CASE WHEN s.PROD_QUANTITY>=0 AND t1.item_name IN ('Snackfood') THEN isnull(t.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',t.PROD_CODE,s.PROD_QUANTITY),0) ELSE 0 END)
+		-abs(sum(CASE WHEN s.PROD_QUANTITY<0 AND t1.item_name IN ('Snackfood') THEN isnull(t.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',t.PROD_CODE,s.PROD_QUANTITY),0) ELSE 0 END)) AS salesf2,
+	sum(CASE WHEN s.PROD_QUANTITY>=0 AND t1.item_name IN ('Snackfood') THEN isnull(s.PROD_AMOUNT,0) ELSE 0 END) 
+		-abs(sum(CASE WHEN s.PROD_QUANTITY<0 AND t1.item_name IN ('Snackfood') THEN isnull(s.PROD_AMOUNT,0) ELSE 0 END))AS salesf3,
+	sum(CASE WHEN s.PROD_QUANTITY<0 AND t1.item_name IN ('Snackfood') THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',t.PROD_CODE,s.PROD_QUANTITY),0) ELSE 0 END) AS salesf4,
+	sum(CASE WHEN s.PROD_QUANTITY<0 AND t1.item_name IN ('Snackfood') THEN isnull(t.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',t.PROD_CODE,s.PROD_QUANTITY),0) ELSE 0 END) AS salesf5,
+	sum(CASE WHEN s.PROD_QUANTITY<0 AND t1.item_name IN ('Snackfood') THEN isnull(s.PROD_AMOUNT,0) ELSE 0 END) AS salesf6,
+	sum(CASE WHEN s.PROD_QUANTITY>=0 AND t1.item_name IN ('Petcare') THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',t.PROD_CODE,s.PROD_QUANTITY),0) ELSE 0 END)
+		-abs(sum(CASE WHEN s.PROD_QUANTITY<0 AND t1.item_name IN ('Petcare') THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',t.PROD_CODE,s.PROD_QUANTITY),0) ELSE 0 END)) AS salesf7,
+	sum(CASE WHEN s.PROD_QUANTITY>=0 AND t1.item_name IN ('Petcare') THEN isnull(t.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',t.PROD_CODE,s.PROD_QUANTITY),0) ELSE 0 END)
+		-abs(sum(CASE WHEN s.PROD_QUANTITY<0 AND t1.item_name IN ('Petcare') THEN isnull(t.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',t.PROD_CODE,s.PROD_QUANTITY),0) ELSE 0 END)) AS salesf8,
+	sum(CASE WHEN s.PROD_QUANTITY>=0 AND t1.item_name IN ('Petcare') THEN isnull(s.PROD_AMOUNT,0) ELSE 0 END) 
+		-abs(sum(CASE WHEN s.PROD_QUANTITY<0 AND t1.item_name IN ('Petcare') THEN isnull(s.PROD_AMOUNT,0) ELSE 0 END))AS salesf9,
+	sum(CASE WHEN s.PROD_QUANTITY<0 AND t1.item_name IN ('Petcare') THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',t.PROD_CODE,s.PROD_QUANTITY),0) ELSE 0 END) AS salesf10,
+	sum(CASE WHEN s.PROD_QUANTITY<0 AND t1.item_name IN ('Petcare') THEN isnull(t.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',t.PROD_CODE,s.PROD_QUANTITY),0) ELSE 0 END) AS salesf11,
+	sum(CASE WHEN s.PROD_QUANTITY<0 AND t1.item_name IN ('Petcare') THEN isnull(s.PROD_AMOUNT,0) ELSE 0 END) AS salesf12
+FROM DMS_DATA_SALE s
+	INNER JOIN DMS_CLIENT dc ON s.CLIENT_ID=dc.CLIENT_ID
+	INNER JOIN MDM_DISTRIBUTOR ddr ON dc.DIST_ID = ddr.DIST_ID
+	INNER JOIN DMS_PROD_MAPPING dpm ON dpm.DIST_PROD_CODE = s.PROD_CODE AND dpm.DIST_PROD_UNIT=s.PROD_UNIT AND s.CLIENT_ID=dpm.CLIENT_ID
+	left join BASE_DICT_ITEM item1 on dpm.TARGET_UNIT_ID = item1.DICT_ITEM_ID
+	INNER JOIN MDM_PRODUCT t ON dpm.TARGET_PROD_CODE = t.PROD_CODE
+	INNER JOIN BASE_DICT_ITEM t1 ON t.TYPE_ID=t1.DICT_ITEM_ID
+	INNER JOIN  DMS_STORE_MAPPING m ON m.DIST_STORE_CODE = s.STORE_CODE AND m.CLIENT_ID=s.CLIENT_ID
+	INNER  JOIN MDM_STORE ds ON ds.STORE_CODE = m.TARGET_STORE_CODE
+	LEFT JOIN BASE_DICT_ITEM dt ON ds.TYPE_ID=dt.DICT_ITEM_ID
+	inner join base_org org on ddr.org_id=org.org_id
+WHERE s.state='1'
+	 and s.bill_date between 
+	(select cal_date from MDM_CALENDAR where cal_year='$year1$' and cal_month='$month1$' and cal_week='$week1$' and cal_day='1') and
+	(select cal_date from MDM_CALENDAR where cal_year='$year1$' and cal_month='$month2$' and cal_week='$week2$' and cal_day='7')
+    $orgSubCode$ $distId$ $distCode$ $prodCode$ $category$ $storeCode$
+GROUP BY  
+  	dbo.fn_getMarsWeekDay(convert(VARCHAR(20),s.bill_date,120)),
+	ddr.dist_name,ds.STORE_CODE,ds.STORE_name,ds.linkman,dt.item_name
+
+]]>
+		</sql>
+	</content>
+	
+</config>

@@ -1,0 +1,176 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE form-validation PUBLIC
+     "-//Apache Software Foundation//DTD Commons Validator Rules Configuration 1.1.3//EN"
+     "http://jakarta.apache.org/commons/dtds/validator_1_1_3.dtd">
+<form-validation>
+	<formset>
+
+		<form name="dmsProdMappingForm">
+			<field property="clientId" depends="required">
+				<arg key="客户端名称" resource="false" />
+			</field>
+			<field property="distProdCode" depends="required">
+				<arg key="经销商产品编码" resource="false" />
+			</field>
+			<field property="distProdUnit" depends="required">
+				<arg key="经销商产品单位" resource="false" />
+			</field>
+			<field property="targetProdCode" depends="required">
+				<arg key="产品标准编码" resource="false" />
+			</field>
+			<field property="dictItemId" depends="required">
+				<arg key="产品标准单位" resource="false" />
+			</field>
+			<!-- <field property="targetProdUnit" depends="required"> <arg key="供应商产品单位" 
+				resource="false" /> </field> -->
+		</form>
+
+		<form name="dmsStoreMappingForm">
+			<field property="clientId" depends="required">
+				<arg key="客户端名称" resource="false" />
+			</field>
+			<field property="distStoreCode" depends="required">
+				<arg key="经销商门店编码" resource="false" />
+			</field>
+			<field property="targetStoreCode" depends="required">
+				<arg key="供应商门店编码" resource="false" />
+			</field>
+		</form>
+
+		<form name="dmsDistributorForm">
+			<!-- <field property="geoId" depends="required"> <arg key="地理区域" resource="false"/> 
+				</field> -->
+			<field property="orgId" depends="required">
+				<arg key="组织名称" resource="false" />
+			</field>
+			<field property="distName" depends="required">
+				<arg key="经销商名称" resource="false" />
+			</field>
+		</form>
+
+		<form name="dmsSoftwareForm">
+			<field property="softName" depends="required">
+				<arg key="软件名称" resource="false" />
+			</field>
+			<field property="softVersion" depends="required">
+				<arg key="软件版本" resource="false" />
+			</field>
+		</form>
+
+		<form name="dmsClientForm">
+			<field property="softName" depends="required">
+				<arg key="软件名称" resource="false" />
+			</field>
+			<field property="distName" depends="required">
+				<arg key="经销商名称" resource="false" />
+			</field>			
+			<field property="clientCode" depends="required">
+				<arg key="客户端名称" resource="false" />
+			</field>
+		</form>
+
+		<form name="dmsClientJobForm">
+			<field property="clientId" depends="required">
+				<arg key="客户端名称" resource="false" />
+			</field>
+		</form>
+
+		<form name="dmsProductForm">
+			<field property="prodCode" depends="required">
+				<arg key="产品编码" resource="false" />
+			</field>
+			<field property="prodName" depends="required">
+				<arg key="产品名称" resource="false" />
+			</field>
+		</form>
+		<form name="dmsStoreForm">
+			<field property="orgId" depends="required">
+				<arg key="组织名称" resource="false" />
+			</field>
+			<field property="storeCode" depends="required">
+				<arg key="门店编码" resource="false" />
+			</field>
+			<field property="storeName" depends="required">
+				<arg key="门店名称" resource="false" />
+			</field>
+		</form>
+		<!-- 数据检查 -->
+		<form name="dmsDataCheckForm">
+			<field property="distId" depends="required">
+				<arg key="经销商" resource="false" />
+			</field>
+			<field property="dictItemId" depends="required">
+				<arg key="检查类型" resource="false" />
+			</field>
+			<field property="rangeLeft" depends="required">
+				<arg key="检查区间开始时间" resource="false" />
+			</field>
+			<field property="rangeRight" depends="required">
+				<arg key="检查区间结束时间" resource="false" />
+			</field>
+			<field property="checkDate" depends="required">
+				<arg key="检查日期" resource="false" />
+			</field>
+			<field property="result" depends="required">
+				<arg key="检查结果" resource="false" />
+			</field>
+			<field property="checkBy" depends="required">
+				<arg key="检查人" resource="false" />
+			</field>
+		</form>
+		<form name="dmsDataSaleForm">
+			<field property="$in_dmsClient_mdmDistributor_distId" depends="required">
+				<arg key="经销商名称" resource="false" />
+			</field>
+		</form>
+		
+		<form name="dmsProdMappingStatusForm">
+			<field property="clientId" depends="required">
+				<arg key="客户端名称" resource="false" />
+			</field>
+			<field property="distProdCode" depends="required">
+				<arg key="经销商产品编码" resource="false" />
+			</field>
+			<field property="distProdUnit" depends="required">
+				<arg key="经销商产品单位" resource="false" />
+			</field>
+			<field property="targetProdCode" depends="required">
+				<arg key="产品标准编码" resource="false" />
+			</field>
+			<field property="dictItemId" depends="required">
+				<arg key="产品标准单位" resource="false" />
+			</field>
+			<!-- <field property="targetProdUnit" depends="required"> <arg key="供应商产品单位" 
+				resource="false" /> </field> -->
+		</form>
+		
+		
+		<form name="featureTypeForm">
+			<field property="typeName" depends="required">
+				<arg key="类别名称" resource="false" />
+			</field>
+			<field property="state" depends="required">
+				<arg key="状态" resource="false" />
+			</field>
+		</form>
+		
+		<form name="featureForm">
+			<field property="typeId" depends="required">
+				<arg key="类别名称" resource="false" />
+			</field>
+			<field property="featureName" depends="required">
+				<arg key="特征名称" resource="false" />
+			</field>
+		</form>
+		
+		<form name="featureKeywordForm">
+			<field property="featureId" depends="required">
+				<arg key="特征名称" resource="false" />
+			</field>
+			<field property="keyword" depends="required">
+				<arg key="特征关键字名称" resource="false" />
+			</field>
+		</form>
+		
+	</formset>
+</form-validation>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>门店信息月度报告</title>
+<header>
+			<!-- column property="0" title="大区" align="right" /-->
+			<column property="1" title="区域" align="right" />
+			<column property="2" title="省份" align="right" />
+			<column property="3" title="城市" align="right" />
+			<column property="4" title="区号" align="right" />
+			<column property="5" title="是否120城市以内" style="text-align:center" />
+			<column property="6" title="状态" bundle="page" key="common.status" align="right" />
+			<column property="7" title="客户编号" align="right" />
+			<column property="8" title="门店名称" align="right" />
+			<column property="9" title="连锁总部名称" align="right" />
+			<column property="10" title="渠道类型" align="right" />
+			<column property="11" title="客户类型" align="right" />
+			<column property="12" title="门店性质" align="right" />
+			<column property="13" title="一级经销商编号" align="right" />
+			<column property="14" title="一级经销商名称" align="right" />
+			<column property="15" title="二级分销商编号" align="right" />
+			<column property="16" title="二级分销商名称" align="right" />
+			<column property="17" title="SR姓名" align="right" />
+			<column property="18" title="CSE姓名" align="right" />
+			<column property="19" title="TSM姓名" align="right" />
+			<column property="20" title="RSM姓名" align="right" />
+			<column property="21" title="KAM姓名" align="right" />
+			<column property="22" title="门店地址" align="right" />
+			<column property="23" title="邮政编码" align="right" />
+			<column property="24" title="门店负责人姓名/联络人" align="right" />
+			<column property="25" title="联系电话" align="right" />			
+</header>
+<content> 
+		<!-- 组织 -->
+		<param id="orgId" template="AND s.ORG_ID in ($orgId$)">$orgId$</param>
+		<!-- 渠道 -->
+		<param id="channelId" template="AND s.CHANNEL_ID in ($channelId$)">$channelId$</param>
+		<!-- 门店性质 -->
+		<param id="natureId" template="AND s.nature_id in ($natureId$)">$natureId$</param>
+		<!-- 门店活动/非活动(状态) -->
+		<param id="storeState" template="AND s.state = $storeState$">$storeState$</param>
+		
+		<sql>
+<![CDATA[
+	
+
+SELECT 
+		CASE WHEN o.type_name='RSM' THEN o.org_name 
+		WHEN o1.type_name='RSM' THEN o1.org_name
+		WHEN o2.type_name='RSM' THEN o2.org_name
+		WHEN o3.type_name='RSM' THEN o3.org_name ELSE '' END '大区',
+		CASE WHEN o.type_name='TSM' THEN o.org_name 
+		WHEN o1.type_name='TSM' THEN o1.org_name
+		WHEN o2.type_name='TSM' THEN o2.org_name
+		WHEN o3.type_name='TSM' THEN o3.org_name ELSE '' END '区域',
+		s.PROV_NAME '省份',
+		s.CITY_NAME '城市',
+		bdi1.item_code ,
+		CASE WHEN s.is_target=1 THEN '是' ELSE '否' END '是否120城市以内',
+		CASE WHEN s.state=1 THEN '活动' ELSE '非活动' END '状态',
+		s.STORE_CODE '客户编号',
+		s.STORE_NAME '门店名称',
+		bdi2.item_name '连锁总部名称',
+		s.CHANNEL_NAME '渠道类型',
+		s.TYPE_NAME '客户类型',
+		s.NATURE_NAME '门店性质',
+		CASE WHEN d.level_code=1 THEN d.dist_code ELSE '' END AS '一级经销商编号',
+		CASE WHEN d.level_code=1 THEN d.dist_name ELSE '' END AS '一级经销商名称',
+		CASE WHEN d.level_code=2 THEN d.dist_code ELSE '' END AS '二级分销商编号',
+		CASE WHEN d.level_code=2 THEN d.dist_name ELSE '' END AS '二级分销商名称',
+		CASE WHEN o.type_name='SR' THEN o.emp_name 
+		WHEN o1.type_name='SR' THEN o1.emp_name
+		WHEN o2.type_name='SR' THEN o2.emp_name
+		WHEN o3.type_name='SR' THEN o3.emp_name ELSE '' END '城市负责人',
+		CASE WHEN o.type_name='CSE' THEN o.emp_name 
+		WHEN o1.type_name='CSE' THEN o1.emp_name
+		WHEN o2.type_name='CSE' THEN o2.emp_name
+		WHEN o3.type_name='CSE' THEN o3.emp_name ELSE '' END '省份负责人',
+		CASE WHEN o.type_name='TSM' THEN o.emp_name 
+		WHEN o1.type_name='TSM' THEN o1.emp_name
+		WHEN o2.type_name='TSM' THEN o2.emp_name
+		WHEN o3.type_name='TSM' THEN o3.emp_name ELSE '' END '区域负责人',
+		CASE WHEN o.type_name='RSM' THEN o.emp_name 
+		WHEN o1.type_name='RSM' THEN o1.emp_name
+		WHEN o2.type_name='RSM' THEN o2.emp_name
+		WHEN o3.type_name='RSM' THEN o3.emp_name ELSE '' END '大区负责人',
+		CASE WHEN o.type_name='NSM' THEN o.emp_name 
+		WHEN o1.type_name='NSM' THEN o1.emp_name
+		WHEN o2.type_name='NSM' THEN o2.emp_name
+		WHEN o3.type_name='NSM' THEN o3.emp_name ELSE '' END '总监',
+		S.STORE_ADDR,
+		s1.post_code AS '邮编',
+		s1.linkman AS '门店负责/联系人',
+		s1.linktel AS '联系电话'
+	 
+FROM 	--门店
+				DIM_STORE s 
+				INNER JOIN DIM_ORG o ON s.ORG_ID=o.ORG_ID
+				--SR
+				left JOIN DIM_ORG o1 ON o1.ORG_ID=o.PARENT_ORG_ID
+				--CSE
+				left JOIN DIM_ORG o2 ON o2.ORG_ID=o1.PARENT_ORG_ID
+				--TSM
+				left JOIN DIM_ORG o3 ON o3.ORG_ID=o2.PARENT_ORG_ID
+				--RSM
+				left JOIN DIM_ORG o4 ON o4.ORG_ID=o3.PARENT_ORG_ID
+				--NSM
+				left JOIN DIM_ORG o5 ON o5.ORG_ID=o4.PARENT_ORG_ID
+		--产品		
+				left JOIN DIM_DISTRIBUTOR d ON d.DIST_ID=s.DIST_ID
+				left JOIN MDM_STORE s1 ON s.STORE_CODE=s1.STORE_CODE
+				left JOIN BASE_DICT_ITEM bdi ON s1.geo_id = bdi.DICT_ITEM_ID and bdi.dict_id='geography'				
+				LEFT JOIN BASE_DICT_ITEM bdi1 ON bdi1.DICT_ITEM_ID=bdi.PARENT_DICT_ITEM_ID
+				LEFT JOIN BASE_DICT_ITEM bdi2 ON bdi2.DICT_ITEM_ID=s1.corp_id AND bdi2.DICT_ID='storeCorp'
+WHERE 1=1 $orgId$ $channelId$ $natureId$ $storeState$
+
+]]>
+		</sql>
+	</content>
+
+</config>  

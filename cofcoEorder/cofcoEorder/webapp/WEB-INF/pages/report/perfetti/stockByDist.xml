@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>经销商库存报告</title>
+	
+	<header>
+		<column property="0" title="大区"/>
+		<column property="1" title="办事处"/>
+		<column property="2" title="业务单元"/>
+		<column property="3" title="经销商名称"/>
+		<column property="4" title="经销商编码"/>
+		<column property="5" title="品牌"/>
+		<column property="6" title="品系"/>
+		<column property="7" title="产品"/>
+		<column property="8" title="包装"/>
+
+		<column property="9" title="当前库存（箱）" cell="number" format="0.00" style="text-align:right"/>
+		<column property="10" title="库存日期" cell="date" format="yyyy-MM-dd"/>
+		<column property="11" title="临期库存数（箱）" cell="number" format="0" style="text-align:right"/>
+		<column property="12" title="临期库存比率" cell="number" format="0.00%" style="text-align:right"/>
+		<column property="13" title="逾期库存数（箱）" cell="number" format="0" style="text-align:right"/>
+		<column property="14" title="逾期库存比率" cell="number" format="0.00%" style="text-align:right"/>
+		<column property="15" title="破损库存数（箱）" cell="number" format="0.00" style="text-align:right"/>
+		<column property="16" title="破损库存比率" cell="number" format="0.00%" style="text-align:right"/>
+	</header>
+	
+	<content>
+		<param id="_orgAuthExp" initValue="" defaultValue="">$orgAuth$</param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="orgSubCode" template="and org.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+		<param id="distId" template="and dist.dist_id in ($distId$)">$distId$</param>
+		<param id="prodName" template="and prod.prod_name like '%$prodName$%'">$prodName$</param>
+		<param id="stockDate" template="and convert(char(10),stock_date,23)='$stockDate$'" initValue="_YESTERDAY">$stockDate$</param>
+		<sql>
+<![CDATA[
+select org.pn2,org.pn3,org.pn4,
+	dist.dist_name,
+	dist.dist_code,
+	brand.item_name,
+	ptype.item_name,
+	prod.prod_name,
+	pack.item_name,
+	data.al,
+	data.stock_date,
+	null,
+	null,
+	data.ol,
+	case when data.al=0 then null else data.ol/data.al end,
+	data.dl,
+	case when data.al=0 then 0 else data.dl/data.al end
+from 
+	(
+	select convert(char(10),stock_date,23) as stock_date,dist_id,target_prod_code,
+		sum(box) as al,
+		sum(case when stock_type='OL' then box end) as ol,
+		sum(case when stock_type='DL' then box end) as dl
+	from rpt_data_stock
+	where 1=1 $stockDate$
+	group by convert(char(10),stock_date,23),dist_id,target_prod_code
+	) data
+	left join mdm_distributor dist on data.dist_id=dist.dist_id
+	left join base_org org on dist.org_id=org.org_id
+	inner join mdm_product prod on data.target_prod_code=prod.prod_code
+	left join base_dict_item brand on prod.brand_id=brand.dict_item_id
+	left join base_dict_item ptype on prod.type_id=ptype.dict_item_id
+	left join base_dict_item pack on prod.pack_id=pack.dict_item_id
+where 1=1 $orgSubCode$ $orgAuth$ $distId$ $prodName$
+]]>
+		</sql>
+	</content>
+	
+</config>

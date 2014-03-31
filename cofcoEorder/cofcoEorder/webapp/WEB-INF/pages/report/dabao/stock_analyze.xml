@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>库存分析</title>
+	
+	<header>
+		<column property="0" title="大区" style="text-align:left"/>
+		<column property="1" title="省" style="text-align:left"/>
+		<column property="2" title="城市" style="text-align:left"/>
+		<column property="3" title="经销商编码" style="text-align:left"/>
+		<column property="4" title="经销商名称" style="text-align:left"/>
+		<column property="5" title="品牌" style="text-align:left"/>
+		<column property="6" title="品类" style="text-align:left"/>
+		<column property="7" title="产品代码" style="text-align:left" />
+		<column property="8" title="产品名称" style="text-align:left" />
+		
+		<column property="9" title="期初库存数量" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="10" title="进货金额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="11" title="期间进货数量" style="text-align:right" cell="number" format="#0.00"/>
+		
+		<column property="12" title="销售金额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="13" title="期间销售数量" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="14" title="其它出入库金额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="15" title="其它出入库数量" style="text-align:right" cell="number" format="#0.00"/>	
+		<column property="16" title="期末库存金额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="17" title="期末库存数量" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="18" title="库存天数" style="text-align:right" />		
+	</header>
+	
+	<content>
+		<!-- 开始时间 结束时间 -->
+        <param id="startDate" isDisplay="1" displayName="开始时间" template="">$startDate$</param>
+		<param id="endDate" isDisplay="1" displayName="结束时间" template="">$endDate$</param>
+		<!-- 组织 -->
+		<param id="orgId" template=" and bo.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="orgName" isDisplay="1" displayName="组织" template="">$orgName$</param>
+		<!-- 经销商 -->
+		<param id="distId" template=" and md.DIST_ID in ($distId$) ">$distId$</param>
+		<param id="distCode" isDisplay="1" displayName="经销商编码" template=" and md.DIST_CODE like '%$distCode$%' ">$distCode$</param>
+		<param id="distName" isDisplay="1" displayName="经销商名称" template="">$distName$</param>
+		<!-- 产品品牌 -->
+		<param id="prodBrandId" template=" and p.BRAND_ID in ($prodBrandId$) ">$prodBrandId$</param>
+		<param id="prodBrandName" isDisplay="1" displayName="产品品牌" template="">$prodBrandName$</param>
+		<!-- 产品品类 -->
+		<param id="prodTypeId" template=" and p.TYPE_ID in ($prodTypeId$) ">$prodTypeId$</param>
+		<param id="prodTypeName" isDisplay="1" displayName="产品品类" template="">$prodTypeName$</param>
+		<!-- 产品名称 产品编码 -->
+		<param id="prodCode" isDisplay="1" displayName="产品代码" template=" and p.PROD_CODE like '%$prodCode$%' ">$prodCode$</param>
+		<param id="prodId" isDisplay="1" displayName="产品名称" template=" and p.PROD_NAME like '%$prodId$%' ">$prodId$</param>
+				
+		<sql>
+          <![CDATA[
+
+--删除临时表
+IF object_id('tempdb..#TEMP_REPORT_TABLE') IS NOT NULL BEGIN 
+    DROP TABLE #TEMP_REPORT_TABLE
+END;
+
+
+--所有经销商产品
+WITH pro AS (
+	SELECT 	bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			item.ITEM_NAME AS ITEM_NAME, prodType.ITEM_NAME AS PROD_TYPE, p.PROD_CODE AS PROD_CODE, p.PROD_NAME AS PROD_NAME
+			
+	FROM 	DMS_PROD_MAPPING mp 
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE 
+			LEFT JOIN BASE_DICT_ITEM item ON p.BRAND_ID=item.DICT_ITEM_ID AND item.DICT_ID='prodBrand'
+			LEFT JOIN BASE_DICT_ITEM prodType ON prodType.DICT_ITEM_ID=p.TYPE_ID AND prodType.DICT_ID='prodType'
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON mp.CLIENT_ID = dc.CLIENT_ID
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	
+	WHERE	p.PROD_CODE NOT IN ('zengpin','tingchan','qita') 
+			$orgId$ $distId$ $distCode$ $prodId$ $prodCode$ $prodBrandId$ $prodTypeId$
+			
+	GROUP BY bo.ORG_ID, md.DIST_CODE, md.DIST_NAME, item.ITEM_NAME, prodType.ITEM_NAME, p.PROD_CODE, p.PROD_NAME
+)
+--销售
+,sale AS (
+	SELECT 	bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			item.ITEM_NAME AS ITEM_NAME, prodType.ITEM_NAME AS PROD_TYPE, p.PROD_CODE AS PROD_CODE, p.PROD_NAME AS PROD_NAME, 
+			sum(dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY)) AS saleQli,
+			sum((dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17) AS saleAmount
+			
+	FROM 	DMS_DATA_SALE dds
+			INNER JOIN DMS_PROD_MAPPING mp ON dds.PROD_CODE=mp.DIST_PROD_CODE AND dds.CLIENT_ID=mp.CLIENT_ID AND dds.PROD_UNIT=mp.DIST_PROD_UNIT AND dds.PROD_NAME=mp.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE 
+			LEFT JOIN BASE_DICT_ITEM item ON p.BRAND_ID=item.DICT_ITEM_ID AND item.DICT_ID='prodBrand'
+			LEFT JOIN BASE_DICT_ITEM prodType ON prodType.DICT_ITEM_ID=p.TYPE_ID AND prodType.DICT_ID='prodType'
+			--关联门店
+			LEFT JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE AND dds.CLIENT_ID=dsm.CLIENT_ID
+			LEFT JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code			
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	
+	WHERE 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$' and dds.STATE=1 
+			$orgId$ $distId$ $distCode$ $prodId$ $prodCode$ $prodBrandId$ $prodTypeId$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+	GROUP BY bo.ORG_ID, md.DIST_CODE, md.DIST_NAME, item.ITEM_NAME, prodType.ITEM_NAME, p.PROD_CODE, p.PROD_NAME
+)
+--前90天销量、金额
+,a AS (
+	SELECT 	bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			item.ITEM_NAME AS ITEM_NAME, prodType.ITEM_NAME AS PROD_TYPE, p.PROD_CODE AS PROD_CODE, p.PROD_NAME AS PROD_NAME, 
+			sum(dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY)) AS qli,
+			sum((dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17) AS amount
+			
+	FROM 	DMS_DATA_SALE dds
+			INNER JOIN DMS_PROD_MAPPING mp ON dds.PROD_CODE=mp.DIST_PROD_CODE AND dds.CLIENT_ID=mp.CLIENT_ID AND dds.PROD_UNIT=mp.DIST_PROD_UNIT AND dds.PROD_NAME=mp.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE 
+			LEFT JOIN BASE_DICT_ITEM item ON p.BRAND_ID=item.DICT_ITEM_ID AND item.DICT_ID='prodBrand'
+			LEFT JOIN BASE_DICT_ITEM prodType ON prodType.DICT_ITEM_ID=p.TYPE_ID AND prodType.DICT_ID='prodType'
+			--关联门店
+			LEFT JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE AND dds.CLIENT_ID=dsm.CLIENT_ID
+			LEFT JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code			
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+			
+	WHERE 	dds.BILL_DATE >= dateadd(day,-90,'$startDate$') and dds.BILL_DATE < '$startDate$' and dds.STATE=1 
+			$orgId$ $distId$ $distCode$ $prodId$ $prodCode$ $prodBrandId$ $prodTypeId$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+	GROUP BY bo.ORG_ID, md.DIST_CODE, md.DIST_NAME, item.ITEM_NAME, prodType.ITEM_NAME, p.PROD_CODE, p.PROD_NAME
+)
+--其他出入库
+,inout AS (
+	SELECT 	bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			item.ITEM_NAME AS ITEM_NAME, prodType.ITEM_NAME AS PROD_TYPE, p.PROD_CODE AS PROD_CODE, p.PROD_NAME AS PROD_NAME, 
+			sum(dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY)) AS inoutQli,
+			sum(dds.PROD_QUANTITY*dds.PROD_PRICE) AS inoutAmount
+			
+	FROM 	DMS_DATA_INOUT dds
+			INNER JOIN DMS_PROD_MAPPING mp ON dds.PROD_CODE=mp.DIST_PROD_CODE AND dds.CLIENT_ID=mp.CLIENT_ID AND dds.PROD_UNIT=mp.DIST_PROD_UNIT AND dds.PROD_NAME=mp.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE 
+			LEFT JOIN BASE_DICT_ITEM item ON p.BRAND_ID=item.DICT_ITEM_ID AND item.DICT_ID='prodBrand'
+			LEFT JOIN BASE_DICT_ITEM prodType ON prodType.DICT_ITEM_ID=p.TYPE_ID AND prodType.DICT_ID='prodType'
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	
+	WHERE 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$' and dds.STATE=1 
+			$orgId$ $distId$ $distCode$ $prodId$ $prodCode$ $prodBrandId$ $prodTypeId$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+	GROUP BY bo.ORG_ID, md.DIST_CODE, md.DIST_NAME, item.ITEM_NAME, prodType.ITEM_NAME, p.PROD_CODE, p.PROD_NAME
+)
+--期初库存
+,beginning AS (
+	SELECT 	bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			item.ITEM_NAME AS ITEM_NAME, prodType.ITEM_NAME AS PROD_TYPE, p.PROD_CODE AS PROD_CODE, p.PROD_NAME AS PROD_NAME, 
+			sum(dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY)) AS begQli
+		
+	FROM 	DMS_DATA_STOCK dds 
+			INNER JOIN (				
+				SELECT 	dds.CLIENT_ID AS CLIENT_ID, dds.PROD_CODE AS PROD_CODE, min(dds.STOCK_DATE) AS startDate
+				FROM 	DMS_DATA_STOCK dds
+				WHERE 	dds.STOCK_DATE >= '$startDate$' AND dds.STOCK_DATE <= '$endDate$' and dds.STATE=1 
+				GROUP BY dds.CLIENT_ID, dds.PROD_CODE
+			) d ON dds.CLIENT_ID=d.CLIENT_ID AND dds.PROD_CODE=d.PROD_CODE AND dds.STOCK_DATE=d.startDate
+
+			INNER JOIN DMS_PROD_MAPPING mp ON dds.PROD_CODE=mp.DIST_PROD_CODE AND dds.CLIENT_ID=mp.CLIENT_ID AND dds.PROD_UNIT=mp.DIST_PROD_UNIT AND dds.PROD_NAME=mp.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE 
+			LEFT JOIN BASE_DICT_ITEM item ON p.BRAND_ID=item.DICT_ITEM_ID AND item.DICT_ID='prodBrand'
+			LEFT JOIN BASE_DICT_ITEM prodType ON prodType.DICT_ITEM_ID=p.TYPE_ID AND prodType.DICT_ID='prodType'
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+						
+	WHERE 	dds.STOCK_DATE >= '$startDate$' AND dds.STOCK_DATE <= '$endDate$' and dds.STATE=1 
+			$orgId$ $distId$ $distCode$ $prodId$ $prodCode$ $prodBrandId$ $prodTypeId$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+	GROUP BY bo.ORG_ID, md.DIST_CODE, md.DIST_NAME, item.ITEM_NAME, prodType.ITEM_NAME, p.PROD_CODE, p.PROD_NAME
+)
+--期末库存
+,ending AS (
+	SELECT 	bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			item.ITEM_NAME AS ITEM_NAME, prodType.ITEM_NAME AS PROD_TYPE, p.PROD_CODE AS PROD_CODE, p.PROD_NAME AS PROD_NAME,
+			sum(dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY)) AS endQli,
+			sum(dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY)*p.PROD_PRICE) AS endAmount
+			
+	FROM 	DMS_DATA_STOCK dds 
+			INNER JOIN (				
+				SELECT 	dds.CLIENT_ID AS CLIENT_ID, dds.PROD_CODE AS PROD_CODE, max(dds.STOCK_DATE) AS startDate
+				FROM 	DMS_DATA_STOCK dds
+				WHERE 	dds.STOCK_DATE >= '$startDate$' AND dds.STOCK_DATE <= '$endDate$' and dds.STATE=1 
+				GROUP BY dds.CLIENT_ID, dds.PROD_CODE
+			) d ON dds.CLIENT_ID=d.CLIENT_ID AND dds.PROD_CODE=d.PROD_CODE AND dds.STOCK_DATE=d.startDate
+	
+			INNER JOIN DMS_PROD_MAPPING mp ON dds.PROD_CODE=mp.DIST_PROD_CODE AND dds.CLIENT_ID=mp.CLIENT_ID AND dds.PROD_UNIT=mp.DIST_PROD_UNIT AND dds.PROD_NAME=mp.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE 
+			LEFT JOIN BASE_DICT_ITEM item ON p.BRAND_ID=item.DICT_ITEM_ID AND item.DICT_ID='prodBrand'
+			LEFT JOIN BASE_DICT_ITEM prodType ON prodType.DICT_ITEM_ID=p.TYPE_ID AND prodType.DICT_ID='prodType'
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+						
+	WHERE 	dds.STOCK_DATE >= '$startDate$' AND dds.STOCK_DATE <= '$endDate$' and dds.STATE=1 
+			$orgId$ $distId$ $distCode$ $prodId$ $prodCode$ $prodBrandId$ $prodTypeId$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+	GROUP BY bo.ORG_ID, md.DIST_CODE, md.DIST_NAME, item.ITEM_NAME, prodType.ITEM_NAME, p.PROD_CODE, p.PROD_NAME
+)
+--进货
+,purchase AS (
+	SELECT 	bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			item.ITEM_NAME AS ITEM_NAME, prodType.ITEM_NAME AS PROD_TYPE, p.PROD_CODE AS PROD_CODE, p.PROD_NAME AS PROD_NAME, 
+			sum(dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY)) AS purQli,
+			sum(dds.PROD_QUANTITY*dds.PROD_PRICE) AS purAmount
+			
+	FROM 	DMS_DATA_PURCHASE dds
+			INNER JOIN DMS_PROD_MAPPING mp ON dds.PROD_CODE=mp.DIST_PROD_CODE AND dds.CLIENT_ID=mp.CLIENT_ID AND dds.PROD_UNIT=mp.DIST_PROD_UNIT AND dds.PROD_NAME=mp.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE 
+			LEFT JOIN BASE_DICT_ITEM item ON p.BRAND_ID=item.DICT_ITEM_ID AND item.DICT_ID='prodBrand'
+			LEFT JOIN BASE_DICT_ITEM prodType ON prodType.DICT_ITEM_ID=p.TYPE_ID AND prodType.DICT_ID='prodType'
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+			
+	WHERE 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$' and dds.STATE=1 
+			$orgId$ $distId$ $distCode$ $prodId$ $prodCode$ $prodBrandId$ $prodTypeId$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+	GROUP BY bo.ORG_ID, md.DIST_CODE, md.DIST_NAME, item.ITEM_NAME, prodType.ITEM_NAME, p.PROD_CODE, p.PROD_NAME
+)
+
+
+
+,base AS (
+	SELECT	(SELECT bo.PN1 FROM BASE_ORG bo WHERE bo.ORG_ID=mp.ORG_ID AND bo.STATE=1) AS region, 
+			(SELECT bo.PN2 FROM BASE_ORG bo WHERE bo.ORG_ID=mp.ORG_ID AND bo.STATE=1) AS province, 
+			(SELECT bo.PN3 FROM BASE_ORG bo WHERE bo.ORG_ID=mp.ORG_ID AND bo.STATE=1) AS city, 
+			mp.DIST_CODE as DIST_CODE,
+			mp.DIST_NAME as DIST_NAME,
+			mp.ITEM_NAME as ITEM_NAME,
+			mp.PROD_TYPE AS PROD_TYPE,
+			mp.PROD_CODE as PROD_CODE,
+			mp.PROD_NAME as PROD_NAME,
+						
+			isnull(b.begQli,0) AS begQli,
+			isnull(p.purAmount,0) AS purAmount, isnull(p.purQli,0) AS purQli,
+			isnull(s.saleAmount,0) AS saleAmount, isnull(s.saleQli,0) AS saleQli,
+			isnull(i.inoutAmount,0) AS inoutAmount, isnull(i.inoutQli,0) AS inoutQli,
+			isnull(e.endAmount,0) AS endAmount, isnull(e.endQli,0) AS endQli,
+			isnull(a.qli,0) AS qli, isnull(a.amount,0) AS amount
+					
+	FROM 	pro mp
+			LEFT JOIN beginning b ON b.ORG_ID=mp.ORG_ID AND b.DIST_CODE=mp.DIST_CODE AND b.DIST_NAME=mp.DIST_NAME 
+				AND b.PROD_CODE=mp.PROD_CODE AND b.PROD_NAME=mp.PROD_NAME --AND mp.PROD_TYPE=b.PROD_TYPE
+			LEFT JOIN ending e ON mp.ORG_ID=e.ORG_ID AND mp.DIST_CODE=e.DIST_CODE AND mp.DIST_NAME=e.DIST_NAME 
+				AND mp.PROD_CODE=e.PROD_CODE AND mp.PROD_NAME=e.PROD_NAME --AND mp.PROD_TYPE=e.PROD_TYPE
+			LEFT JOIN purchase p ON mp.ORG_ID=p.ORG_ID AND mp.DIST_CODE=p.DIST_CODE AND mp.DIST_NAME=p.DIST_NAME 
+				AND mp.PROD_CODE=p.PROD_CODE AND mp.PROD_NAME=p.PROD_NAME --AND mp.PROD_TYPE=p.PROD_TYPE
+			LEFT JOIN sale s ON mp.ORG_ID=s.ORG_ID AND mp.DIST_CODE=s.DIST_CODE AND mp.DIST_NAME=s.DIST_NAME 
+				AND mp.PROD_CODE=s.PROD_CODE AND mp.PROD_NAME=s.PROD_NAME --AND mp.PROD_TYPE=s.PROD_TYPE
+			LEFT JOIN inout i ON mp.ORG_ID=i.ORG_ID AND mp.DIST_CODE=i.DIST_CODE AND mp.DIST_NAME=i.DIST_NAME 
+				AND mp.PROD_CODE=i.PROD_CODE AND mp.PROD_NAME=i.PROD_NAME --AND mp.PROD_TYPE=i.PROD_TYPE
+			LEFT JOIN a ON mp.ORG_ID=a.ORG_ID AND mp.DIST_CODE=a.DIST_CODE AND mp.DIST_NAME=a.DIST_NAME 
+				AND mp.PROD_CODE=a.PROD_CODE AND mp.PROD_NAME=a.PROD_NAME --AND mp.PROD_TYPE=a.PROD_TYPE
+				
+	WHERE	isnull(b.begQli,0)<>0 or isnull(p.purAmount,0)<>0 or isnull(p.purQli,0)<>0 or isnull(s.saleAmount,0)<>0 or 
+			isnull(s.saleQli,0)<>0 or isnull(i.inoutAmount,0)<>0 or isnull(i.inoutQli,0)<>0 or isnull(e.endQli,0)<>0
+)
+
+--插入临时表
+SELECT * INTO #TEMP_REPORT_TABLE FROM base
+
+
+SELECT	region, province, city, DIST_CODE, DIST_NAME, ITEM_NAME, PROD_TYPE, PROD_CODE, PROD_NAME, 
+		begQli,
+		purAmount, purQli,
+		saleAmount, saleQli,
+		inoutAmount, inoutQli,
+		endAmount, endQli, 
+		
+ 		CASE WHEN endAmount=0 THEN '<font color=red>0</font>'
+			--ELSE CASE WHEN amount=0 THEN '999'
+				ELSE CASE WHEN amount+inoutAmount=0 THEN '<font color=red>0</font>'
+					ELSE CASE WHEN endAmount>0 THEN 
+						CASE WHEN CAST(endAmount/(abs((amount+inoutAmount))/90) AS DECIMAL(38,2))<7.00 THEN '<font color=red>'+CAST(CAST(endAmount/(abs((amount+inoutAmount))/90) AS DECIMAL(38,2)) AS VARCHAR)+'</font>'
+							ELSE CASE WHEN CAST(endAmount/(abs((amount+inoutAmount))/90) AS DECIMAL(38,2))>20.00 THEN '<font color=green>'+CAST(CAST(endAmount/(abs((amount+inoutAmount))/90) AS DECIMAL(38,2)) AS VARCHAR)+'</font>'
+							ELSE CAST(CAST(endAmount/(abs((amount+inoutAmount))/90) AS DECIMAL(38,2)) AS VARCHAR)
+							END 
+						END 
+				 	ELSE 
+				 		CASE WHEN CAST(endAmount/((amount+inoutAmount)/90) AS DECIMAL(38,2))<7.00 THEN '<font color=red>'+CAST(CAST(endAmount/((amount+inoutAmount)/90) AS DECIMAL(38,2)) AS VARCHAR)+'</font>'
+				 			ELSE CASE WHEN CAST(endAmount/((amount+inoutAmount)/90) AS DECIMAL(38,2))>20.00 THEN '<font color=green>'+CAST(CAST(endAmount/((amount+inoutAmount)/90) AS DECIMAL(38,2)) AS VARCHAR)+'</font>'
+				 			ELSE CAST(CAST(endAmount/((amount+inoutAmount)/90) AS DECIMAL(38,2)) AS VARCHAR)
+				 			END 
+				 		END 
+					END 
+				END 
+			--END	
+		END	
+				
+FROM 	#TEMP_REPORT_TABLE
+
+UNION ALL
+
+
+SELECT	'', '', '', '', '', ITEM_NAME, '', '', '', 
+		sum(begQli),
+		sum(purAmount), sum(purQli),
+		sum(saleAmount), sum(saleQli),
+		sum(inoutAmount), sum(inoutQli),
+		sum(endAmount), sum(endQli), 
+
+ 		CASE WHEN sum(endAmount)=0 THEN '<font color=red>0</font>'
+			ELSE CASE WHEN sum(amount+inoutAmount)=0 THEN '<font color=red>0</font>'
+				ELSE CASE WHEN sum(endAmount)>0 THEN 
+					CASE WHEN CAST(sum(endAmount)/(abs((sum(amount+inoutAmount)))/90) AS DECIMAL(38,2))<7.00 THEN '<font color=red>'+CAST(CAST(sum(endAmount)/(abs((sum(amount+inoutAmount)))/90) AS DECIMAL(38,2)) AS VARCHAR)+'</font>'
+						ELSE CASE WHEN CAST(sum(endAmount)/(abs((sum(amount+inoutAmount)))/90) AS DECIMAL(38,2))>20.00 THEN '<font color=green>'+CAST(CAST(sum(endAmount)/(abs((sum(amount+inoutAmount)))/90) AS DECIMAL(38,2)) AS VARCHAR)+'</font>'
+						ELSE CAST(CAST(sum(endAmount)/(abs((sum(amount+inoutAmount)))/90) AS DECIMAL(38,2)) AS VARCHAR)
+						END 
+					END 
+			 	ELSE 
+			 		CASE WHEN CAST(sum(endAmount)/((sum(amount+inoutAmount))/90) AS DECIMAL(38,2))<7.00 THEN '<font color=red>'+CAST(CAST(sum(endAmount)/((sum(amount+inoutAmount))/90) AS DECIMAL(38,2)) AS VARCHAR)+'</font>'
+			 			ELSE CASE WHEN CAST(sum(endAmount)/((sum(amount+inoutAmount))/90) AS DECIMAL(38,2))>20.00 THEN '<font color=green>'+CAST(CAST(sum(endAmount)/((sum(amount+inoutAmount))/90) AS DECIMAL(38,2)) AS VARCHAR)+'</font>'
+			 			ELSE CAST(CAST(sum(endAmount)/((sum(amount+inoutAmount))/90) AS DECIMAL(38,2)) AS VARCHAR)
+			 			END 
+			 		END 
+				END 
+			END 
+		END 	
+				
+FROM 	#TEMP_REPORT_TABLE
+GROUP BY ITEM_NAME
+
+
+UNION ALL
+
+
+SELECT	'合计：', '', '', '', '', '', '', '', '',
+		sum(begQli),
+		sum(purAmount), sum(purQli),
+		sum(saleAmount), sum(saleQli),
+		sum(inoutAmount), sum(inoutQli),
+		sum(endAmount), sum(endQli),  
+		
+ 		CASE WHEN sum(endAmount)=0 THEN '<font color=red>0</font>'
+			ELSE CASE WHEN sum(amount+inoutAmount)=0 THEN '<font color=red>0</font>'
+				ELSE CASE WHEN sum(endAmount)>0 THEN 
+					CASE WHEN CAST(sum(endAmount)/(abs((sum(amount+inoutAmount)))/90) AS DECIMAL(38,2))<7.00 THEN '<font color=red>'+CAST(CAST(sum(endAmount)/(abs((sum(amount+inoutAmount)))/90) AS DECIMAL(38,2)) AS VARCHAR)+'</font>'
+						ELSE CASE WHEN CAST(sum(endAmount)/(abs((sum(amount+inoutAmount)))/90) AS DECIMAL(38,2))>20.00 THEN '<font color=green>'+CAST(CAST(sum(endAmount)/(abs((sum(amount+inoutAmount)))/90) AS DECIMAL(38,2)) AS VARCHAR)+'</font>'
+						ELSE CAST(CAST(sum(endAmount)/(abs((sum(amount+inoutAmount)))/90) AS DECIMAL(38,2)) AS VARCHAR)
+						END 
+					END 
+			 	ELSE 
+			 		CASE WHEN CAST(sum(endAmount)/((sum(amount+inoutAmount))/90) AS DECIMAL(38,2))<7.00 THEN '<font color=red>'+CAST(CAST(sum(endAmount)/((sum(amount+inoutAmount))/90) AS DECIMAL(38,2)) AS VARCHAR)+'</font>'
+			 			ELSE CASE WHEN CAST(sum(endAmount)/((sum(amount+inoutAmount))/90) AS DECIMAL(38,2))>20.00 THEN '<font color=green>'+CAST(CAST(sum(endAmount)/((sum(amount+inoutAmount))/90) AS DECIMAL(38,2)) AS VARCHAR)+'</font>'
+			 			ELSE CAST(CAST(sum(endAmount)/((sum(amount+inoutAmount))/90) AS DECIMAL(38,2)) AS VARCHAR)
+			 			END 
+			 		END 
+				END 
+			END 
+		END  		
+				
+FROM 	#TEMP_REPORT_TABLE
+
+ 
+          ]]>
+		</sql>
+	</content>
+	
+</config>

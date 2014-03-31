@@ -1,0 +1,27 @@
+@charset "utf-8";
+* { font-size:12px; }
+html, body { margin:0px; padding:0px; }
+#LoginBody { margin: 0px; font-family: Arial, "宋体"; background: url(../images/login_BodyBg.jpg) center top #638fc0 repeat-y; }
+#wrap { background: url(../images/login_bgimg.jpg) no-repeat; height: 379px; width: 548px; position: relative; margin: auto; top: 80px; }
+#login_wrap { width: 380px; position: absolute; right: 0px; top: 195px; }
+#login_wrap ul { margin: 0px; padding: 0px; list-style-type: none; color: #666; float: left; text-align: left; display: block; }
+#login_wrap li { height: 30px; text-align: left; width: 100%; }
+#login_wrap input { width: 122px; border: solid 1px #ccc; background:url(../images/login_input_bg.gif) right top repeat-x #fff;height: 18px; padding:2px 4px; color:#666; font-family: Arial, "宋体"; }
+#login_wrap input.yzm{ width:60px;}
+#login_wrap .login_on { position: absolute; top:20px; z-index:5000; left:185px; width:90px; height:62px; }
+#login_wrap .login_on a{ width:90px; height:100px; display:block; background:url(../images/login_03.gif) no-repeat}
+#login_wrap .login_on a:hover{background:url(../images/login_05.gif) no-repeat}
+#epage_help { color: #fff; position: absolute; right: 35px; bottom: 24px; width: 200px; text-align: right; }
+#epage_help a { color: #fff; text-decoration: none; }
+#epage_help a:hover { color: #fff; text-decoration:underline }
+
+#flash01, #flash02, #flash03, #flash04, #flash05,#flash06,#flash07,#flash08 { position: absolute; left: 13px; top: 106px; width: 28px; height: 24px; }
+#flash01 { left: 44px; }
+#flash04 { top: -22px; left: 33px; }
+#flash02 { top: 199px; }
+#flash05 { left: 461px; top: 122px; }
+#flash06{ display:none; left: 133px; top: -1px; }
+#flash07{ left: 453px; top: 161px; }
+#flash08{ left: 56px; top: 188px; }
+#TextUser, #TextUser li { width: 50px !important; }
+#TextUser li { line-height:30px; }

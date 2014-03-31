@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE form-validation PUBLIC
+     "-//Apache Software Foundation//DTD Commons Validator Rules Configuration 1.1.3//EN"
+     "http://jakarta.apache.org/commons/dtds/validator_1_1_3.dtd">
+<form-validation>
+	<formset>
+		<form name="loginForm">
+			<field property="userAccount" depends="required">
+				<arg key="用户名" resource="false"/>
+			</field>
+			<field property="userPassword" depends="required">
+				<arg key="密码" resource="false"/>
+			</field>
+			<field property="rand" depends="required">
+				<arg key="验证码" resource="false"/>
+			</field>
+		</form>
+		<form name="changePassForm">
+			<field property="userAccount" depends="required">
+				<arg key="用户帐号" resource="false"/>
+			</field>
+			<field property="userPassword" depends="required">
+				<arg key="用户密码" resource="false"/>
+			</field>
+			<field property="newPass" depends="required,minlength">
+				<arg key="新密码" resource="false"/>
+		        <arg key="1" resource="false" />
+		        <var>
+		          <var-name>minlength</var-name>
+		          <var-value>1</var-value>
+		        </var>
+			</field>
+			<field property="newPass2" depends="required">
+				<arg key="确认新密码" resource="false"/>
+			</field>
+		</form>
+		<form name="baseOrgForm">
+			<field property="orgName" depends="required">
+				<arg key="组织名称" resource="false"/>
+			</field>
+			<field property="orgAlias" depends="required">
+				<arg key="组织简称" resource="false"/>
+			</field>
+		</form>
+		<form name="baseEmployeeForm">
+			<field property="empCode" depends="required">
+				<arg key="人员编码" resource="false"/>
+			</field>
+			<field property="empName" depends="required">
+				<arg key="人员名称" resource="false"/>
+			</field>
+			<field property="orgName" depends="required">
+				<arg key="所属组织" resource="false"/>
+			</field>
+			<field property="geoName" depends="required">
+				<arg key="所属地理区域" resource="false"/>
+			</field>
+			<field property="dutyId" depends="required">
+				<arg key="职务" resource="false"/>
+			</field>
+			
+			<field property="mobilePhone" depends="required">
+				<arg key="移动电话" resource="false"/>
+			</field>
+		</form>
+		<form name="baseDictForm">
+			<field property="itemName" depends="required">
+				<arg key="名称" resource="false"/>
+			</field>
+		</form>
+		<form name="baseResourceForm">
+			<field property="resCode" depends="required">
+				<arg key="资源编码" resource="false"/>
+			</field>
+			<field property="resName" depends="required">
+				<arg key="资源名称" resource="false"/>
+			</field>
+		</form>
+		<form name="baseRoleForm">
+			<field property="roleName" depends="required">
+				<arg key="角色名称" resource="false"/>
+			</field>
+		</form>
+		<form name="baseUserForm">
+			<field property="userAccount" depends="required">
+				<arg key="用户帐号" resource="false"/>
+			</field>
+			<!-- <field property="userPassword" depends="minlength">
+				<arg key="初始密码" resource="false"/>
+		        <arg key="1" resource="false" />
+		        <var>
+		          <var-name>minlength</var-name>
+		          <var-value>1</var-value>
+		        </var>
+			</field> -->
+			<field property="empId" depends="required">
+				<arg key="人员名称" resource="false"/>
+			</field>
+		</form>
+		<form name="baseMenuForm">
+			<field property="menuName" depends="required">
+				<arg key="菜单名称" resource="false"/>
+			</field>
+		</form>
+		
+		<!-- 公告版 -->
+		<form name="baseMessagesForm">
+              <field property="orgIds" depends="required">
+				<arg key="接收组织" resource="false" />
+			 </field>
+		     <field property="title" depends="required">
+				<arg key="主题" resource="false" />
+			</field>
+		     <field property="content" depends="required">
+				<arg key="内容" resource="false" />
+			</field>
+		</form>
+		<form name="baseOpinionsForm">
+		     <field property="title" depends="required">
+				<arg key="主题" resource="false" />
+			</field>
+		     <field property="content" depends="required">
+				<arg key="内容" resource="false" />
+			</field>
+		</form>
+	</formset>
+</form-validation>

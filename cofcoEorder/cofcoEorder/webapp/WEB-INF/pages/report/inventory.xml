@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>inventory</title>
+	
+	<header>
+		<column property="0" title="玛氏时间" />
+		<column property="1" title="经销商名称" bundle="page" key="common.distName" />
+		<column property="2" title="玛氏产品编号"/>
+		<column property="3" title="品类"/>
+		<column property="4" title="玛氏产品名称"/>
+		
+		<column property="5" title="正品数量（箱）" align="right" cell="currency" format="0.########"/>
+		<column property="6" title="DTR正品金额（元）" align="right" cell="number" format="0.00"/>
+		
+		<column property="7" title="DTR正品单价（元）" align="right" cell="number" format="0.00"/>
+		<column property="8" title="MARS正品金额"  align="right" cell="currency" format="0.########"/>
+		
+		<column property="9" title="到期日"/>
+		<column property="10" title="残品数量（箱）"  align="right" cell="currency" format="0.########"/>
+		<column property="11" title="DTR残品金额（元）" align="right" cell="number" format="0.00"/>
+		
+		<column property="12" title="DTR残品单价（元）" align="right" cell="number" format="0.00"/>
+		<column property="13" title="MARS残品金额" align="right" cell="number" format="0.00"/>
+		<column property="14" title="MARS库存总金额" align="right" cell="number" format="0.00"/>
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH, _FIRST_DAY_OF_WEEK -->
+		<param id="_orgAuthExp" initValue="" defaultValue="">$orgAuth$</param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="orgSubCode" template="and org.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+		<param id="distId" template="and ddr.dist_id in ($distId$)">$distId$</param>
+		<param id="distCode" template="and ddr.dist_Code like '%$distCode$%'">$distCode$</param>
+		<param id="prodCode" template="and dp.PROD_CODE like '%$prodCode$%'">$prodCode$</param>
+		<param id="year1">$year1$</param>
+		<param id="year2">$year2$</param>
+		<param id="month1">$month1$</param>
+		<param id="month2">$month2$</param>
+		<param id="week1">$week1$</param>
+		<param id="week2">$week2$</param>
+		<!-- 
+		<param id="billDate1" template="and dds.STOCK_DATE>='$billDate1$'">$billDate1$</param>
+		<param id="billDate2" template="and dds.STOCK_DATE&lt;='$billDate2$ 23:59:59'">$billDate2$</param>
+		 -->
+		 
+		 <param id="clientId" template=" AND dc.client_id in($clientId$)">$clientId$</param>
+		<sql>
+<![CDATA[
+SELECT 
+	aa.stockdate,
+	--aa.prod_code,
+	aa.dist_name,
+	aa.prod,
+	aa.C,
+	aa.name,
+	sum(aa.duenum1),
+	sum(aa.dueprice1),
+	sum(aa.duenum0),
+	sum(aa.dueprice3),
+	'' as expire_date,
+	sum(aa.ordernum2),
+	sum(aa.orderprice2),
+	sum(aa.ordernum0),
+	sum(aa.orderprice3),
+	sum(aa.orderprice3)+sum(aa.dueprice3)
+FROM
+(
+	SELECT
+  	dbo.fn_getMarsWeekDay(convert(VARCHAR(20),dds.STOCK_DATE,120)) as stockdate,
+	dds.prod_code,
+	ddr.dist_name,
+	dp.PROD_CODE AS prod,
+	--dp.prod_category AS prodcategory,
+	t1.item_name AS C,
+	dp.PROD_NAME AS name,
+	--正常品
+	sum(CASE WHEN dds.STOCK_TYPE not in ('DL','00002次仓库') THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 end) AS duenum1,
+	sum(CASE WHEN dds.STOCK_TYPE not in ('DL','00002次仓库') THEN isnull(ddp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 end) AS dueprice1,
+	(CASE WHEN dds.STOCK_TYPE not in ('DL','00002次仓库') THEN isnull(ddp.prod_price/dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,1),0) ELSE 0 end) AS duenum0,
+	sum(CASE WHEN dds.STOCK_TYPE not in ('DL','00002次仓库') THEN isnull(dp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 end) AS dueprice3,
+	--次品
+	sum(CASE WHEN dds.STOCK_TYPE in ('DL','00002次仓库') THEN isnull(dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 end) AS ordernum2,
+	sum(CASE WHEN dds.STOCK_TYPE in ('DL','00002次仓库') THEN isnull(ddp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 end) AS orderprice2,
+	(CASE WHEN dds.STOCK_TYPE in ('DL','00002次仓库') THEN isnull(ddp.prod_price/dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,1),0) ELSE 0 end) AS ordernum0,
+	sum(CASE WHEN dds.STOCK_TYPE in ('DL','00002次仓库') THEN isnull(dp.prod_price*dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,dds.PROD_QUANTITY),0) ELSE 0 end) AS orderprice3
+FROM DMS_DATA_STOCK dds
+	inner JOIN DMS_CLIENT dc ON dc.CLIENT_ID=dds.CLIENT_ID
+	inner JOIN MDM_DISTRIBUTOR ddr ON ddr.DIST_ID=dc.DIST_ID
+	inner JOIN DMS_PROD_MAPPING dpm ON dpm.DIST_PROD_CODE = dds.PROD_CODE AND dds.PROD_UNIT=dpm.DIST_PROD_UNIT and dds.CLIENT_ID=dpm.CLIENT_ID
+	left join BASE_DICT_ITEM item1 on dpm.TARGET_UNIT_ID = item1.DICT_ITEM_ID
+	inner JOIN MDM_Product dp ON dp.PROD_CODE = dpm.TARGET_PROD_CODE
+	INNER JOIN BASE_DICT_ITEM t1 ON dp.TYPE_ID=t1.DICT_ITEM_ID
+	inner join base_org org on ddr.org_id=org.org_id
+	inner join dms_data_product ddp on ddp.client_id = dc.client_id and ddp.prod_code = dds.prod_code
+WHERE  dds.state='1'
+	 and dds.stock_date between 
+	(select cal_date from MDM_CALENDAR where cal_year='$year1$' and cal_month='$month1$' and cal_week='$week1$' and cal_day='1') and
+	(select cal_date from MDM_CALENDAR where cal_year='$year1$' and cal_month='$month2$' and cal_week='$week2$' and cal_day='7')
+    $orgSubCode$ $distId$ $distCode$ $prodCode$ $clientId$
+GROUP BY 
+	dbo.fn_getMarsWeekDay(convert(VARCHAR(20),dds.STOCK_DATE,120)),
+	dds.prod_code,ddr.dist_name,dp.PROD_CODE,t1.item_name ,dp.PROD_NAME,
+	(CASE WHEN dds.STOCK_TYPE not in ('DL','00002次仓库') THEN isnull(ddp.prod_price/dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,1),0) ELSE 0 end),
+	(CASE WHEN dds.STOCK_TYPE in ('DL','00002次仓库') THEN isnull(ddp.prod_price/dbo.fn_getUnitConvByName(item1.item_name,'箱',dp.PROD_CODE,1),0) ELSE 0 end)
+)aa
+GROUP BY aa.stockdate,
+aa.dist_name,aa.prod,aa.C,aa.name,aa.prod_code
+]]>
+		</sql>
+	</content>
+	
+</config>

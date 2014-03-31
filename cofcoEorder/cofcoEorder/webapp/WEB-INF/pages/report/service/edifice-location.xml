@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title></title>
+	
+	<header>
+		<column property="0" title="上级组织" width="300"/>
+	</header>
+	
+	<content>
+		<param id="startDate">$startDate$</param>
+		<param id="endDate">$endDate$</param>
+		<param id="distCode" template="and dist.dist_code='$distCode$'">$distCode$</param>
+		<sql>
+<![CDATA[
+select 
+	atv.store_code as loca_id, 
+	loca.NAME as loca_name, 
+	loca.POS_CHN_ADDRESS, 
+	loca.CITY_ZH_NAME,
+	null,--ds.province,  
+	null,--ds.postal_code, 
+	'china', 
+	convert(char(10),loca.start_date,21) start_date,
+	convert(char(10),loca.close_date,21) close_date,
+	loca.door_rank_desc, 
+	loca.DOOR_TYPE_DESC,
+	'' as demographic, 
+	reg.ITEM_CODE,
+	'' as climate, 
+	case when loca.start_date is null then '' else case when (loca.start_date+365)>getdate() then '是' else '否' end end, 
+	geo.item_code as city_code,
+	dist.ownergrp_code,
+	dist.dist_code as dist_code, 
+	dist.ownergrp_name
+from dms_active_store atv
+	inner join dms_client client on atv.client_id=client.client_id
+	inner join mdm_distributor dist on client.dist_id=dist.dist_id
+	left join dms_store_mapping sm on atv.client_id=sm.client_id and atv.store_code=sm.dist_store_code
+	left join mdm_afslocation loca on sm.target_store_code=loca.pos_id
+	left join base_dict_item geo on sm.geo_id=geo.dict_item_id
+	left join base_dict_item reg on reg.DICT_ITEM_ID = geo.PARENT_DICT_ITEM_ID
+	where dist.pass_back_date is not null 
+	and (sm.isreturn_data !='0' or sm.isreturn_data is null) $distCode$
+order by dist.dist_code
+]]>
+		</sql>
+	</content>
+	
+</config>

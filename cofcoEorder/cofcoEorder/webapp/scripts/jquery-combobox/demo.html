@@ -1,0 +1,63 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link type="text/css" rel="stylesheet" href="css/smoothness/jquery-ui.css" />
+</head>
+<style>
+body,p,ul,li,input,h1,h2,dl,dd,dt,textarea,table,td,tr,form{padding:0px; margin:0px; list-style:none;}
+body{font:12px \5b8b\4f53; color:#333; background:#6FA6CC;}
+
+button.comboboxButton {width:2em;  margin-left: -1px;}
+button.comboboxButton .ui-button-text {display:block; line-height:1;}
+.ui-autocomplete-input {margin:0; padding:0.3em 0 0.31em 0.3em; *padding:0.38em 0 0.46em 0.3em;}
+
+</style>
+
+<body>
+<div style="margin:50px">
+	<p>
+	输入关键字自动完成，如果首次输入中文没触发匹配可以继续输入，或者输入一个空格接着backspace删除即可触发。
+	双击输入框即可全部选择，方便替换输入
+	</p>
+	<br />
+	<select id="s3">
+		<option value="">请输入关键字</option>
+		<option value="1">java</option>
+		<option value="2">javascript</option>
+		<option value="3">c</option>
+		<option value="35">c/'?</option>
+		<option value="4">c++</option>
+		<option value="14">c#</option>
+		<option value="5">php</option>
+		<option value="15">python</option>
+		<option value="6">奇瑞托拉斯c</option>
+		<option value="8">新奇军</option>
+		<option value="9">奇瑞集团</option>
+		<option value="11">长安 集团有限公司</option>
+		<option value="10">奇特</option>
+		<option value="30"></option>
+		<option value="31">0</option>
+	</select>
+
+	<input type="button" id="showSel" value="显示select" onclick="javascript:$('#s3').show();" />
+</div>
+
+
+<script type="text/javascript" src="js/jquery.js"></script>
+<script type="text/javascript" src="js/jquery-ui.min.js" ></script>
+<script type="text/javascript" src="js/jquery-ui-i18n.js" ></script>
+<script type="text/javascript" src="js/jquery-combobox-min.js"></script>
+
+<script>
+$(document).ready(function(){
+	//$('#s3').combobox({size: 25});
+	$('#s3').combobox();
+});
+
+</script>
+
+</body>
+</html>

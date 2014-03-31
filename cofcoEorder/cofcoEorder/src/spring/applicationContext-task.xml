@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"  
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+	   xmlns:p="http://www.springframework.org/schema/p"  
+	   xmlns:tx="http://www.springframework.org/schema/tx"  
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						   http://www.springframework.org/schema/beans/spring-beans-2.0.xsd   
+						   http://www.springframework.org/schema/tx
+						   http://www.springframework.org/schema/tx/spring-tx-2.0.xsd">
+	
+	
+	
+	
+	<bean id="dataBaseTaskManager" class="com.winchannel.task.service.DataBaseTaskManager">
+		<property name="sessionFactory" ref="sessionFactory"/>
+		<property name="mdmDistributorManager" ref="mdmDistributorManager"></property>
+		<property name="baseDictManager" ref="baseDictManager"></property>
+		<property name="mdmProductManager" ref="mdmProductManager"></property>
+		
+	</bean> 
+ 	 
+	
+	<bean id="dataTransferJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<!-- 调用的类 -->
+		<property name="targetObject" ref="DataTransferJob" />
+		<!-- 调用类中的方法 -->
+		<property name="targetMethod" value="execute" />
+		<property name="concurrent" value="true" />
+	</bean>
+
+	<!-- 定义触发时间 -->
+	<bean id="dataTransferCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="dataTransferJob" />
+		<!-- cron表达式 -->
+		<property name="cronExpression" value="0 0 6 * * ?" />
+	</bean>
+	
+	<!-- 定义SAP触发时间 -->
+	<bean id="transferSapOrderJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<!-- 调用的类 -->
+		<property name="targetObject" ref="DataTransferJob" />
+		<!-- 调用类中的方法 -->
+		<property name="targetMethod" value="executeTransSap" />
+		<property name="concurrent" value="true" />
+	</bean>	
+	<bean id="transferSapOrderCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="transferSapOrderJob" />
+		<!-- cron表达式 -->
+		<property name="cronExpression" value="0 0/10 * * * ?" />
+	</bean>
+	
+	<!-- 总管理类 如果将lazy-init='false'那么容器启动就会执行调度程序  -->
+	<bean id="scheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+ 			<list>
+				<ref bean="dataTransferCronTrigger" />
+				<ref bean="transferSapOrderCronTrigger" />
+			</list>
+		</property>
+	</bean>	
+	
+	 <bean id="DataTransferJob" class="com.winchannel.task.jobs.DataBaseJob" >
+		<property name="dataBaseTaskManager" ref="dataBaseTaskManager"/>
+	</bean>
+ 
+</beans> 

@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>一级经销商进销存月报</title>
+	
+	<header>
+		<column property="0" title="大区" sortable="false"/>
+		<column property="1" title="区域" sortable="false"/>
+		<column property="5" title="城市" sortable="false"/>
+		<column property="6" title="经销商编码" bundle="page" key="common.distCode" sortable="false"/>
+		<column property="7" title="经销商名称" bundle="page" key="common.distName" sortable="false"/>
+		<column property="8" title="经销商性质" sortable="false"/>
+		<column property="12" title="品牌" sortable="false"/>
+		<column property="9" title="经销商产品编码" bundle="page" key="common.distProdCode"  sortable="false"/>
+		<column property="10" title="产品" sortable="false"/>
+		<column property="13" title="一月,进货数量" sortable="false" style="text-align:right"  cell="number" format="#,##0.00"/>
+		<column property="14" title="一月,进货金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="15" title="一月,售出数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="16" title="一月,售出金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00" />
+		<column property="17" title="一月,库存数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00" />
+		<column property="18" title="一月,库存金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00" />
+		
+		<column property="19" title="二月,进货数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="20" title="二月,进货金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00" />
+		<column property="21" title="二月,售出数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00" />
+		<column property="22" title="二月,售出金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="23" title="二月,库存数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="24" title="二月,库存金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		
+		<column property="25" title="三月,进货数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="26" title="三月,进货金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="27" title="三月,售出数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="28" title="三月,售出金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="29" title="三月,库存数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="30" title="三月,库存金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		
+		<column property="31" title="四月,进货数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="32" title="四月,进货金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="33" title="四月,售出数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="34" title="四月,售出金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="35" title="四月,库存数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="36" title="四月,库存金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		
+		<column property="37" title="五月,进货数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="38" title="五月,进货金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="39" title="五月,售出数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="40" title="五月,售出金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="41" title="五月,库存数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="42" title="五月,库存金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		
+		<column property="43" title="六月,进货数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="44" title="六月,进货金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="45" title="六月,售出数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="46" title="六月,售出金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="47" title="六月,库存数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="48" title="六月,库存金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		
+		<column property="49" title="七月,进货数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="50" title="七月,进货金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="51" title="七月,售出数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="52" title="七月,售出金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="53" title="七月,库存数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="54" title="七月,库存金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		
+		<column property="55" title="八月,进货数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="56" title="八月,进货金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="57" title="八月,售出数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="58" title="八月,售出金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="59" title="八月,库存数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="60" title="八月,库存金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		
+		<column property="61" title="九月,进货数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="62" title="九月,进货金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="63" title="九月,售出数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="64" title="九月,售出金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="65" title="九月,库存数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="66" title="九月,库存金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+	
+		<column property="67" title="十月,进货数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="68" title="十月,进货金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="69" title="十月,售出数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="70" title="十月,售出金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="71" title="十月,库存数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="72" title="十月,库存金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		
+		<column property="73" title="十一月,进货数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="74" title="十一月,进货金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="75" title="十一月,售出数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="76" title="十一月,售出金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="77" title="十一月,库存数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="78" title="十一月,库存金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		
+		<column property="79" title="十二月,进货数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="80" title="十二月,进货金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="81" title="十二月,售出数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="82" title="十二月,售出金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="83" title="十二月,库存数量" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+		<column property="84" title="十二月,库存金额" sortable="false" style="text-align:right" cell="number" format="#,##0.00"/>
+	</header>
+	
+	<content>
+		<param id="_orgSubCode" template="and B.SUB_CODE like '$_orgSubCode$%'">$_orgSubCode$</param>
+		<param id="_empAuthExp">$empAuth$</param>
+		<param id="queryDate" template="'$queryDate$-12-31'">$queryDate$</param>
+		<param id="prodCode" template="and P.PROD_CODE= '$prodCode$'">$prodCode$</param>
+		<param id="queryOrgIds" template="and C.ORG_ID in ($queryOrgIds$)">$queryOrgIds$</param>
+		<param id="brandId" template=" and P.BRAND_ID = '$brandId$'">$brandId$</param>
+		<param id="queryGeoIds" template=" and A.CITY_ID in ($queryGeoIds$)">$queryGeoIds$</param>
+		<sql>
+<![CDATA[
+	
+SELECT 
+		D.ORG_NAME DQ,
+		C.ORG_NAME QY,
+		C.ORG_CODE,
+		A.DIST_ID,
+		A.CITY_ID,
+		A.CITY_NAME,
+		A.DIST_CODE,
+		A.DIST_NAME,
+		CASE WHEN A.LEVEL_CODE='1' THEN '一级' ELSE '二级' END LEVEL_CODE,
+		P.PROD_CODE,
+		P.PROD_NAME,
+		P.BRAND_ID,
+		P.BRAND_NAME,
+		cast(coalesce(CIN.N1,0) as numeric(10)) PN1,
+		cast(coalesce(CIN.A1,0)/1000 as numeric(10,2)) PA1,
+		cast(coalesce(SALE.N1,0) as numeric(10)) SN1,
+		cast(coalesce(SALE.A1,0)/1000 as numeric(10,2)) SA1,
+		cast(coalesce(STOCK.N1,0) as numeric(10)) TN1,
+		cast(coalesce(STOCK.A1,0)/1000 as numeric(10,2)) TA1,
+		
+		cast(coalesce(CIN.N2,0) as numeric(10)) PN2,
+		cast(coalesce(CIN.A2,0)/1000 as numeric(10,2)) PA2,
+		cast(coalesce(SALE.N2,0) as numeric(10)) SN2,
+		cast(coalesce(SALE.A2,0)/1000 as numeric(10,2)) SA2,
+		cast(coalesce(STOCK.N2,0) as numeric(10)) TN2,
+		cast(coalesce(STOCK.A2,0)/1000 as numeric(10,2)) TA2,
+		
+		cast(coalesce(CIN.N3,0) as numeric(10)) PN3,
+		cast(coalesce(CIN.A3,0)/1000 as numeric(10,2)) PA3,
+		cast(coalesce(SALE.N3,0) as numeric(10)) SN3,
+		cast(coalesce(SALE.A3,0)/1000 as numeric(10,2)) SA3,
+		cast(coalesce(STOCK.N3,0) as numeric(10)) TN3,
+		cast(coalesce(STOCK.A3,0)/1000 as numeric(10,2)) TA3,
+		
+		cast(coalesce(CIN.N4,0) as numeric(10)) PN4,
+		cast(coalesce(CIN.A4,0)/1000 as numeric(10,2)) PA4,
+		cast(coalesce(SALE.N4,0) as numeric(10)) SN4,
+		cast(coalesce(SALE.A4,0)/1000 as numeric(10,2)) SA4,
+		cast(coalesce(STOCK.N4,0) as numeric(10)) TN4,
+		cast(coalesce(STOCK.A4,0)/1000 as numeric(10,2)) TA4,
+		
+		cast(coalesce(CIN.N5,0) as numeric(10)) PN5,
+		cast(coalesce(CIN.A5,0)/1000 as numeric(10,2)) PA5,
+		cast(coalesce(SALE.N5,0) as numeric(10)) SN5,
+		cast(coalesce(SALE.A5,0)/1000 as numeric(10,2)) SA5,
+		cast(coalesce(STOCK.N5,0) as numeric(10)) TN5,
+		cast(coalesce(STOCK.A5,0)/1000 as numeric(10,2)) TA5,
+		
+		cast(coalesce(CIN.N6,0) as numeric(10)) PN6,
+		cast(coalesce(CIN.A6,0)/1000 as numeric(10,2)) PA6,
+		cast(coalesce(SALE.N6,0) as numeric(10)) SN6,
+		cast(coalesce(SALE.A6,0)/1000 as numeric(10,2)) SA6,
+		cast(coalesce(STOCK.N6,0) as numeric(10)) TN6,
+		cast(coalesce(STOCK.A6,0)/1000 as numeric(10,2)) TA6,
+		
+		cast(coalesce(CIN.N7,0) as numeric(10)) PN7,
+		cast(coalesce(CIN.A7,0)/1000 as numeric(10,2)) PA7,
+		cast(coalesce(SALE.N7,0) as numeric(10)) SN7,
+		cast(coalesce(SALE.A7,0)/1000 as numeric(10,2)) SA7,
+		cast(coalesce(STOCK.N7,0) as numeric(10)) TN7,
+		cast(coalesce(STOCK.A7,0)/1000 as numeric(10,2)) TA7,
+		
+		cast(coalesce(CIN.N8,0) as numeric(10)) PN8,
+		cast(coalesce(CIN.A8,0)/1000 as numeric(10,2)) PA8,
+		cast(coalesce(SALE.N8,0) as numeric(10)) SN8,
+		cast(coalesce(SALE.A8,0)/1000 as numeric(10,2)) SA8,
+		cast(coalesce(STOCK.N8,0) as numeric(10)) TN8,
+		cast(coalesce(STOCK.A8,0)/1000 as numeric(10,2)) TA8,
+		
+		cast(coalesce(CIN.N9,0) as numeric(10)) PN9,
+		cast(coalesce(CIN.A9,0)/1000 as numeric(10,2)) PA9,
+		cast(coalesce(SALE.N9,0) as numeric(10)) SN9,
+		cast(coalesce(SALE.A9,0)/1000 as numeric(10,2)) SA9,
+		cast(coalesce(STOCK.N9,0) as numeric(10)) TN9,
+		cast(coalesce(STOCK.A9,0)/1000 as numeric(10,2)) TA9,
+		
+		cast(coalesce(CIN.N10,0) as numeric(10)) PN10,
+		cast(coalesce(CIN.A10,0)/1000 as numeric(10,2)) PA10,
+		cast(coalesce(SALE.N10,0) as numeric(10)) SN10,
+		cast(coalesce(SALE.A10,0)/1000 as numeric(10,2)) SA10,
+		cast(coalesce(STOCK.N10,0) as numeric(10)) TN10,
+		cast(coalesce(STOCK.A10,0)/1000 as numeric(10,2)) TA10,
+		
+		cast(coalesce(CIN.N11,0) as numeric(10)) PN11,
+		cast(coalesce(CIN.A11,0)/1000 as numeric(10,2)) PA11,
+		cast(coalesce(SALE.N11,0) as numeric(10)) SN11,
+		cast(coalesce(SALE.A11,0)/1000 as numeric(10,2)) SA11,
+		cast(coalesce(STOCK.N11,0) as numeric(10)) TN11,
+		cast(coalesce(STOCK.A11,0)/1000 as numeric(10,2)) TA11,
+		
+		cast(coalesce(CIN.N12,0) as numeric(10)) PN12,
+		cast(coalesce(CIN.A12,0)/1000 as numeric(10,2)) PA12,
+		cast(coalesce(SALE.N12,0) as numeric(10)) SN12,
+		cast(coalesce(SALE.A12,0)/1000 as numeric(10,2)) SA12,
+		cast(coalesce(STOCK.N12,0) as numeric(10)) TN12,
+		cast(coalesce(STOCK.A12,0)/1000 as numeric(10,2)) TA12
+	FROM DIM_DISTRIBUTOR A INNER JOIN BASE_ORG B ON a.ORG_ID=b.ORG_ID AND A.INST_DATE IS NOT NULL
+		INNER JOIN DIM_ORG C ON B.SUB_CODE LIKE C.ORG_SUB_CODE+'%' AND C.TYPE_NAME='TSM' INNER JOIN BASE_ORG D ON C.PARENT_ORG_ID=D.ORG_ID
+		CROSS JOIN DIM_PRODUCT P 
+		LEFT JOIN (
+		   SELECT DD.DIST_ID,DD.TARGET_PROD_CODE, 
+		   sum(DD.N1) N1,sum(DD.A1) A1,
+		   sum(DD.N2) N2,sum(DD.A2) A2,
+		   sum(DD.N3) N3,sum(DD.A3) A3,
+		   sum(DD.N4) N4,sum(DD.A4) A4,
+		   sum(DD.N5) N5,sum(DD.A5) A5,
+		   sum(DD.N6) N6,sum(DD.A6) A6,
+		   sum(DD.N7) N7,sum(DD.A7) A7,
+		   sum(DD.N8) N8,sum(DD.A8) A8,
+		   sum(DD.N9) N9,sum(DD.A9) A9,
+		   sum(DD.N10) N10,sum(DD.A10) A10,
+		   sum(DD.N11) N11,sum(DD.A11) A11,
+		   sum(DD.N12) N12,sum(DD.A12) A12
+		   FROM (
+			SELECT 
+				CC.DIST_ID,CC.TARGET_PROD_CODE,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-01' THEN CC.CIN_NUM ELSE 0 END N1,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-01' THEN CC.CIN_AMOUNT ELSE 0 END A1,
+				
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-02' THEN CC.CIN_NUM ELSE 0 END N2,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-02' THEN CC.CIN_AMOUNT ELSE 0 END A2,
+				
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-03' THEN CC.CIN_NUM ELSE 0 END N3,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-03' THEN CC.CIN_AMOUNT ELSE 0 END A3,
+				
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-04' THEN CC.CIN_NUM ELSE 0 END N4,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-04' THEN CC.CIN_AMOUNT ELSE 0 END A4,
+				
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-05' THEN CC.CIN_NUM ELSE 0 END N5,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-05' THEN CC.CIN_AMOUNT ELSE 0 END A5,
+				
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-06' THEN CC.CIN_NUM ELSE 0 END N6,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-06' THEN CC.CIN_AMOUNT ELSE 0 END A6,
+				
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-07' THEN CC.CIN_NUM ELSE 0 END N7,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-07' THEN CC.CIN_AMOUNT ELSE 0 END A7,
+				
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-08' THEN CC.CIN_NUM ELSE 0 END N8,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-08' THEN CC.CIN_AMOUNT ELSE 0 END A8,
+				
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-09' THEN CC.CIN_NUM ELSE 0 END N9,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-09' THEN CC.CIN_AMOUNT ELSE 0 END A9,
+				
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-10' THEN CC.CIN_NUM ELSE 0 END N10,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-10' THEN CC.CIN_AMOUNT ELSE 0 END A10,
+				
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-11' THEN CC.CIN_NUM ELSE 0 END N11,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-11' THEN CC.CIN_AMOUNT ELSE 0 END A11,
+				
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-12' THEN CC.CIN_NUM ELSE 0 END N12,
+				CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-12' THEN CC.CIN_AMOUNT ELSE 0 END A12
+				
+				FROM (
+				
+					SELECT convert(CHAR(7),A.BILL_DATE,23) queryMonth, A.DIST_ID,A.TARGET_PROD_CODE,sum(A.BOX) CIN_NUM,sum(A.PROD_AMOUNT) CIN_AMOUNT FROM RPT_DATA_PURCHASE A
+					WHERE A.TARGET_PROD_CODE IS NOT NULL AND A.BILL_DATE >=dateAdd(year, datediff(year,'19000101',$queryDate$),'19000101') AND A.BILL_DATE<dateAdd(month, datediff(month,'19000101',$queryDate$)+1,'19000101')
+					GROUP BY A.DIST_ID,A.TARGET_PROD_CODE,convert(CHAR(7),A.BILL_DATE,23)
+				) CC
+				
+			) DD
+			GROUP BY DD.DIST_ID,DD.TARGET_PROD_CODE
+
+		) CIN ON A.DIST_ID=CIN.DIST_ID AND P.PROD_CODE = CIN.TARGET_PROD_CODE
+		LEFT JOIN 
+		(
+			SELECT DD.DIST_ID,DD.TARGET_PROD_CODE, 
+			   sum(DD.N1) N1,sum(DD.A1) A1,
+			   sum(DD.N2) N2,sum(DD.A2) A2,
+			   sum(DD.N3) N3,sum(DD.A3) A3,
+			   sum(DD.N4) N4,sum(DD.A4) A4,
+			   sum(DD.N5) N5,sum(DD.A5) A5,
+			   sum(DD.N6) N6,sum(DD.A6) A6,
+			   sum(DD.N7) N7,sum(DD.A7) A7,
+			   sum(DD.N8) N8,sum(DD.A8) A8,
+			   sum(DD.N9) N9,sum(DD.A9) A9,
+			   sum(DD.N10) N10,sum(DD.A10) A10,
+			   sum(DD.N11) N11,sum(DD.A11) A11,
+			   sum(DD.N12) N12,sum(DD.A12) A12
+		   FROM (
+		   		SELECT 
+					CC.DIST_ID,CC.TARGET_PROD_CODE,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-01' THEN CC.SALE_NUM ELSE 0 END N1,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-01' THEN CC.SALE_AMOUNT ELSE 0 END A1,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-02' THEN CC.SALE_NUM ELSE 0 END N2,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-02' THEN CC.SALE_AMOUNT ELSE 0 END A2,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-03' THEN CC.SALE_NUM ELSE 0 END N3,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-03' THEN CC.SALE_AMOUNT ELSE 0 END A3,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-04' THEN CC.SALE_NUM ELSE 0 END N4,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-04' THEN CC.SALE_AMOUNT ELSE 0 END A4,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-05' THEN CC.SALE_NUM ELSE 0 END N5,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-05' THEN CC.SALE_AMOUNT ELSE 0 END A5,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-06' THEN CC.SALE_NUM ELSE 0 END N6,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-06' THEN CC.SALE_AMOUNT ELSE 0 END A6,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-07' THEN CC.SALE_NUM ELSE 0 END N7,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-07' THEN CC.SALE_AMOUNT ELSE 0 END A7,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-08' THEN CC.SALE_NUM ELSE 0 END N8,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-08' THEN CC.SALE_AMOUNT ELSE 0 END A8,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-09' THEN CC.SALE_NUM ELSE 0 END N9,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-09' THEN CC.SALE_AMOUNT ELSE 0 END A9,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-10' THEN CC.SALE_NUM ELSE 0 END N10,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-10' THEN CC.SALE_AMOUNT ELSE 0 END A10,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-11' THEN CC.SALE_NUM ELSE 0 END N11,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-11' THEN CC.SALE_AMOUNT ELSE 0 END A11,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-12' THEN CC.SALE_NUM ELSE 0 END N12,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-12' THEN CC.SALE_AMOUNT ELSE 0 END A12
+				
+				FROM (
+					SELECT convert(CHAR(7),A.BILL_DATE,23) queryMonth,A.DIST_ID,A.TARGET_PROD_CODE,sum(A.BOX) SALE_NUM,sum(A.PROD_AMOUNT) SALE_AMOUNT FROM RPT_DATA_SALE A 
+							WHERE A.BILL_DATE >=dateAdd(year, datediff(year,'19000101',$queryDate$),'19000101') AND A.BILL_DATE<dateAdd(month, datediff(month,'19000101',$queryDate$)+1,'19000101')
+							AND A.TARGET_STORE_CODE IS NOT NULL
+							GROUP BY A.DIST_ID,A.TARGET_PROD_CODE,convert(CHAR(7),A.BILL_DATE,23)
+				) CC
+			) DD
+			GROUP BY DD.DIST_ID,DD.TARGET_PROD_CODE 
+		) AS SALE ON A.DIST_ID=SALE.DIST_ID AND P.PROD_CODE = SALE.TARGET_PROD_CODE
+		LEFT JOIN (
+			SELECT DD.DIST_ID,DD.TARGET_PROD_CODE, 
+			   sum(DD.N1) N1,sum(DD.A1) A1,
+			   sum(DD.N2) N2,sum(DD.A2) A2,
+			   sum(DD.N3) N3,sum(DD.A3) A3,
+			   sum(DD.N4) N4,sum(DD.A4) A4,
+			   sum(DD.N5) N5,sum(DD.A5) A5,
+			   sum(DD.N6) N6,sum(DD.A6) A6,
+			   sum(DD.N7) N7,sum(DD.A7) A7,
+			   sum(DD.N8) N8,sum(DD.A8) A8,
+			   sum(DD.N9) N9,sum(DD.A9) A9,
+			   sum(DD.N10) N10,sum(DD.A10) A10,
+			   sum(DD.N11) N11,sum(DD.A11) A11,
+			   sum(DD.N12) N12,sum(DD.A12) A12
+		   FROM (
+				SELECT 
+					CC.DIST_ID,CC.TARGET_PROD_CODE,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-01' THEN CC.STOCK_NUM ELSE 0 END N1,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-01' THEN CC.STOCK_AMOUNT ELSE 0 END A1,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-02' THEN CC.STOCK_NUM ELSE 0 END N2,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-02' THEN CC.STOCK_AMOUNT ELSE 0 END A2,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-03' THEN CC.STOCK_NUM ELSE 0 END N3,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-03' THEN CC.STOCK_AMOUNT ELSE 0 END A3,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-04' THEN CC.STOCK_NUM ELSE 0 END N4,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-04' THEN CC.STOCK_AMOUNT ELSE 0 END A4,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-05' THEN CC.STOCK_NUM ELSE 0 END N5,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-05' THEN CC.STOCK_AMOUNT ELSE 0 END A5,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-06' THEN CC.STOCK_NUM ELSE 0 END N6,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-06' THEN CC.STOCK_AMOUNT ELSE 0 END A6,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-07' THEN CC.STOCK_NUM ELSE 0 END N7,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-07' THEN CC.STOCK_AMOUNT ELSE 0 END A7,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-08' THEN CC.STOCK_NUM ELSE 0 END N8,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-08' THEN CC.STOCK_AMOUNT ELSE 0 END A8,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-09' THEN CC.STOCK_NUM ELSE 0 END N9,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-09' THEN CC.STOCK_AMOUNT ELSE 0 END A9,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-10' THEN CC.STOCK_NUM ELSE 0 END N10,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-10' THEN CC.STOCK_AMOUNT ELSE 0 END A10,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-11' THEN CC.STOCK_NUM ELSE 0 END N11,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-11' THEN CC.STOCK_AMOUNT ELSE 0 END A11,
+					
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-12' THEN CC.STOCK_NUM ELSE 0 END N12,
+					CASE WHEN queryMonth=convert(char(4),$queryDate$,23)+'-12' THEN CC.STOCK_AMOUNT ELSE 0 END A12
+				
+				FROM (
+					SELECT convert(CHAR(7),STK.stock_date,23) queryMonth,STK.DIST_ID,STK.TARGET_PROD_CODE,sum(STK.STOCK_NUM) STOCK_NUM,sum(STK.GROSS_SALES) STOCK_AMOUNT FROM (
+							SELECT AA.ID,AA.DIST_ID, AA.TARGET_PROD_CODE,AA.BOX STOCK_NUM,AA.STOCK_DATE,AA.GROSS_SALES,dense_rank() OVER (PARTITION BY AA.DIST_ID,AA.TARGET_PROD_CODE,convert(CHAR(7),AA.STOCK_DATE,23) ORDER BY AA.STOCK_DATE DESC) AS rownum FROM RPT_DATA_STOCK AA 
+							WHERE AA.stock_date<dateAdd(month, datediff(month,'19000101',$queryDate$)+1,'19000101') AND AA.TARGET_PROD_CODE IS NOT NULL
+					) AS STK WHERE STK.ROWNUM=1
+					GROUP BY STK.DIST_ID,STK.TARGET_PROD_CODE,convert(CHAR(7),STK.stock_date,23)
+				) CC
+			) DD
+			GROUP BY DD.DIST_ID,DD.TARGET_PROD_CODE
+		) AS STOCK ON A.DIST_ID=STOCK.DIST_ID AND P.PROD_CODE = STOCK.TARGET_PROD_CODE
+	WHERE 1=1 and A.level_code = '1' $_orgSubCode$  
+	$prodCode$ $queryOrgIds$ $brandId$ $queryGeoIds$
+]]>
+		</sql>
+	</content>
+	
+</config>

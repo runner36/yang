@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>非保有客户信息</title>
+	
+	<header>
+		<column property="0" title="大区" style="text-align:left"/>
+		<column property="1" title="省" style="text-align:left"/>
+		<column property="2" title="城市" style="text-align:left"/>
+		<column property="3" title="经销商编码" style="text-align:left"/>
+		<column property="4" title="经销商名称" style="text-align:left"/>
+		<column property="5" title="渠道" style="text-align:left" />
+		<column property="6" title="JDES II客户代码" style="text-align:left" />
+		<column property="7" title="JDES II客户名称" style="text-align:left" />
+		
+		<column property="8" title="最近一次购买日期" style="text-align:left" cell="date" format="yyyy-MM-dd"/>
+		<column property="9" title="最近一次购买金额" style="text-align:right" cell="number" format="#0.00"/>
+	</header>
+	
+	<content>
+		<!-- 开始时间 结束时间 -->
+        <param id="startDate" isDisplay="1" displayName="开始时间"  template="">$startDate$</param>
+		<param id="endDate" isDisplay="1" displayName="结束时间"  template="">$endDate$</param>
+		<!-- 组织 -->
+		<param id="orgId"  template=" and bo.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="orgName" isDisplay="1" displayName="组织"  template="">$orgName$</param>
+		<!-- 渠道 -->
+		<param id="channelId"  template=" and ms.CHANNEL_ID in ($channelId$) ">$channelId$</param>
+		<param id="channelName" isDisplay="1" displayName="客户销售分类"  template="">$channelName$</param>
+		<!-- 门店类型 -->
+		<param id="storeTypeId"  template=" and ms.TYPE_ID in ($storeTypeId$) ">$storeTypeId$</param>
+		<param id="storeTypeName" isDisplay="1" displayName="渠道"  template="">$storeTypeName$</param>
+		<!-- 经销商 -->
+		<param id="distId"  template=" and md.DIST_ID in ($distId$) ">$distId$</param>
+		<param id="distCode" isDisplay="1" displayName="经销商编码"  template=" and md.DIST_CODE like '%$distCode$%' ">$distCode$</param>		
+		<param id="distName" isDisplay="1" displayName="经销商名称"  template="">$distName$</param>
+		<!-- 客户名称 客户编码 -->
+		<param id="customerCode" isDisplay="1" displayName="产品代码"  template=" and ms.STORE_CODE like '%$customerCode$%' ">$customerCode$</param>
+		<param id="customerName" isDisplay="1" displayName="产品名称"  template=" and ms.STORE_NAME like '%$customerName$%' ">$customerName$</param>
+		
+		<sql>
+          <![CDATA[
+ 
+
+--取得在90天之内没有出货记录的客户，并且最近一次购买日期在选择的开始时间之前
+WITH bill_date AS (
+	SELECT 	sale.STORE_CODE AS STORE_CODE, sale.STORE_NAME AS STORE_NAME, 
+			max(sale.BILL_DATE) AS BILL_DATE, sale.CLIENT_ID AS CLIENT_ID			
+	FROM 	DMS_DATA_SALE sale			 
+	WHERE 	(sale.PROD_QUANTITY*sale.PROD_PRICE) >= 0 AND sale.STATE=1
+			AND sale.STORE_CODE+CAST(sale.CLIENT_ID AS VARCHAR) NOT IN (
+				SELECT 	STORE_CODE+CAST(CLIENT_ID AS VARCHAR)
+				FROM 	DMS_DATA_SALE 
+				WHERE 	BILL_DATE BETWEEN dateadd(dd,-89,'$endDate$') AND '$endDate$'
+				GROUP BY STORE_CODE, CLIENT_ID
+			)
+			AND sale.BILL_DATE < dateadd(dd,-89,'$endDate$')
+			
+	GROUP BY sale.STORE_CODE, sale.STORE_NAME, sale.CLIENT_ID
+)
+,maxId AS (
+	SELECT 	bd.STORE_CODE AS STORE_CODE, bd.STORE_NAME AS STORE_NAME, bd.BILL_DATE AS BILL_DATE, max(sale.ID) AS saleId		
+	FROM 	DMS_DATA_SALE sale
+			inner JOIN bill_date	bd ON sale.STORE_CODE=bd.STORE_CODE AND sale.STORE_NAME=bd.STORE_NAME AND sale.BILL_DATE=bd.BILL_DATE
+	WHERE 	(sale.PROD_QUANTITY*sale.PROD_PRICE) >= 0 AND sale.STATE=1 AND bd.BILL_DATE IS NOT NULL 
+	GROUP BY bd.STORE_CODE, bd.STORE_NAME, bd.BILL_DATE
+)
+
+
+SELECT 	(SELECT b.PN2 FROM BASE_ORG b WHERE bo.ORG_ID=b.ORG_ID AND b.STATE=1) AS region, 
+		(SELECT b.PN4 FROM BASE_ORG b WHERE bo.ORG_ID=b.ORG_ID AND b.STATE=1) AS province, 
+		(SELECT b.ORG_NAME FROM BASE_ORG b WHERE bo.ORG_ID=b.ORG_ID AND b.STATE=1) AS city, 
+		md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, bdi.ITEM_NAME AS CHANNEL_ID,
+		ms.STORE_CODE AS STORE_CODE, ms.STORE_NAME AS STORE_NAME, bd.BILL_DATE AS BILL_DATE, 
+		sum((sale.PROD_QUANTITY*sale.PROD_PRICE)/1.17) AS PROD_AMOUNT
+		
+FROM 	bill_date bd 
+		LEFT JOIN DMS_DATA_SALE sale ON sale.CLIENT_ID=bd.CLIENT_ID AND sale.STORE_CODE=bd.STORE_CODE AND sale.STORE_NAME=bd.STORE_NAME AND bd.BILL_DATE=sale.BILL_DATE 
+		INNER JOIN DMS_PROD_MAPPING mp ON sale.PROD_CODE=mp.DIST_PROD_CODE AND sale.CLIENT_ID=mp.CLIENT_ID AND sale.PROD_UNIT=mp.DIST_PROD_UNIT AND sale.PROD_NAME=mp.DIST_PROD_NAME
+		INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE
+		--关联门店
+		INNER JOIN DMS_STORE_MAPPING dsm ON sale.STORE_CODE = dsm.DIST_STORE_CODE and dsm.CLIENT_ID=sale.CLIENT_ID
+		INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code 
+		LEFT JOIN BASE_DICT_ITEM bdi ON bdi.DICT_ITEM_ID=ms.TYPE_ID AND bdi.DICT_ID='storeType'  		 
+		--关联客户端、经销商
+		INNER JOIN DMS_CLIENT dc ON sale.CLIENT_ID = dc.CLIENT_ID
+		INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+		--关联组织
+		INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+		
+WHERE 	sale.PROD_QUANTITY >= 0 AND sale.BILL_DATE <= bd.BILL_DATE AND sale.STATE=1
+		$orgId$ $distId$ $distCode$ $channelId$ $storeTypeId$ $customerName$ $customerCode$
+		AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+		
+GROUP BY bo.ORG_ID, md.DIST_CODE, md.DIST_NAME, bdi.ITEM_NAME, ms.STORE_CODE, ms.STORE_NAME, bd.BILL_DATE
+
+
+UNION ALL 
+
+
+SELECT 	'合计：','','','','','','','',NULL, 
+		sum((sale.PROD_QUANTITY*sale.PROD_PRICE)/1.17) AS PROD_AMOUNT
+		
+FROM 	bill_date bd 
+		LEFT JOIN DMS_DATA_SALE sale ON sale.CLIENT_ID=bd.CLIENT_ID AND sale.STORE_CODE=bd.STORE_CODE AND sale.STORE_NAME=bd.STORE_NAME AND bd.BILL_DATE=sale.BILL_DATE 
+		INNER JOIN DMS_PROD_MAPPING mp ON sale.PROD_CODE=mp.DIST_PROD_CODE AND sale.CLIENT_ID=mp.CLIENT_ID AND sale.PROD_UNIT=mp.DIST_PROD_UNIT AND sale.PROD_NAME=mp.DIST_PROD_NAME
+		INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE
+		--关联门店
+		INNER JOIN DMS_STORE_MAPPING dsm ON sale.STORE_CODE = dsm.DIST_STORE_CODE and dsm.CLIENT_ID=sale.CLIENT_ID
+		INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code 
+		LEFT JOIN BASE_DICT_ITEM bdi ON bdi.DICT_ITEM_ID=ms.CHANNEL_ID AND bdi.DICT_ID='storeChannel' 
+		--关联客户端、经销商
+		INNER JOIN DMS_CLIENT dc ON sale.CLIENT_ID = dc.CLIENT_ID
+		INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+		--关联组织
+		INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+		
+WHERE 	sale.PROD_QUANTITY >= 0 AND sale.BILL_DATE <= bd.BILL_DATE AND sale.STATE=1
+		$orgId$ $distId$ $distCode$ $channelId$ $storeTypeId$ $customerName$ $customerCode$ 
+		AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+		
+          ]]>
+		</sql>
+	</content>
+	
+</config>

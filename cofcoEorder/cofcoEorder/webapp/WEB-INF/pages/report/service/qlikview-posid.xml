@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title></title>
+	
+	<header>
+		<column property="0" title="上级组织" width="300"/>
+	</header>
+	
+	<content>
+		<sql>
+<![CDATA[
+select 
+    dist.OWNERGRP_NAME as ownergroupname,
+    sm.DIST_STORE_CODE as storenumber,
+    (case when left(sm.TARGET_STORE_CODE,4) = 'WINC' then '' else sm.TARGET_STORE_CODE end) as posid,
+    dict.ITEM_CODE as citycode
+from DMS_STORE_MAPPING sm
+    inner join DMS_CLIENT client on sm.CLIENT_ID=client.CLIENT_ID
+    inner join MDM_DISTRIBUTOR dist on dist.DIST_ID=client.DIST_ID
+    inner join BASE_DICT_ITEM dict on dict.DICT_ID='geography' and sm.GEO_ID=dict.DICT_ITEM_ID
+WHERE sm.isreturn_data!='0' and dist.pass_back_date is not null
+]]>
+		</sql>
+	</content>
+	
+</config>

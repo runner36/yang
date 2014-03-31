@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title></title>
+	
+	<header>
+		<column property="0" title="上级组织" width="300"/>
+	</header>
+	
+	<content>
+		<param id="startDate">$startDate$</param>
+		<param id="endDate">$endDate$</param>
+		<param id="distCode" template="and dist.dist_code='$distCode$'">$distCode$</param>
+		<sql>
+<![CDATA[
+select 
+	a.upc,
+	'Nike',
+	'Nike',
+	a.divcode,
+	a.div,
+	'',
+	null, --dp.dept,
+	'',
+	null, --dp.sub_dept,
+	'',
+	null, --dp.grade,
+	'',
+	'',
+	a.gender,
+	a.style,
+	a.style,
+	a.color,
+	a.color,
+	a.size,
+	a.size,
+	a.prod_code,
+	null, --dp.stock_cost,
+	'',
+	null, --dp.stock_price,
+	null, --dp.rep_ind,
+	null, --dp.discount,
+	null, --convert(varchar(10),afs.FIRST_PRODUCT_OFFER_DATE,120),
+	null, --convert(varchar(10),afs.END_PRODUCT_OFFER_DATE,120),
+	a.dist_code,
+	a.ownergroupname
+from
+(
+select 
+	prod.PROD_PC_BARCODE as upc,
+	case afs.DIVISION_DESCRIPTION when 'APPAREL' then 10 when 'EQUIPMENT' then 30 else 20 end as divcode,
+	afs.DIVISION_DESCRIPTION as div,
+	afs.GENDER_AGE as gender,
+	LEFT(prod.EXT_CODE,CHARINDEX('-',prod.EXT_CODE)-1) as style,
+	RIGHT(prod.EXT_CODE,LEN(prod.EXT_CODE)-CHARINDEX('-',prod.EXT_CODE)) as color,
+	replace(prod.PROD_CODE,prod.EXT_CODE+'-','') as size,
+	dp.prod_code as prod_code,
+	dist.dist_code as dist_code, 
+	dist.OWNERGRP_NAME as ownergroupname,
+	row_number() over
+	(partition by prod.PROD_PC_BARCODE,dist.dist_code order by dp.create_time desc) as rn,
+	dp.CREATE_TIME
+from dms_active_product dp 
+	inner join dms_client client on dp.client_id=client.client_id
+	inner join mdm_distributor dist on client.dist_id=dist.dist_id
+	inner join dms_prod_mapping pm on dp.client_id=pm.client_id and dp.prod_code=pm.dist_prod_code
+	and pm.DIST_PROD_NAME=dp.PROD_NAME and pm.DIST_PROD_UNIT=dp.PROD_UNIT
+	inner join mdm_product prod on pm.target_prod_code=prod.prod_code
+	inner join MDM_AFSPRODUCT afs on prod.EXT_CODE=afs.MATERIAL_NUMBER
+where dist.pass_back_date is not null and pm.TARGET_PROD_CODE!='nonike' $distCode$
+) a
+where a.rn=1
+order by a.dist_code
+]]>
+		</sql>
+	</content>
+	
+</config>

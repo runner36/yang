@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="true">
+	<title>经销商销售明细报表</title>
+
+	<header>
+		<column property="0" title="管理大区"/>
+		<column property="1" title="管理地区"/>
+		<column property="2" title="管理单元"/>
+		<column property="3" title="经销商省份"/>
+		<column property="4" title="经销商地级市"/>
+		<column property="5" title="经销商县级市"/>
+		<column property="6" title="经销商代码"/>
+		<column property="7" title="经销商名称"/>
+		
+		<column property="8" title="门店管理大区"/>
+		<column property="9" title="门店管理地区"/>
+		<column property="10" title="门店管理单元"/>
+		<column property="11" title="门店省份"/>
+		<column property="12" title="门店地级市"/>
+		<column property="13" title="门店县级市"/>
+		<column property="14" title="门店代码"/>
+		<column property="15" title="门店名称"/>
+		
+		<column property="16" title="客户组织"/>
+		<column property="17" title="客户类型"/>
+		<column property="18" title="产品代码"/>
+		<column property="19" title="产品名称"/>
+		<column property="20" title="产品品类"/>
+		<column property="21" title="产品品牌"/>
+		
+		<column property="22" title="日　期" cell="date" format="yyyy-MM-dd"/>
+		<column property="23" title="箱　数" cell="number" format="0.0000" style="text-align:right"/>
+		<column property="24" title="吨　数" cell="number" format="0.0000" style="text-align:right"/>
+		<column property="25" title="经销商销售额" cell="number" format="0.0000" style="text-align:right"/>
+        <column property="26" title="卡夫毛销售额" cell="number" format="0.0000" style="text-align:right"/>
+	</header>
+
+	<content>
+		<!-- 开始时间，结束时间 -->
+		<param id="ge_billDate" template=" and data.BILL_DATE >= '$ge_billDate$'">$ge_billDate$</param>
+		<param id="le_billDate" template=" and data.BILL_DATE &lt;= '$le_billDate$ 23:59:59'">$le_billDate$</param>
+		<!-- 管理组织 -->
+		<param id="orgId"       template=" and distOrg.ORG_ID in ($orgId$) ">$orgId$</param>
+		<!-- 省   份 -->
+		<param id="geoId"       template=" and dist.GEO_ID in ($geoId$) ">$geoId$</param>
+		<!-- 经销商名称 -->
+		<param id="distId"      template=" and dist.DIST_ID in ($distId$) ">$distId$</param>
+		<!-- 经销商代码 -->
+		<param id="distCode"    template=" and dist.DIST_CODE like '%$distCode$%' ">$distCode$</param>
+		<!-- 门店名称 -->
+		<param id="sisName"     template=" and store.STORE_NAME like '%$sisName$%' ">$sisName$</param>
+		<!-- 门店代码-->
+		<param id="sisCode"     template=" and store.STORE_CODE like '%$sisCode$%' ">$sisCode$</param>
+		<!-- 客户组织-->
+		<param id="corpId"  	template=" and store.CORP_ID in ($corpId$) ">$corpId$</param>
+		<!-- 客户属性-->
+		<param id="natureId"    template=" and store.CHANNEL_ID in ($natureId$) ">$natureId$</param>
+		<!-- 客户类型 -->
+		<param id="typeId"      template=" and store.TYPE_ID in ($typeId$) ">$typeId$</param>
+		<!-- 产品描述 -->
+		<param id="prodName"    template=" and prod.PROD_NAME like '%$prodName$%' ">$prodName$</param>
+		<!-- 产品代码 -->
+		<param id="prodCode"    template=" and prod.PROD_CODE like '%$prodCode$%' ">$prodCode$</param>
+		<!-- 产品品类 -->
+		<param id="categoryId"  template=" and prod.TYPE_ID  in ($categoryId$) ">$categoryId$</param>
+		<!-- 品牌 -->
+		<param id="brandId"     template=" and prod.BRAND_ID in ($brandId$) ">$brandId$</param>
+
+		<sql>
+			<![CDATA[
+
+			SELECT 	distOrg.PN2, distOrg.PN3, distOrg.PN4,
+					distGeo.PN2,distGeo.PN3,distGeo.PN4,
+					dist.DIST_CODE, dist.DIST_NAME,
+					storeOrg.PN2, storeOrg.PN3, storeOrg.PN4, 
+					storeGeo.PN2,storeGeo.PN3,storeGeo.PN4, 
+					CASE WHEN store.STORE_CODE IS NULL THEN 'O'+data.STORE_CODE ELSE store.STORE_CODE END AS STORE_CODE, 
+					store.STORE_NAME, storeCorp.ITEM_NAME, storeType.ITEM_NAME,
+					prod.PROD_CODE, prod.PROD_NAME, prodType.ITEM_NAME, prodBrand.ITEM_NAME,
+					data.BILL_DATE, data.BOX, data.TON, data.PROD_QUANTITY*data.PROD_PRICE, data.GROSS_SALES
+			
+			FROM 	rpt_data_sale data
+					--产品
+					inner join mdm_product prod on prod.PROD_CODE=data.TARGET_PROD_CODE
+					left join base_dict_item prodType on prod.TYPE_ID=prodType.DICT_ITEM_ID AND prodType.DICT_ID='prodType'
+					left join base_dict_item prodBrand on prod.BRAND_ID=prodBrand.DICT_ITEM_ID AND prodBrand.DICT_ID='prodBrand'
+					--门店
+					left join mdm_store store on store.STORE_CODE=data.TARGET_STORE_CODE
+					left join base_dict_item storeCorp on store.CORP_ID=storeCorp.DICT_ITEM_ID AND storeCorp.DICT_ID='storeCorp'
+					left join base_dict_item storeType on store.TYPE_ID=storeType.DICT_ITEM_ID AND storeType.DICT_ID='storeType'
+					--门店组织
+					left join base_org storeOrg on storeOrg.ORG_ID=store.ORG_ID
+					--门店地理					
+					left join base_dict_item storeGeo on store.GEO_ID=storeGeo.DICT_ITEM_ID AND storeGeo.DICT_ID='geography'
+					--客户端、经销商
+					inner join dms_client client on data.CLIENT_ID=client.CLIENT_ID
+					inner join mdm_distributor dist on client.DIST_ID=dist.DIST_ID
+					--经销商组织
+					left join base_org distOrg on distOrg.ORG_ID=dist.ORG_ID
+					--经销商地理
+					left join base_dict_item distGeo on dist.GEO_ID=distGeo.DICT_ITEM_ID AND distGeo.DICT_ID='geography'
+					
+			WHERE 	1=1
+					$ge_billDate$ $le_billDate$ $orgId$  $geoId$  $distId$  $distCode$ $sisName$ $sisCode$ 
+					$natureId$ $corpId$ $typeId$ $prodName$ $prodCode$ $categoryId$ $brandId$
+
+			]]>
+		</sql>
+	</content>
+</config>

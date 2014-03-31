@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.winchannel.order.model.MdmProdGroupDeliveryDays" table="MDM_PROD_GROUP_DELIVERY_DAYS">
+        <id name="id" type="java.lang.Long">
+            <column name="ID" precision="10" scale="0" />
+            <generator class="identity" />
+        </id>        
+        <many-to-one name="itemProdStru" class="com.winchannel.base.model.BaseDictItem" fetch="select">
+            <column name="PROD_STRU_ID" precision="10" scale="0" />        
+        </many-to-one>        
+        <property name="deliveryDays" type="java.lang.Long">
+            <column name="DELIVERY_DAYS" precision="10" scale="0" />
+        </property> 
+        
+        <property name="createdBy" type="java.lang.String">
+            <column name="CREATED_BY" length="50" />
+        </property>
+        <property name="created" type="java.util.Date">
+            <column name="CREATED" length="23" />
+        </property>
+        <property name="updatedBy" type="java.lang.String">
+            <column name="UPDATED_BY" length="50" />
+        </property>
+        <property name="updated" type="java.util.Date">
+            <column name="UPDATED" length="23" />
+        </property>
+               
+    </class>
+</hibernate-mapping>

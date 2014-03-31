@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>渠道销售周报</title>
+	
+	<header>
+		<column property="0" title="大区"  style="text-align:left"/>
+		<column property="1" title="区域"  style="text-align:left"/>
+		<column property="2" title="城市"  style="text-align:left"/>
+		<column property="3" title="渠道"  style="text-align:left" />
+		<column property="4" title="品牌"  style="text-align:left" />
+		<column property="5" title="产品" style="text-align:left" />
+		
+		<column property="6" title="W1,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="7" title="W1,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="8" title="W2,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="9" title="W2,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="10" title="W3,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="11" title="W3,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="12" title="W4,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="13" title="W4,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="14" title="W5,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="15" title="W5,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="16" title="W6,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="17" title="W6,金额"  style="text-align:right" cell="number" format="#0.00"/>
+		
+		<column property="18" title="MTD,数量"  style="text-align:right" cell="number" format="#0.00"/>
+		<column property="19" title="MTD,金额"  style="text-align:right" cell="number" format="#0.00"/>				
+	</header>
+	
+	<content>
+		<!-- 年月 -->
+        <param id="YearMon" initValue="" defaultValue="" template="">$YearMon$</param>
+		<!-- 组织名称 -->
+		<param id="orgId" initValue="" defaultValue="" template=" and ds.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="orgName" initValue="" defaultValue="" template=" and area.PN4 in ($orgName$) " dataType="char" >$orgName$</param>
+		<!-- 地理区域 -->
+		<param id="geoId" initValue="" defaultValue="" template=" and ds.CITY_ID in ($geoId$) ">$geoId$</param>
+		<!-- 渠道 -->
+		<param id="channelId" initValue="" defaultValue="" template=" and ds.CHANNEL_ID in ($channelId$) ">$channelId$</param>
+		<sql>
+		
+          <![CDATA[
+			WITH sale AS (
+				SELECT	area.PN2 AS region, area.PN3 AS area, dc.CITY_NAME AS city,
+						ds.CHANNEL_NAME AS channelName, dp.BRAND_NAME AS brandName,
+						dp.PROD_NAME AS prodName, 
+						 
+						CASE WHEN 
+							rds.BILL_DATE>=(SELECT DateAdd(day,-CAL_DAY+1,CAL_DATE) FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=1) AND 
+							rds.BILL_DATE<=(SELECT CAL_DATE FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=1) THEN rds.BOX ELSE 0 END AS W1_QLI,
+						CASE WHEN 
+							rds.BILL_DATE>=(SELECT DateAdd(day,-CAL_DAY+1,CAL_DATE) FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=1) AND 
+							rds.BILL_DATE<=(SELECT CAL_DATE FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=1) THEN rds.GROSS_SALES ELSE 0 END AS W1_AMOUNT,
+					
+						CASE WHEN 
+							rds.BILL_DATE>=(SELECT DateAdd(day,-CAL_DAY+1,CAL_DATE) FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=2) AND 
+							rds.BILL_DATE<=(SELECT CAL_DATE FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=2) THEN rds.BOX ELSE 0 END AS W2_QLI,
+						CASE WHEN 
+							rds.BILL_DATE>=(SELECT DateAdd(day,-CAL_DAY+1,CAL_DATE) FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=2) AND 
+							rds.BILL_DATE<=(SELECT CAL_DATE FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=2) THEN rds.GROSS_SALES ELSE 0 END AS W2_AMOUNT,
+					
+						CASE WHEN 
+							rds.BILL_DATE>=(SELECT DateAdd(day,-CAL_DAY+1,CAL_DATE) FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=3) AND 
+							rds.BILL_DATE<=(SELECT CAL_DATE FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=3) THEN rds.BOX ELSE 0 END AS W3_QLI,
+						CASE WHEN 
+							rds.BILL_DATE>=(SELECT DateAdd(day,-CAL_DAY+1,CAL_DATE) FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=3) AND 
+							rds.BILL_DATE<=(SELECT CAL_DATE FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=3) THEN rds.GROSS_SALES ELSE 0 END AS W3_AMOUNT,
+				
+						CASE WHEN 
+							rds.BILL_DATE>=(SELECT DateAdd(day,-CAL_DAY+1,CAL_DATE) FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=4) AND 
+							rds.BILL_DATE<=(SELECT CAL_DATE FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=4) THEN rds.BOX ELSE 0 END AS W4_QLI,
+						CASE WHEN 
+							rds.BILL_DATE>=(SELECT DateAdd(day,-CAL_DAY+1,CAL_DATE) FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=4) AND 
+							rds.BILL_DATE<=(SELECT CAL_DATE FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=4) THEN rds.GROSS_SALES ELSE 0 END AS W4_AMOUNT,
+				
+						CASE WHEN 
+							rds.BILL_DATE>=(SELECT DateAdd(day,-CAL_DAY+1,CAL_DATE) FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=5) AND 
+							rds.BILL_DATE<=(SELECT CAL_DATE FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=5) THEN rds.BOX ELSE 0 END AS W5_QLI,
+						CASE WHEN 
+							rds.BILL_DATE>=(SELECT DateAdd(day,-CAL_DAY+1,CAL_DATE) FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=5) AND 
+							rds.BILL_DATE<=(SELECT CAL_DATE FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=5) THEN rds.GROSS_SALES ELSE 0 END AS W5_AMOUNT,
+				
+						CASE WHEN 
+							rds.BILL_DATE>=(SELECT DateAdd(day,-CAL_DAY+1,CAL_DATE) FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=6) AND 
+							rds.BILL_DATE<=(SELECT CAL_DATE FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=6) THEN rds.BOX ELSE 0 END AS W6_QLI,
+						CASE WHEN 
+							rds.BILL_DATE>=(SELECT DateAdd(day,-CAL_DAY+1,CAL_DATE) FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=6) AND 
+							rds.BILL_DATE<=(SELECT CAL_DATE FROM MDM_CALENDAR WHERE CAL_YEAR=DatePart(yy, '$YearMon$'+'-01') AND CAL_MONTH=DatePart(mm, '$YearMon$'+'-01') AND CAL_WEEK_OF_MONTH=6) THEN rds.GROSS_SALES ELSE 0 END AS W6_AMOUNT,
+					
+						CASE WHEN '$YearMon$' = substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) THEN rds.BOX ELSE 0 END AS QLI_TOTAL,
+						CASE WHEN '$YearMon$' = substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) THEN rds.GROSS_SALES ELSE 0 END AS AMOUNT_TOTAL
+		
+		
+				FROM 	RPT_DATA_SALE rds
+						INNER JOIN DIM_STORE ds ON ds.STORE_CODE=rds.TARGET_STORE_CODE
+						INNER JOIN DIM_PRODUCT dp ON dp.PROD_CODE=rds.TARGET_PROD_CODE
+						INNER JOIN BASE_ORG area ON area.ORG_ID=ds.ORG_ID
+						LEFT JOIN DIM_CITY dc ON dc.CITY_ID=ds.CITY_ID
+						
+		 		WHERE	'$YearMon$' = substring(convert(VARCHAR(100),rds.BILL_DATE,23),0,8) $orgName$ $geoId$ $channelId$
+	 		)
+	 		
+	 		SELECT 	region, area, city, channelName, brandName, prodName, 
+		 			sum(W1_QLI), sum(W1_AMOUNT)/1000, 
+		 			sum(W2_QLI), sum(W2_AMOUNT)/1000, 
+		 			sum(W3_QLI), sum(W3_AMOUNT)/1000, 
+		 			sum(W4_QLI), sum(W4_AMOUNT)/1000, 
+		 			sum(W5_QLI), sum(W5_AMOUNT)/1000, 
+		 			sum(W6_QLI), sum(W6_AMOUNT)/1000, 
+		 			sum(QLI_TOTAL), sum(AMOUNT_TOTAL)/1000
+		 	
+		 	FROM 	sale
+		 	
+		 	GROUP BY region, area, city, channelName, brandName, prodName
+		 	
+          ]]>
+		</sql>
+	</content>
+	
+</config>

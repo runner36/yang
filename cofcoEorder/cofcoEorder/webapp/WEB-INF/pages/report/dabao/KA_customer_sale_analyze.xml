@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>KA客户销售分析报表</title>
+	
+	<header>
+		<column property="0" title="大区" style="text-align:left"/>
+		<column property="1" title="省" style="text-align:left"/>
+		<column property="2" title="城市" style="text-align:left"/>
+		<column property="3" title="经销商名称" style="text-align:left"/>
+		<column property="4" title="经销商编码" style="text-align:left"/>
+		<column property="5" title="JDES II客户名称" style="text-align:left" />
+		<column property="6" title="JDES II客户代码" style="text-align:left" />
+		<column property="7" title="大宝客户名称" style="text-align:left" />
+		<column property="8" title="大宝客户代码" style="text-align:left" />
+		
+		<column property="9" title="品类" style="text-align:left" />
+		<column property="10" title="产品代码" style="text-align:left" />
+		<column property="11" title="产品名称" style="text-align:left" />		
+				
+		<column property="12" title="销售金额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="13" title="销售数量" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="14" title="退货金额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="15" title="退货数量" style="text-align:right" cell="number" format="#0.00"/>
+		
+		<column property="16" title="净销售金额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="17" title="净销售数量" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="18" title="净销售金额贡献率" style="text-align:right" />
+		<column property="19" title="净销售数量贡献率" style="text-align:right" />		
+	</header>
+	
+	<content>
+		<!-- 开始时间 结束时间 -->
+        <param id="startDate" isDisplay="1" displayName="开始时间"  template="">$startDate$</param>
+		<param id="endDate" isDisplay="1" displayName="结束时间"  template="">$endDate$</param>
+		<!-- 组织 -->
+		<param id="orgId"  template=" and bo.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="orgName" isDisplay="1" displayName="组织"  template="">$orgName$</param>
+		<!-- 渠道 -->
+		<param id="channelId"  template=" and ms.CHANNEL_ID in ($channelId$) ">$channelId$</param>
+		<param id="channelName" isDisplay="1" displayName="客户销售分类"  template="">$channelName$</param>
+		<!-- 门店类型 -->
+		<param id="storeTypeId"  template=" and ms.TYPE_ID in ($storeTypeId$) ">$storeTypeId$</param>
+		<param id="storeTypeName" isDisplay="1" displayName="渠道"  template="">$storeTypeName$</param>		
+		<!-- 经销商 -->
+		<param id="distId"  template=" and md.DIST_ID in ($distId$) ">$distId$</param>
+		<param id="distCode" isDisplay="1" displayName="经销商编码"  template=" and md.DIST_CODE like '%$distCode$%' ">$distCode$</param>
+		<param id="distName" isDisplay="1" displayName="经销商名称"  template="">$distName$</param>
+		<!-- 客户名称 客户编码 -->
+		<param id="customerCode" isDisplay="1" displayName="大宝客户代码"  template=" and ms.STORE_CODE like '%$customerCode$%' ">$customerCode$</param>
+		<param id="customerName" isDisplay="1" displayName="大宝客户名称"  template=" and ms.STORE_NAME like '%$customerName$%' ">$customerName$</param>
+		<!-- 产品品牌 -->
+		<param id="prodBrandId"  template=" and p.BRAND_ID in ($prodBrandId$) ">$prodBrandId$</param>
+		<param id="prodBrandName" isDisplay="1" displayName="产品品牌"  template="">$prodBrandName$</param>
+		<!-- 产品品类 -->
+		<param id="prodTypeId"  template=" and p.TYPE_ID in ($prodTypeId$) ">$prodTypeId$</param>
+		<param id="prodTypeName" isDisplay="1" displayName="产品品类"  template="">$prodTypeName$</param>
+		<!-- 产品编码 -->
+		<param id="prodCode" isDisplay="1" displayName="产品代码"  template=" and p.PROD_CODE like '%$prodCode$%' ">$prodCode$</param>
+		<param id="prodId" isDisplay="1" displayName="产品名称"  template=" and p.PROD_NAME like '%$prodId$%' ">$prodId$</param>
+		<!-- 所属集团客户 -->
+		<param id="memo5" isDisplay="1" displayName="所属集团客户"  template=" and ms.MEMO5 like '%$memo5$%' ">$memo5$</param>
+		<sql>
+          <![CDATA[
+
+
+--定义变量，用于计算%列的值
+DECLARE @totalNumAmount DECIMAL(18,8), @totalNumQli DECIMAL(18,8)
+SET @totalNumAmount=0
+SET @totalNumQli=0;
+
+WITH amount AS (
+	SELECT 	isnull(CASE WHEN (dds.PROD_QUANTITY*dds.PROD_PRICE) >= 0 THEN (dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17 ELSE 0 END,0)  AS PROD_AMOUNT,
+			isnull(CASE WHEN (dds.PROD_QUANTITY*dds.PROD_PRICE) < 0 THEN (dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17 ELSE 0 END,0)  AS R_PROD_AMOUNT
+
+	FROM 	DMS_DATA_SALE dds
+	    	INNER JOIN DMS_PROD_MAPPING mp ON dds.PROD_CODE=mp.DIST_PROD_CODE AND dds.CLIENT_ID=mp.CLIENT_ID AND dds.PROD_UNIT=mp.DIST_PROD_UNIT AND dds.PROD_NAME=mp.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE
+			--关联门店
+			LEFT JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE AND dds.CLIENT_ID=dsm.CLIENT_ID AND dds.STORE_NAME=dsm.DIST_STORE_NAME
+			LEFT JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.TARGET_STORE_CODE 
+			LEFT JOIN BASE_DICT_ITEM prodType ON prodType.DICT_ITEM_ID=p.TYPE_ID AND prodType.DICT_ID='prodType' 
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	
+	WHERE 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$' and dds.STATE=1
+			$orgId$ $distId$ $distCode$ $channelId$ $customerName$ $customerCode$ 
+			$prodCode$ $prodId$ $storeTypeId$ $prodBrandId$ $prodTypeId$ $memo5$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+			AND ms.CHANNEL_ID IN (1578,1579,1612)
+)
+SELECT @totalNumAmount=sum(PROD_AMOUNT+R_PROD_AMOUNT) FROM amount;
+
+WITH qli AS (
+	SELECT 	isnull(CASE WHEN dds.PROD_QUANTITY >= 0 THEN dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY) ELSE 0 END,0)  AS PROD_QUANTITY,		
+			isnull(CASE WHEN dds.PROD_QUANTITY < 0 THEN dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY) ELSE 0 END,0)  AS R_PROD_QUANTITY
+
+	FROM 	DMS_DATA_SALE dds
+	    	INNER JOIN DMS_PROD_MAPPING mp ON dds.PROD_CODE=mp.DIST_PROD_CODE AND dds.CLIENT_ID=mp.CLIENT_ID AND dds.PROD_UNIT=mp.DIST_PROD_UNIT AND dds.PROD_NAME=mp.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE
+			--关联门店
+			LEFT JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE AND dds.CLIENT_ID=dsm.CLIENT_ID AND dds.STORE_NAME=dsm.DIST_STORE_NAME
+			LEFT JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.TARGET_STORE_CODE 
+			LEFT JOIN BASE_DICT_ITEM prodType ON prodType.DICT_ITEM_ID=p.TYPE_ID AND prodType.DICT_ID='prodType' 
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	
+	WHERE 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$' and dds.STATE=1
+			$orgId$ $distId$ $distCode$ $channelId$ $customerName$ $customerCode$ 
+			$prodCode$ $prodId$ $storeTypeId$ $prodBrandId$ $prodTypeId$ $memo5$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+			AND ms.CHANNEL_ID IN (1578,1579,1612)
+)
+SELECT @totalNumQli=sum(PROD_QUANTITY+R_PROD_QUANTITY) FROM qli;
+
+
+
+WITH BASE AS (
+	SELECT 	bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			ms.STORE_CODE AS STORE_CODE, ms.STORE_NAME AS STORE_NAME,
+			ms.MEMO1 AS JDES_STORE_CODE, ms.MEMO2 AS JDES_STORE_NAME,
+			prodType.ITEM_NAME AS PROD_TYPE, p.PROD_CODE AS PROD_CODE, p.PROD_NAME AS PROD_NAME,
+			
+			isnull(CASE WHEN (dds.PROD_QUANTITY*dds.PROD_PRICE) >= 0 THEN (dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17 ELSE 0 END,0)  AS PROD_AMOUNT,
+			isnull(CASE WHEN (dds.PROD_QUANTITY*dds.PROD_PRICE) < 0 THEN (dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17 ELSE 0 END,0)  AS R_PROD_AMOUNT,
+	 		isnull(CASE WHEN dds.PROD_QUANTITY >= 0 THEN dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY) ELSE 0 END,0)  AS PROD_QUANTITY,		
+			isnull(CASE WHEN dds.PROD_QUANTITY < 0 THEN dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY) ELSE 0 END,0) AS R_PROD_QUANTITY
+			
+	FROM 	DMS_DATA_SALE dds
+	    	INNER JOIN DMS_PROD_MAPPING mp ON dds.PROD_CODE=mp.DIST_PROD_CODE AND dds.CLIENT_ID=mp.CLIENT_ID AND dds.PROD_UNIT=mp.DIST_PROD_UNIT AND dds.PROD_NAME=mp.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE
+			--关联门店
+			LEFT JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE AND dds.CLIENT_ID=dsm.CLIENT_ID AND dds.STORE_NAME=dsm.DIST_STORE_NAME
+			LEFT JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.TARGET_STORE_CODE 
+			LEFT JOIN BASE_DICT_ITEM prodType ON prodType.DICT_ITEM_ID=p.TYPE_ID AND prodType.DICT_ID='prodType' 
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	
+	WHERE 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$' and dds.STATE=1
+			$orgId$ $distId$ $distCode$ $channelId$ $customerName$ $customerCode$ 
+			$prodCode$ $prodId$ $storeTypeId$ $prodBrandId$ $prodTypeId$ $memo5$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+			AND ms.CHANNEL_ID IN (1578,1579,1612)
+)
+
+
+--明细
+SELECT 	(SELECT bo.PN1 FROM BASE_ORG bo WHERE bo.ORG_ID=BASE.ORG_ID AND bo.STATE=1), 
+		(SELECT bo.PN2 FROM BASE_ORG bo WHERE bo.ORG_ID=BASE.ORG_ID AND bo.STATE=1),
+		(SELECT bo.PN3 FROM BASE_ORG bo WHERE bo.ORG_ID=BASE.ORG_ID AND bo.STATE=1),
+		DIST_NAME AS DIST_NAME, DIST_CODE AS DIST_CODE,
+		STORE_NAME AS STORE_NAME, STORE_CODE AS STORE_CODE,
+		JDES_STORE_CODE AS JDES_STORE_CODE, JDES_STORE_NAME AS JDES_STORE_NAME,
+		PROD_TYPE AS PROD_TYPE, PROD_CODE AS PROD_CODE, PROD_NAME AS PROD_NAME,
+					
+		cast(sum(PROD_AMOUNT) as decimal(38,2)) AS PROD_AMOUNT, cast(sum(PROD_QUANTITY) as decimal(38,2)) AS PROD_QUANTITY, 
+		cast(sum(R_PROD_AMOUNT) as decimal(38,2)) AS R_PROD_AMOUNT, cast(sum(R_PROD_QUANTITY) as decimal(38,2)) AS R_PROD_QUANTITY,
+
+		CASE WHEN sum(R_PROD_AMOUNT)>0 THEN cast(sum(PROD_AMOUNT-R_PROD_AMOUNT) as decimal(38,2))
+		ELSE cast(sum(PROD_AMOUNT+R_PROD_AMOUNT) as decimal(38,2))
+		END AS N_PROD_AMOUNT, 
+		
+		CASE WHEN sum(R_PROD_QUANTITY)>0 THEN cast(sum(PROD_QUANTITY-R_PROD_QUANTITY) as decimal(38,2))
+		ELSE cast(sum(PROD_QUANTITY+R_PROD_QUANTITY) as decimal(38,2))
+		END AS N_PROD_QUANTITY
+		
+		
+		,CASE WHEN sum(PROD_AMOUNT)+sum(R_PROD_AMOUNT)=0 THEN '-'
+			ELSE CASE WHEN @totalNumAmount=0 THEN '-'
+			ELSE CAST(CAST((sum(PROD_AMOUNT)+sum(R_PROD_AMOUNT))/@totalNumAmount*100 AS decimal(38,2)) AS VARCHAR)+'%'
+		END END
+		
+ 		,CASE WHEN sum(PROD_QUANTITY)+sum(R_PROD_QUANTITY)=0 THEN '-'
+			ELSE CASE WHEN @totalNumQli=0 THEN '-'
+			ELSE CAST(CAST((sum(PROD_QUANTITY)+sum(R_PROD_QUANTITY))/@totalNumQli*100 AS decimal(38,2)) AS VARCHAR)+'%'
+		END END 
+		
+FROM BASE
+GROUP BY ORG_ID, DIST_CODE, DIST_NAME, STORE_CODE, STORE_NAME, JDES_STORE_CODE, JDES_STORE_NAME, PROD_TYPE, PROD_CODE, PROD_NAME
+
+
+UNION ALL 
+
+--汇总
+SELECT 	'合计：', '', '', '', '', '', '', '', '', '','','',
+		sum(PROD_AMOUNT), sum(PROD_QUANTITY), sum(R_PROD_AMOUNT), sum(R_PROD_QUANTITY)
+
+		,CASE WHEN sum(R_PROD_AMOUNT)>0 THEN sum(PROD_AMOUNT)-sum(R_PROD_AMOUNT)
+		ELSE sum(PROD_AMOUNT)+sum(R_PROD_AMOUNT)
+		END
+ 		,CASE WHEN sum(R_PROD_QUANTITY)>0 THEN sum(PROD_QUANTITY)-sum(R_PROD_QUANTITY)
+		ELSE sum(PROD_QUANTITY)+sum(R_PROD_QUANTITY)
+		END
+		
+		,CASE WHEN sum(PROD_AMOUNT)+sum(R_PROD_AMOUNT)=0 THEN '-'
+			ELSE CASE WHEN @totalNumAmount=0 THEN '-'
+			ELSE CAST(CAST((sum(PROD_AMOUNT)+sum(R_PROD_AMOUNT))/@totalNumAmount*100 AS decimal(38,2)) AS VARCHAR)+'%'
+		END END
+		
+ 		,CASE WHEN sum(PROD_QUANTITY)+sum(R_PROD_QUANTITY)=0 THEN '-'
+			ELSE CASE WHEN @totalNumQli=0 THEN '-'
+			ELSE CAST(CAST((sum(PROD_QUANTITY)+sum(R_PROD_QUANTITY))/@totalNumQli*100 AS decimal(38,2)) AS VARCHAR)+'%'
+		END END
+		 		
+FROM BASE
+ 
+          ]]>
+		</sql>
+	</content>
+	
+</config>

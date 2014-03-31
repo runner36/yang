@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="true" paging="false">
+	<title>Ex-Distributor Analysis (By Brand)</title>
+	
+	<header>
+		<column title="SKU" width="300"/>
+		<column title="MTD,2009" width="80" align="center" />
+		<column title="MTD,2010" width="80" align="center"  />
+		<column title="MTD,%" width="80" align="center"  />
+		<column title="YTD,2009" width="80" align="center"  cell="number" format="0.00"/>
+		<column title="YTD,2010" width="80" align="center"  cell="number" format="0.00"/>
+		<column title="YTD,%" width="80" align="center"  />
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH -->
+		<param id="_orgAuthExp" initValue="" defaultValue="" valueList="" dataType="char"></param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="yyyyMm" initValue="_TODAY" defaultValue="">$yyyyMm$</param>
+		<param id="subCode" initValue="" defaultValue="" template="and (org.SUB_CODE like '$subCode$%') ">$subCode$</param>
+		<param id="bannerIds" initValue="" defaultValue="" template=" and (store.CORP_ID in ($bannerIds$)) ">$bannerIds$</param>
+		<sql>
+<![CDATA[
+
+--总量 start
+DECLARE @oldmonthtotal DECIMAL(38,5),@newmonthtotal DECIMAL(38,5),@oldtotal DECIMAL(38,5),@newtotal DECIMAL(38,5),@date VARCHAR(20),@oldYearStart varchar(20),@newYearStart varchar(20),@oldYearEnd varchar(20),@newYearEnd varchar(20)
+SET @date='$yyyyMm$'
+if(len(@date)=0)
+SET @date=CONVERT(VARCHAR(10),getdate(),120)
+else if(len(@date)<8)
+SET @date=@date+'-01'
+--以9月为开始     年YTD 
+if(convert(INT,substring(@date,6,2))>=9)
+begin
+	SET @oldYearStart = CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+'-09-01'
+	SET @oldYearEnd = dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+substring(CONVERT(VARCHAR(7),@date,120),5,7)+'-01')+1, 0))
+	SET @newYearStart = CONVERT(VARCHAR(4),@date,120)+'-09-01'
+	SET @newYearEnd=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,@date)+1, 0))
+end
+else
+begin
+	SET @oldYearStart = CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-2)+'-09-01'
+	SET @oldYearEnd = dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+substring(CONVERT(VARCHAR(7),@date,120),5,7)+'-01')+1, 0))
+	SET @newYearStart = CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+'-09-01'
+	SET @newYearEnd=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,@date)+1, 0))
+end
+
+
+
+SET @oldmonthtotal=isnull((SELECT sum(BOX) FROM RPT_DATA_SALE r_d_sale LEFT JOIN MDM_STORE store ON (r_d_sale.TARGET_STORE_CODE=store.STORE_CODE) LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID)  WHERE 1=1 AND r_d_sale.TARGET_PROD_CODE is not null  $subCode$ $bannerIds$  AND  r_d_sale.BILL_DATE>=CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+substring(CONVERT(VARCHAR(7),@date,120),5,7)+'-01' AND r_d_sale.BILL_DATE<=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+substring(CONVERT(VARCHAR(7),@date,120),5,7)+'-01')+1, 0))),0.0)/100 
+SET @newmonthtotal=isnull((SELECT sum(BOX) FROM RPT_DATA_SALE r_d_sale LEFT JOIN MDM_STORE store ON (r_d_sale.TARGET_STORE_CODE=store.STORE_CODE) LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID) WHERE 1=1 AND r_d_sale.TARGET_PROD_CODE is not null  $subCode$ $bannerIds$  AND r_d_sale.BILL_DATE>= CONVERT(VARCHAR(7),@date,120)+'-01' AND r_d_sale.BILL_DATE<=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,@date)+1, 0))),0.0)/100
+SET @oldtotal=isnull((SELECT sum(BOX)FROM RPT_DATA_SALE  r_d_sale LEFT JOIN MDM_STORE store ON (r_d_sale.TARGET_STORE_CODE=store.STORE_CODE) LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID) WHERE 1=1 AND r_d_sale.TARGET_PROD_CODE is not null  $subCode$ $bannerIds$ AND  r_d_sale.BILL_DATE>=CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+'-01-01' AND r_d_sale.BILL_DATE<=CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+'-12-31 23:59:59') ,0.0)/100
+SET @newtotal=isnull((SELECT sum(BOX)FROM RPT_DATA_SALE  r_d_sale LEFT JOIN MDM_STORE store ON (r_d_sale.TARGET_STORE_CODE=store.STORE_CODE) LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID) WHERE  1=1 AND r_d_sale.TARGET_PROD_CODE is not null  $subCode$ $bannerIds$  AND r_d_sale.BILL_DATE>=CONVERT(VARCHAR(4),@date,120)+'-01-01' AND r_d_sale.BILL_DATE<=CONVERT(VARCHAR(4),@date,120)+'-12-31 23:59:59') ,0.0)/100
+
+SELECT NULL ,'totalBrand','totalBrand',@oldmonthtotal,@newmonthtotal
+,CASE WHEN @newmonthtotal=0 THEN '-'
+ WHEN @oldmonthtotal=0 THEN '<font color=green>NEW</font>'
+ WHEN (@newmonthtotal-@oldmonthtotal)<0 THEN '<font color=red>'+CAST(CAST(  ((@newmonthtotal-@oldmonthtotal)*100/@oldmonthtotal ) AS  decimal(38,0))  AS VARCHAR)+'%</font>'
+ ELSE   CAST(CAST(  ((@newmonthtotal-@oldmonthtotal)*100/@oldmonthtotal ) AS  decimal(38,0))  AS VARCHAR)+'%' END 
+,@oldtotal,@newtotal
+,CASE WHEN @newtotal=0 THEN '-'
+ WHEN @oldtotal=0 THEN '<font color=green>NEW</font>'
+ WHEN (@newtotal-@oldtotal)<0 THEN '<font color=red>'+CAST(CAST(  ((@newtotal-@oldtotal)*100/@oldtotal ) AS  decimal(38,0))  AS VARCHAR)+'%</font>'
+ ELSE   CAST(CAST(  ((@newtotal-@oldtotal)*100/@oldtotal ) AS  decimal(38,0)) AS VARCHAR)+'%'  END 
+-------------------------- 
+UNION ALL 
+--品牌 统计start 
+
+SELECT brand.ITEM_NAME1,brand.ITEM_NAME ,brand.ITEM_NAME ,isnull(oldBrandmonth.oldMonthTotal,0.0) AS oldMonthTotal,isnull(newBrandmonth.newMonthTotal,0.0) AS newMonthTotal
+,CASE WHEN isnull(newBrandmonth.newMonthTotal,0)=0 THEN '-'
+ WHEN isnull(oldBrandmonth.oldMonthTotal,0)=0 THEN '<font color=green>NEW</font>'
+ WHEN (newMonthTotal-oldMonthTotal)<0 THEN '<font color=red>'+CAST(CAST(  ((newMonthTotal-oldMonthTotal)*100/oldMonthTotal ) AS  decimal(38,0))  AS VARCHAR)+'%</font>'
+ ELSE   CAST(CAST(  ((newMonthTotal-oldMonthTotal)*100/oldMonthTotal ) AS  decimal(38,0))  AS VARCHAR)+'%' END 
+ 
+,isnull(oldBrandyear.oldYearTotal,0.0) AS oldYearTotal,isnull(newBrandyear.newYearTotal,0.0) AS newYearTotal
+,CASE WHEN isnull(newBrandyear.newYearTotal,0)=0 THEN '-'
+ WHEN isnull(oldBrandyear.oldYearTotal,0)=0 THEN '<font color=green>NEW</font>'
+ WHEN (newYearTotal-oldYearTotal)<0 THEN '<font color=red>'+CAST(CAST(  ((newYearTotal-oldYearTotal)*100/oldYearTotal ) AS  decimal(38,0))  AS VARCHAR)+'%</font>'
+ ELSE   CAST(CAST(  ((newYearTotal-oldYearTotal)*100/oldYearTotal ) AS  decimal(38,0))  AS VARCHAR)+'%' END 
+ 
+ FROM (
+SELECT 'totalBrand' AS ITEM_NAME1,brand.ITEM_NAME ,brand.DICT_ITEM_ID
+
+FROM RPT_DATA_SALE r_d_sale 
+LEFT JOIN MDM_PRODUCT prod ON (r_d_sale.TARGET_PROD_CODE=prod.PROD_CODE)
+LEFT JOIN BASE_DICT_ITEM brand ON (prod.BRAND_ID=brand.DICT_ITEM_ID)
+LEFT JOIN MDM_STORE store ON (r_d_sale.TARGET_STORE_CODE=store.STORE_CODE)
+LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID)
+WHERE 1=1  
+AND r_d_sale.TARGET_PROD_CODE is not null 
+$subCode$ $bannerIds$
+
+GROUP BY brand.ITEM_NAME,brand.DICT_ITEM_ID
+) brand LEFT JOIN  (-- 去年当月
+	SELECT brand1.ITEM_NAME,sum(r_d_sale1.BOX)/100 AS oldMonthTotal,brand1.DICT_ITEM_ID  FROM RPT_DATA_SALE r_d_sale1
+	LEFT JOIN MDM_PRODUCT prod1 ON (r_d_sale1.TARGET_PROD_CODE=prod1.PROD_CODE)
+	LEFT JOIN BASE_DICT_ITEM brand1 ON (prod1.BRAND_ID=brand1.DICT_ITEM_ID)
+	LEFT JOIN MDM_STORE store ON (r_d_sale1.TARGET_STORE_CODE=store.STORE_CODE)
+	LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID)
+	
+	WHERE r_d_sale1.BILL_DATE>=CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+substring(CONVERT(VARCHAR(7),@date,120),5,7)+'-01'
+   AND r_d_sale1.BILL_DATE<=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+substring(CONVERT(VARCHAR(7),@date,120),5,7)+'-01')+1, 0))
+	$subCode$ $bannerIds$
+	
+	GROUP BY brand1.ITEM_NAME,brand1.DICT_ITEM_ID
+) oldBrandmonth ON (oldBrandmonth.DICT_ITEM_ID=brand.DICT_ITEM_ID)
+LEFT JOIN (--今年当月
+	SELECT brand2.ITEM_NAME,sum(r_d_sale2.BOX)/100 AS newMonthTotal,brand2.DICT_ITEM_ID FROM RPT_DATA_SALE r_d_sale2
+	LEFT JOIN MDM_PRODUCT prod2 ON (r_d_sale2.TARGET_PROD_CODE=prod2.PROD_CODE)
+	LEFT JOIN BASE_DICT_ITEM brand2 ON (prod2.BRAND_ID=brand2.DICT_ITEM_ID)
+	LEFT JOIN MDM_STORE store ON (r_d_sale2.TARGET_STORE_CODE=store.STORE_CODE)
+	LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID)
+	
+	WHERE r_d_sale2.BILL_DATE>=CONVERT(VARCHAR(7),@date,120)+'-01'
+   AND r_d_sale2.BILL_DATE<=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,@date)+1, 0))
+	$subCode$ $bannerIds$
+	
+	GROUP BY brand2.ITEM_NAME,brand2.DICT_ITEM_ID
+)newBrandmonth ON (newBrandmonth.DICT_ITEM_ID=brand.DICT_ITEM_ID)
+LEFT JOIN (-- 去年
+	SELECT brand3.ITEM_NAME,sum(r_d_sale3.BOX)/100 AS oldYearTotal,brand3.DICT_ITEM_ID FROM RPT_DATA_SALE r_d_sale3
+	LEFT JOIN MDM_PRODUCT prod3 ON (r_d_sale3.TARGET_PROD_CODE=prod3.PROD_CODE)
+	LEFT JOIN BASE_DICT_ITEM brand3 ON (prod3.BRAND_ID=brand3.DICT_ITEM_ID)
+	LEFT JOIN MDM_STORE store ON (r_d_sale3.TARGET_STORE_CODE=store.STORE_CODE)
+	LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID)
+
+	WHERE r_d_sale3.BILL_DATE>=@oldYearStart
+   AND r_d_sale3.BILL_DATE<=@oldYearEnd
+	$subCode$ $bannerIds$
+	
+	GROUP BY brand3.ITEM_NAME,brand3.DICT_ITEM_ID
+)oldBrandyear ON (oldBrandyear.DICT_ITEM_ID=brand.DICT_ITEM_ID)
+LEFT JOIN (--今年
+	SELECT brand4.ITEM_NAME,sum(r_d_sale4.BOX)/100 AS newYearTotal,brand4.DICT_ITEM_ID FROM RPT_DATA_SALE r_d_sale4
+	LEFT JOIN MDM_PRODUCT prod4 ON (r_d_sale4.TARGET_PROD_CODE=prod4.PROD_CODE)
+	LEFT JOIN BASE_DICT_ITEM brand4 ON (prod4.BRAND_ID=brand4.DICT_ITEM_ID)
+	LEFT JOIN MDM_STORE store ON (r_d_sale4.TARGET_STORE_CODE=store.STORE_CODE)
+	LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID)
+	
+	WHERE r_d_sale4.BILL_DATE>=@newYearStart
+   AND r_d_sale4.BILL_DATE<=@newYearEnd
+	$subCode$ $bannerIds$
+	
+	GROUP BY brand4.ITEM_NAME,brand4.DICT_ITEM_ID	
+)newBrandyear ON (newBrandyear.DICT_ITEM_ID=brand.DICT_ITEM_ID)
+
+
+-------------------------
+UNION ALL 
+----产品 start
+
+SELECT prods.ITEM_NAME,prods.PROD_NAME_EN,prods.PROD_NAME_EN,isnull(oldProMonth.oldProMonthTotal,0.0) AS oldProMonthTotal,isnull(newProMonth.newProMonthTotal,0.0) AS newProMonthTotal
+,CASE WHEN isnull(newProMonth.newProMonthTotal,0)=0 THEN '-' 
+ WHEN isnull(oldProMonth.oldProMonthTotal,0)=0 THEN '<font color=green>NEW</font>'
+ WHEN (newProMonthTotal-oldProMonthTotal)<0 THEN '<font color=red>'+CAST(CAST(  ((newProMonthTotal-oldProMonthTotal)*100/oldProMonthTotal ) AS  decimal(38,0))  AS VARCHAR)+'%</font>'
+ ELSE   CAST(CAST(  ((newProMonthTotal-oldProMonthTotal)*100/oldProMonthTotal) AS  decimal(38,0))  AS VARCHAR)+'%' END 
+
+,isnull(oldProYear.oldProYearTotal,0.0) AS oldProYearTotal, isnull(newProYear.newProYearTotal,0.0) AS newProYearTotal
+,CASE WHEN isnull(newProYear.newProYearTotal,0)=0 THEN '-' 
+ WHEN isnull(oldProYear.oldProYearTotal,0)=0 THEN '<font color=green>NEW</font>'
+ WHEN (newProYearTotal-oldProYearTotal)<0 THEN '<font color=red>'+CAST(CAST(  ((newProYearTotal-oldProMonthTotal)*100/oldProYearTotal ) AS  decimal(38,0))  AS VARCHAR)+'%</font>'
+ ELSE   CAST(CAST(  ((newProYearTotal-oldProYearTotal)*100/oldProYearTotal) AS  decimal(38,0))  AS VARCHAR)+'%' END 
+
+
+FROM(
+SELECT brand.ITEM_NAME,prod.PROD_NAME_EN ,r_d_sale.TARGET_PROD_CODE
+FROM RPT_DATA_SALE r_d_sale 
+LEFT JOIN MDM_PRODUCT prod ON (r_d_sale.TARGET_PROD_CODE=prod.PROD_CODE)
+LEFT JOIN BASE_DICT_ITEM brand ON (prod.BRAND_ID=brand.DICT_ITEM_ID)
+LEFT JOIN MDM_STORE store ON (r_d_sale.TARGET_STORE_CODE=store.STORE_CODE)
+LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID)
+where 1=1 
+AND r_d_sale.TARGET_PROD_CODE is not null 
+$subCode$  $bannerIds$
+
+GROUP BY brand.ITEM_NAME,prod.PROD_NAME_EN,r_d_sale.TARGET_PROD_CODE
+) prods LEFT JOIN (
+	--去年 当月
+	SELECT r_d_sale.TARGET_PROD_CODE,sum(r_d_sale.BOX)/100 AS oldProMonthTotal
+	FROM RPT_DATA_SALE r_d_sale
+	LEFT JOIN MDM_STORE store ON (r_d_sale.TARGET_STORE_CODE=store.STORE_CODE)
+	LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID)
+ 
+	WHERE r_d_sale.BILL_DATE>=CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+substring(CONVERT(VARCHAR(7),@date,120),5,7)+'-01'
+	AND r_d_sale.BILL_DATE<=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+substring(CONVERT(VARCHAR(7),@date,120),5,7)+'-01')+1, 0)) 
+	$subCode$  $bannerIds$
+	
+	GROUP BY r_d_sale.TARGET_PROD_CODE
+) oldProMonth ON(oldProMonth.TARGET_PROD_CODE=prods.TARGET_PROD_CODE)
+LEFT JOIN (
+	--今年 当月
+	SELECT r_d_sale1.TARGET_PROD_CODE,sum(r_d_sale1.BOX)/100 AS newProMonthTotal
+	FROM RPT_DATA_SALE r_d_sale1
+	LEFT JOIN MDM_STORE store ON (r_d_sale1.TARGET_STORE_CODE=store.STORE_CODE)
+	LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID)
+	
+	WHERE r_d_sale1.BILL_DATE>=CONVERT(VARCHAR(7),@date,120)+'-01'
+	AND r_d_sale1.BILL_DATE<=dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,@date)+1, 0))
+	$subCode$  $bannerIds$
+	
+	GROUP BY r_d_sale1.TARGET_PROD_CODE
+)newProMonth ON(newProMonth.TARGET_PROD_CODE=prods.TARGET_PROD_CODE)
+LEFT JOIN (
+	--去年
+	SELECT r_d_sale2.TARGET_PROD_CODE,sum(r_d_sale2.BOX)/100 AS oldProYearTotal
+	FROM RPT_DATA_SALE r_d_sale2
+	LEFT JOIN MDM_STORE store ON (r_d_sale2.TARGET_STORE_CODE=store.STORE_CODE)
+	LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID)
+	
+	WHERE r_d_sale2.BILL_DATE>=@oldYearStart
+	AND r_d_sale2.BILL_DATE<=@oldYearEnd
+	$subCode$  $bannerIds$
+	
+	GROUP BY r_d_sale2.TARGET_PROD_CODE
+)oldProYear ON(oldProYear.TARGET_PROD_CODE=prods.TARGET_PROD_CODE)
+LEFT JOIN (
+	--今年
+	SELECT r_d_sale3.TARGET_PROD_CODE,sum(r_d_sale3.BOX)/100 AS newProYearTotal
+	FROM RPT_DATA_SALE r_d_sale3
+	LEFT JOIN MDM_STORE store ON (r_d_sale3.TARGET_STORE_CODE=store.STORE_CODE)
+	LEFT JOIN BASE_ORG org ON (store.ORG_ID=org.ORG_ID)
+	
+	WHERE r_d_sale3.BILL_DATE>=@newYearStart
+	AND r_d_sale3.BILL_DATE<=@newYearEnd
+	$subCode$  $bannerIds$
+	
+	GROUP BY r_d_sale3.TARGET_PROD_CODE
+)newProYear ON(newProYear.TARGET_PROD_CODE=prods.TARGET_PROD_CODE)
+
+]]>
+		</sql>
+	</content>
+	
+</config>

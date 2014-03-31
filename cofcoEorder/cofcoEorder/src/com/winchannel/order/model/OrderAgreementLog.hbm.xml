@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.winchannel.order.model.OrderAgreementLog" table="ORDER_AGREEMENT_LOG">
+        <id name="id" type="java.lang.Long">
+            <column name="ID" precision="10" scale="0" />
+            <generator class="identity" />
+        </id>
+        <many-to-one name="mdmDistributor" class="com.winchannel.mdm.distributor.model.MdmDistributor" fetch="select">
+            <column name="DIST_ID" precision="10" scale="0" />
+        </many-to-one>
+        <many-to-one name="baseUser" class="com.winchannel.base.model.BaseUser" fetch="select">
+            <column name="USER_ID" precision="10" scale="0" />
+        </many-to-one>
+        <many-to-one name="baseEmployee" class="com.winchannel.base.model.BaseEmployee" fetch="select">
+            <column name="CREATED_BYID" precision="10" scale="0" />
+        </many-to-one>         
+        <property name="status" type="java.lang.Integer">
+            <column name="STATUS" precision="2" scale="0" />
+        </property>
+        <property name="createdByName" type="java.lang.String">
+            <column name="CREATED_BYNAME" length="200" />
+        </property>
+        <property name="createDate" type="java.util.Date">
+            <column name="CREATED_DATE" length="23" />
+        </property>        
+    </class>
+</hibernate-mapping>

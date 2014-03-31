@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+<beans default-autowire="byName" default-lazy-init="true">
+	<!-- <bean id="dmsDistributorManager" class="com.winchannel.dms.server.service.DmsDistributorManager" />
+	<bean id="dmsSoftwareManager" class="com.winchannel.dms.server.service.DmsSoftwareManager" />
+	<bean id="dmsClientManager" class="com.winchannel.dms.server.service.DmsClientManager" />
+	<bean id="dmsProdMappingManager" class="com.winchannel.dms.server.service.DmsProdMappingManager" />
+	<bean id="dmsStoreMappingManager"
+		class="com.winchannel.dms.server.service.DmsStoreMappingManager" />
+	<bean id="dmsRunLogManager" class="com.winchannel.dms.server.service.DmsRunLogManager" />
+	<bean id="dmsClientJobManager" class="com.winchannel.dms.server.service.DmsClientJobManager" />
+	<bean id="dmsClientJobDetManager"
+		class="com.winchannel.dms.server.service.DmsClientJobDetManager" /> -->
+
+	<!-- <bean id="dmsDataPurchaseManager"
+		class="com.winchannel.dms.server.service.DmsDataPurchaseManager" />
+	<bean id="dmsDataSaleManager" class="com.winchannel.dms.server.service.DmsDataSaleManager" />
+	<bean id="dmsDataStockManager" class="com.winchannel.dms.server.service.DmsDataStockManager" />
+	<bean id="dmsDataProductManager" class="com.winchannel.dms.server.service.DmsDataProductManager" />
+	<bean id="dmsDataStoreManager" class="com.winchannel.dms.server.service.DmsDataStoreManager" />
+	<bean id="dmsDataInoutManager" class="com.winchannel.dms.server.service.DmsDataInoutManager" />
+	<bean id="dmsDataOrderManager" class="com.winchannel.dms.server.service.DmsDataOrderManager" />
+	<bean id="dmsClientServiceManager"
+		class="com.winchannel.dms.server.service.DmsClientServiceManager" /> -->
+
+	<!-- for nike -->
+	<!-- <bean id="dmsClientServiceManager" class="com.winchannel.dms.server.service.custom.NikeDmsClientServiceManager" 
+		/> -->
+	<!-- for nike -->
+	<!-- <bean id="dmsStockDateMappingManager"
+		class="com.winchannel.dms.server.service.DmsStockDateMappingManager" />
+
+	<bean id="dmsTurnoverDaysCurveManager"
+		class="com.winchannel.dms.server.service.DmsTurnoverDaysCurveManager" />
+	<bean id="salesFlowReportManager" class="com.winchannel.gsk.report.server.SalesFlowReportManager" />
+	<bean id="dmsMessageManager" class="com.winchannel.dms.server.service.DmsMessageManager" />
+
+	<bean id="dmsProdMappingLogManager" class="com.winchannel.dms.server.service.DmsProdMappingLogManager" /> -->
+
+
+
+
+	<!--
+	<bean id="dmsProdMappingStatusManager" class="com.winchannel.dms.server.service.DmsProdMappingStatusManager" />
+	-->
+</beans>

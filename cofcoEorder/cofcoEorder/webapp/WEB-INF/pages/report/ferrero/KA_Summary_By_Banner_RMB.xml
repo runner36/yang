@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>Monthly KA Summary By Banner</title>
+	
+	<header>
+		<column property="0" width="150" title="Banner"/>
+		<column property="1" width="70" title="Target"/>
+		<column property="2" width="70" title="Actual"  align="center"  />
+		<column property="3" width="70" title="%Achieve"  align="center"  />
+		<column property="4" width="70" title="LY"  align="center"  />
+		<column property="5" width="70" title="%Growth"  align="center"  />
+		<column property="6" width="70" title="YTD Target"  align="center"  />
+		<column property="7" width="70" title="YTD Actual"  align="center"  />
+		<column property="8" width="70" title="YTD%Achieve"  align="center"  />
+	</header>
+	
+	<content>
+		<param id="Year" template=" '$Year$' ">$Year$</param>
+		<param id="Month" template=" '$Month$' ">$Month$</param>
+		<param id="orgId" template=" AND md.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="banner" template=" AND bdi.ITEM_NAME in ($banner$) " dataType="char">$banner$</param>
+		<param id="Unit" template="">$Unit$</param>
+		
+		<sql>
+		<![CDATA[
+DECLARE 
+	@date VARCHAR(20),
+	@date_y VARCHAR(20), @date_m VARCHAR(20),
+	@oldYearStart varchar(20), @newYearStart varchar(20)
+SET @date_y=$Year$
+SET @date_m=$Month$
+if(len(@date_m)<2)
+	SET @date_m = '0'+@date_m
+SET @date=@date_y+'-'+@date_m
+if(len(@date)=0)
+	SET @date=CONVERT(VARCHAR(10),getdate(),120)
+else if(len(@date)<8)
+	SET @date=@date+'-01'
+--以9月为开始     年YTD 
+if(convert(INT,substring(@date,6,2))>=9)
+begin
+	SET @oldYearStart = CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+'-09-01 0:00:00'
+	SET @newYearStart = CONVERT(VARCHAR(4),@date,120)+'-09-01 0:00:00'
+end
+else
+begin
+	SET @oldYearStart = CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-2)+'-09-01 0:00:00'
+	SET @newYearStart = CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@date,120))-1)+'-09-01 0:00:00'
+end;
+		
+WITH LY_YEAR AS (
+	SELECT bdi.ITEM_NAME AS  bannerId, sum(dds.PROD_AMOUNT) AS qli
+	
+	FROM DMS_DATA_SALE dds
+		--关联产品
+		INNER JOIN DMS_PROD_MAPPING dpm ON dds.PROD_CODE = dpm.DIST_PROD_CODE AND dds.CLIENT_ID = dpm.CLIENT_ID AND dds.PROD_UNIT=dpm.DIST_PROD_UNIT
+		INNER JOIN MDM_PRODUCT mp ON  mp.PROD_CODE = dpm.TARGET_PROD_CODE
+		--关联门店
+		INNER JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE
+		INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code
+		INNER JOIN BASE_DICT_ITEM bdi ON bdi.DICT_ITEM_ID = ms.CORP_ID
+		--关联客户、经销商 
+		INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+	 	INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+		--关联单位转换表
+		--LEFT JOIN MDM_UNIT_CONVERSION muc ON muc.PROD_CODE=dpm.TARGET_PROD_CODE AND muc.CONV_UNIT1_ID=dpm.TARGET_UNIT_ID AND muc.CONV_UNIT2_ID=$Unit$
+	
+	WHERE dds.BILL_DATE >= @oldYearStart and dds.BILL_DATE <= ( select dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0, $Year$ +'-'+ $Month$ +'-01')-11, 0)) )
+		$orgId$ $banner$
+		and mp.PROD_CODE not in ('zengpin','qita','tingchan')
+	GROUP BY bdi.ITEM_NAME
+)
+,LY_MONTH AS (
+	SELECT bdi.ITEM_NAME AS  bannerId, sum(dds.PROD_AMOUNT) AS qli
+	
+	FROM DMS_DATA_SALE dds
+		--关联产品
+		INNER JOIN DMS_PROD_MAPPING dpm ON dds.PROD_CODE = dpm.DIST_PROD_CODE AND dds.CLIENT_ID = dpm.CLIENT_ID AND dds.PROD_UNIT=dpm.DIST_PROD_UNIT
+		INNER JOIN MDM_PRODUCT mp ON  mp.PROD_CODE = dpm.TARGET_PROD_CODE
+		--关联门店
+		INNER JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE
+		INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code
+		INNER JOIN BASE_DICT_ITEM bdi ON bdi.DICT_ITEM_ID = ms.CORP_ID
+		--关联客户、经销商 
+		INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+	 	INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+		--关联单位转换表
+		--LEFT JOIN MDM_UNIT_CONVERSION muc ON muc.PROD_CODE=dpm.TARGET_PROD_CODE AND muc.CONV_UNIT1_ID=dpm.TARGET_UNIT_ID AND muc.CONV_UNIT2_ID=$Unit$
+	
+	WHERE DATEPART(yy, dateadd(yy, -1, $Year$))=DATEPART(yy, dds.BILL_DATE) AND DATEPART(mm, dds.BILL_DATE)=$Month$ 
+		$orgId$ $banner$
+		and mp.PROD_CODE not in ('zengpin','qita','tingchan')
+	GROUP BY bdi.ITEM_NAME
+)
+
+,TY_YEAR AS (
+	SELECT bdi.ITEM_NAME AS  bannerId, sum(dds.PROD_AMOUNT) AS qli
+	
+	FROM DMS_DATA_SALE dds
+		--关联产品
+		INNER JOIN DMS_PROD_MAPPING dpm ON dds.PROD_CODE = dpm.DIST_PROD_CODE AND dds.CLIENT_ID = dpm.CLIENT_ID AND dds.PROD_UNIT=dpm.DIST_PROD_UNIT
+		INNER JOIN MDM_PRODUCT mp ON  mp.PROD_CODE = dpm.TARGET_PROD_CODE
+		--关联门店
+		INNER JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE
+		INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code
+		INNER JOIN BASE_DICT_ITEM bdi ON bdi.DICT_ITEM_ID = ms.CORP_ID
+		--关联客户、经销商 
+		INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+	 	INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+		--关联单位转换表
+		--LEFT JOIN MDM_UNIT_CONVERSION muc ON muc.PROD_CODE=dpm.TARGET_PROD_CODE AND muc.CONV_UNIT1_ID=dpm.TARGET_UNIT_ID AND muc.CONV_UNIT2_ID=$Unit$
+			 	
+	WHERE dds.BILL_DATE >= @newYearStart and dds.BILL_DATE <= ( select dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0, $Year$ +'-'+ $Month$ +'-01')+1, 0)) )
+		$orgId$ $banner$
+		and mp.PROD_CODE not in ('zengpin','qita','tingchan')
+	GROUP BY bdi.ITEM_NAME
+)
+,TY_MONTH AS (
+	SELECT bdi.ITEM_NAME AS  bannerId, sum(dds.PROD_AMOUNT) AS qli
+	
+	FROM DMS_DATA_SALE dds
+		--关联产品
+		INNER JOIN DMS_PROD_MAPPING dpm ON dds.PROD_CODE = dpm.DIST_PROD_CODE AND dds.CLIENT_ID = dpm.CLIENT_ID AND dds.PROD_UNIT=dpm.DIST_PROD_UNIT
+		INNER JOIN MDM_PRODUCT mp ON  mp.PROD_CODE = dpm.TARGET_PROD_CODE
+		--关联门店
+		INNER JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE
+		INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code
+		INNER JOIN BASE_DICT_ITEM bdi ON bdi.DICT_ITEM_ID = ms.CORP_ID
+		--关联客户、经销商 
+		INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+	 	INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+		--关联单位转换表
+		--LEFT JOIN MDM_UNIT_CONVERSION muc ON muc.PROD_CODE=dpm.TARGET_PROD_CODE AND muc.CONV_UNIT1_ID=dpm.TARGET_UNIT_ID AND muc.CONV_UNIT2_ID=$Unit$
+			 	
+	WHERE DATEPART(yy, dds.BILL_DATE)=$Year$ AND DATEPART(mm, dds.BILL_DATE)=$Month$
+		$orgId$ $banner$
+		and mp.PROD_CODE not in ('zengpin','qita','tingchan')
+	GROUP BY bdi.ITEM_NAME
+)
+
+,base AS (
+	SELECT tm.bannerId AS bannerId
+			,'-' AS month_target
+			,cast(isnull(tm.qli,0) AS decimal(38,2)) AS tm_qli
+			,cast(isnull(lm.qli,0) AS decimal(38,2)) AS lm_qli
+			,'-' AS year_target
+			,cast(isnull(ty.qli,0) AS decimal(38,2)) AS ty_qli
+			,cast(isnull(ly.qli,0) AS decimal(38,2)) AS ly_qli
+	
+	FROM TY_YEAR AS ty
+		LEFT JOIN TY_MONTH AS tm ON tm.bannerId=ty.bannerId 
+		LEFT JOIN LY_MONTH AS lm ON lm.bannerId=ty.bannerId 
+		LEFT JOIN LY_YEAR AS ly ON ly.bannerId=ty.bannerId  
+)
+
+SELECT 	base.bannerId
+		,'-'
+		,sum(cast(isnull(base.tm_qli,0) AS decimal(38,2)))
+		,'-'
+		,sum(cast(isnull(base.lm_qli,0) AS decimal(38,2)))
+		,CASE WHEN isnull(sum(base.tm_qli), 0) = 0 THEN '-'
+			ELSE CASE WHEN isnull(sum(base.lm_qli), 0) = 0 THEN 'NEW'
+			ELSE cast(cast((sum(base.lm_qli) - sum(base.tm_qli))/sum(base.tm_qli)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+			END
+		END	
+		
+		,'-'
+		,sum(cast(isnull(base.ty_qli,0) AS decimal(38,2)))
+		,'-'	
+
+FROM base
+GROUP BY base.bannerId
+
+
+UNION ALL
+
+
+SELECT 	'KA Total'
+		,'-'
+		,sum(cast(isnull(base.tm_qli,0) AS decimal(38,2)))
+		,'-'
+		,sum(cast(isnull(base.lm_qli,0) AS decimal(38,2)))
+		,CASE WHEN isnull(sum(base.tm_qli), 0) = 0 THEN '-'
+			ELSE CASE WHEN isnull(sum(base.lm_qli), 0) = 0 THEN 'NEW'
+			ELSE cast(cast((sum(base.lm_qli) - sum(base.tm_qli))/sum(base.tm_qli)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+			END
+		END	
+		
+		,'-'
+		,sum(cast(isnull(base.ty_qli,0) AS decimal(38,2)))
+		,'-'	
+
+FROM base		
+		 
+		]]>
+		</sql>
+	</content>
+</config>

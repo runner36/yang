@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+table :
+	class    : 实体类的类名
+	key      : 可以指定某一列的code为key，可以指定多个，中间用逗号分隔；如果指定，系统会根据key的值来决定数据的存储方式，新增或是修改
+	startRow : 从数据文件中的第几行开始读取数据(1...)
+column :
+	id       : 列号（1...）
+	code     : 实体类中的属性名
+	type     : 数据类型 char|number|date 
+	length   : 数据最大长度，如果是数值，则包括小数点及正负号
+	format   : 在数据类型为 number|date 时有效；date类型时也可不输入，系统会自动尝试所有格式；如果是number类型，则必须输入，以便区分或转换为long和double
+	required : 值是否必须
+	mask     : 使用正则表达式验证
+	value    : 可直接指定列的的值，如：value="123"; 也可加入系统变量或当前变量，如：value="${0}-${_emp.empName}-${sort}" , 结果："001-系统管理员-1";
+	
+目前系统支持的变量：
+
+_user       : BaseUser
+_emp        : BaseEmployee
+		
+_currDate   : String
+_currTime   : String
+_currMillis : String
+_uuid       : String
+
+-->
+<table class="com.winchannel.order.model.MdmDistributorAddress"  key="mdmDistributor.distCode,baseDictItem.itemCode,shiptoCode"  startRow="2" template-name="客户送达方_导入模板">
+	<columns>
+		<column name="1" code="mdmDistributor.distCode" title="客户(编码)" type="char"   length="32"  format="" required="true" />
+		<column name="2" code="baseDictItem.itemCode"  filter="baseDict.dictId='prodSTRU'" title="物料组(编码)" type="char"   length="32"  format="" required="true"/>
+		<column name="3" code="shiptoCode" title="送达方(编码)" type="char" length="100"  format=""   required="true"/>
+		<column name="4" code="shiptoName" title="送达方客户(名称)" type="char" length="100" required="true"/>
+		<column name="5" code="shiptoAdd" title="送达方地址" type="char"   length="100"  format="0"  required="true"/>
+		<column name="6" code="contact" title="联系人" type="char"   length="100"  format="0" required="true"/>
+		<column name="7" code="tel" title="联系电话" type="char"   length="15"  format="0" required="true"/>
+		<column name="8" code="mobile" title="手机" type="char"   length="15"  format="0" />
+		<column name="9" code="factoryDelivery" title="出货仓库" type="char"   length="250"  format="0"      />
+		<column name="10" code="status" title="状态（1:有效/0:无效）" type="number"   length="10"  format="0"      />
+		<column code="createdByid"   title=""    type="number"  length="50"   format=""  value="${_emp.empId}"/>
+		<column code="createdDate"   title=""    type="date"  length="23"   format=""  value="${_currTime}"/>
+		<column code="createdByname" title=""    type="char"  length="50"   format=""  value="${_emp.empName}"/>
+		<column code="updatedByid"   title=""    type="number"  length="50"   format=""  value="${_emp.empId}"/>
+		<column code="updatedByname" title=""    type="char"  length="50"   format=""  value="${_emp.empName}"/>
+		<column code="updatedDate"   title=""    type="date"  length="23"   format=""  value="${_currTime}"/>
+	</columns>
+</table>
+

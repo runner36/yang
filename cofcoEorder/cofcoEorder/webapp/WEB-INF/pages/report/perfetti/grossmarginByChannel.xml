@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>毛利率分析二</title>
+	
+	<header>
+		<column property="0" title="SKU"/>
+		<column property="1" title="KA" cell="number" format="0.00" style="text-align:right"/>
+		<column property="2" title="SC" cell="number" format="0.00" style="text-align:right"/>
+		<column property="3" title="WS" cell="number" format="0.00" style="text-align:right"/>
+		<column property="4" title="SECDS" cell="number" format="0.00" style="text-align:right"/>
+		<column property="5" title="CO" cell="number" format="0.00" style="text-align:right"/>
+		<column property="6" title="渠道平均毛利率" cell="number" format="0.00%" style="text-align:right"/>
+	</header>
+	
+	<content>
+		<param id="_orgAuthExp" initValue="" defaultValue="">$orgAuth$</param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="prodName" template="and prod.prod_name like '%$prodName$%'">$prodName$</param>
+		<param id="billDate1" template="and sale.bill_date>='$billDate1$'">$billDate1$</param>
+		<param id="billDate2" template="and sale.bill_date&lt;='$billDate2$ 23:59:59'">$billDate2$</param>
+		<sql>
+<![CDATA[
+select prod.prod_name,
+	case when sale.ka_amt=0 then null else round((sale.ka_amt-sale.ka_gross)/sale.ka_amt,2) end,
+	case when sale.sc_amt=0 then null else round((sale.sc_amt-sale.sc_gross)/sale.sc_amt,2) end,
+	case when sale.ws_amt=0 then null else round((sale.ws_amt-sale.ws_gross)/sale.ws_amt,2) end,
+	case when sale.se_amt=0 then null else round((sale.se_amt-sale.se_gross)/sale.se_amt,2) end,
+	case when sale.co_amt=0 then null else round((sale.co_amt-sale.co_gross)/sale.co_amt,2) end,
+	case when sale.amt=0 then null else round((sale.amt-sale.gross)/sale.amt,4) end
+from 
+	(
+	select sale.target_prod_code,
+		sum(case when channel.pn1='KA' then gross_sales end) as ka_gross,
+		sum(case when channel.pn1='KA' then prod_amount end) as ka_amt,
+		sum(case when channel.pn1='SC' then gross_sales end) as sc_gross,
+		sum(case when channel.pn1='SC' then prod_amount end) as sc_amt,
+		sum(case when channel.pn1='WS' then gross_sales end) as ws_gross,
+		sum(case when channel.pn1='WS' then prod_amount end) as ws_amt,
+		sum(case when channel.pn1='SECDS' then gross_sales end) as se_gross,
+		sum(case when channel.pn1='SECDS' then prod_amount end) as se_amt,
+		sum(case when channel.pn1='CO' then gross_sales end) as co_gross,
+		sum(case when channel.pn1='CO' then prod_amount end) as co_amt,
+		sum(gross_sales) as gross,
+		sum(prod_amount) as amt
+	from rpt_data_sale sale,mdm_store store,base_dict_item channel
+	where sale.target_store_code=store.store_code and store.channel_id=channel.dict_item_id $billDate1$ $billDate2$
+	group by sale.target_prod_code
+	) sale
+	inner join mdm_product prod on sale.target_prod_code=prod.prod_code
+where 1=1 $prodName$
+
+
+]]>
+		</sql>
+	</content>
+	
+</config>

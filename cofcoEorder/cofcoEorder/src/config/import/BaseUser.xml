@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+table :
+	class         : 实体类的类名
+	key           : 可以指定某一列的code为key，可以指定多个，中间用逗号分隔；如果指定，系统会根据key的值来决定数据的存储方式，新增或是修改
+	startRow      : 从数据文件中的第几行开始读取数据(1...)
+	template-name ：导出模板时的文件名称
+	event-handler ：指定事件处理程序,需继承com.winchannel.core.importer.ImpEventHandler,如event-handler="com.winchannel.test.OrgImpEventHandler"
+column :
+	id         : 列号（1...）
+	code       : 实体类中的属性名
+	type       : 数据类型 char|number|date 
+	length     : 数据最大长度，如果是数值，则包括小数点及正负号
+	format     : 在数据类型为 number|date 时有效；date类型时也可不输入，系统会自动尝试所有格式；如果是number类型，则必须输入，以便区分或转换为long和double
+	required   : 值是否必须
+	mask       : 使用正则表达式验证
+	allow-skip : 如果验证失败则跳过当前记录，继续正常运行
+	filter     : 主要用在主键或外键列上，比如有一列是字典项，则需要通过filter指定字段分类缩小范围，如：filter="baseDict.dictId='prodUnit'"
+	value      : 可直接指定列的的值，如：value="123"; 也可加入系统变量或当前变量，如：value="${0}-${_emp.empName}-${sort}" , 结果："001-系统管理员-1";
+	
+目前系统支持的变量：
+
+_user       : BaseUser
+_emp        : BaseEmployee
+		
+_currDate   : String
+_currTime   : String
+_currMillis : String
+_uuid       : String
+
+-->
+<table class="com.winchannel.base.model.BaseUser" key="userAccount" start-row="2" eventHandler="com.winchannel.base.service.ImportBaseUserEventHandler" template-name="用户导入模板">
+	<columns>
+		<column name="1" code="baseEmployee.empCode" title="人员编号" type="char"   length="50"  format=""      required="true"/>
+		<column name="2" code="userAccount"          title="用户帐号" type="char"   length="50"  format=""      required="true"  mask="" allow-skip="true"/>
+		<column name="3" code="userPassword"         title="用户密码" type="char"   length="50"  format=""      required="true" filter=""/>
+		<column name="4" code="sort"                 title="排序　　" type="number" length="10"  format="0"     required="false" mask=""/>
+		<column name="5" code=""                 	 title="角色名称" type="char" length="100"  format="0"      required="true" mask=""/>
+		<column name="6" code="userType"                 title="用户类型" type="char" length="50"  format="0"       required="true" mask=""/>
+		<column name="7" code="remark"               title="备注　　" type="char"   length="500" />
+		
+		<column code="createdBy"     title=""    type="char"     length="50"   format=""  value="${_emp.empName}"/>
+		<column code="created"       title=""    type="date"     length="23"   format=""  value="${_currTime}"/>
+		<column code="updatedBy"     title=""    type="char"     length="50"   format=""  value="${_emp.empName}"/>
+		<column code="updated"       title=""    type="date"     length="23"   format=""  value="${_currTime}"/>
+		<column code="state"     title=""    type="char"     length="50"   format=""  value="1"/>
+	</columns>
+</table>
+

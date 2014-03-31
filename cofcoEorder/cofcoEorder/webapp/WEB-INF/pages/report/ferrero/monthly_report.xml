@@ -1,0 +1,726 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>Monthly Report</title>
+	
+	<header>
+		<column title="Channel" property="0" />
+		<column title="Banner" property="1" />
+		<column title="Brand" property="2" />
+		<column title="SKU" property="3" />
+		
+		<column title="Sep,LY"   property="4"  />
+		<column title="Sep,TY"  property="5"  />
+		<column title="Sep,%"  property="6"  />
+		<column title="Oct,LY"  property="7"  />
+		<column title="Oct,TY"  property="8"  />
+		<column title="Oct,%"  property="9"  />
+		<column title="Nov,LY"  property="10"  />
+		<column title="Nov,TY"  property="11"  />
+		<column title="Nov,%"  property="12"  />
+		<column title="Dec,LY"  property="13"  />
+		<column title="Dec,TY"  property="14"  />
+		<column title="Dec,%"  property="15"  />
+		<column title="Jan,LY"  property="16"  />
+		<column title="Jan,TY"  property="17"  />
+		<column title="Jan,%"  property="18"  />	
+		<column title="Feb,LY"  property="19"  />
+		<column title="Feb,TY"  property="20"  />
+		<column title="Feb,%"  property="21"  />
+		<column title="Mar,LY"  property="22"  />
+		<column title="Mar,TY"  property="23"  />
+		<column title="Mar,%"  property="24"  />
+		<column title="Apr,LY"  property="25"  />
+		<column title="Apr,TY"  property="26"  />
+		<column title="Apr,%"  property="27"  />
+		<column title="May,LY"  property="28"  />
+		<column title="May,TY"  property="29"  />
+		<column title="May,%"  property="30"  />
+		<column title="Jun,LY"  property="31"  />
+		<column title="Jun,TY"  property="32"  />
+		<column title="Jun,%"  property="33"  />
+		<column title="Jul,LY"  property="34"  />
+		<column title="Jul,TY"  property="35"  />
+		<column title="Jul,%"  property="36"  />
+		<column title="Aug,LY"  property="37"  />
+		<column title="Aug,TY"  property="38"  />
+		<column title="Aug,%"  property="39"  />
+		
+		<column title="YTD,LY"  property="40"  />
+		<column title="YTD,TY"  property="41"  />
+		<column title="YTD,%"  property="42"  />
+		<column title="Share,TY"  property="43"  />		
+	</header>
+	<content>
+		<param id="Year" template="">$Year$</param>
+		<param id="orgId" template=" AND md.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="distId" template=" AND md.DIST_ID in ($distId$) ">$distId$</param>
+		<param id="bannerId" template=" AND ms.CORP_ID in ($bannerId$) ">$bannerId$</param>
+		<param id="channelId" template=" AND ms.TYPE_ID in ($channelId$) ">$channelId$</param>
+		<param id="brandId" template=" AND mp.BRAND_ID in ($brandId$) ">$brandId$</param>
+		<param id="Unit" template="">$Unit$</param>
+		
+		<param id="simsOrgId" template=" and ms.ORG_ID in ($simsOrgId$) AND ms.DIST_ID=md.DIST_ID ">$simsOrgId$</param>
+		<sql>
+<![CDATA[
+
+
+--删除临时表
+IF object_id('tempdb..#TEMP_TABLE') IS NOT NULL BEGIN 
+    DROP TABLE #TEMP_TABLE
+END;
+
+WITH base AS (
+	SELECT 	ms.CORP_ID AS corpId, banner.ITEM_NAME AS corpName, ms.TYPE_ID AS channelId, channel.ITEM_NAME AS channelName, 
+			mp.BRAND_ID AS brandId, brand.ITEM_NAME AS brandName,
+			mp.PROD_CODE AS prodCode, mp.PROD_ALIAS AS prodName, mp.SORT AS P_SORT
+			
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,-12,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS LY_9
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,0, '$Year$'+'-09-01'),23),0,8)
+			THEN dds.box ELSE  0 END ) AS TY_9
+			
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,-11,'$Year$'+'-09-01'),23),0,8)
+			THEN dds.box ELSE  0 END ) AS LY_10
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,1,'$Year$'+'-09-01'),23),0,8) 
+			THEN dds.box ELSE  0 END ) AS TY_10
+			
+			,sum(CASE WHEN  substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,-10,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS LY_11
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,2,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS TY_11
+			
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,-9,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS LY_12
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,3,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS TY_12
+			
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,-8,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS LY_1
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,4,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS TY_1
+			
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,-7,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS LY_2
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,5,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS TY_2
+			
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,-6,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS LY_3
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,6,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS TY_3
+			
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,-5,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS LY_4     
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,7,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS TY_4 
+			
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,-4,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS LY_5     
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,8,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS TY_5 
+			
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,-3,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS LY_6     
+			,sum(CASE WHEN  substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,9,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS TY_6 
+			
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,-2,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS LY_7     
+			,sum(CASE WHEN  substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,10,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS TY_7 
+			
+			,sum(CASE WHEN substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,-1,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS LY_8     
+			,sum(CASE WHEN  substring(convert(VARCHAR(100),DATEADD(dd,0,dds.BILL_DATE),23),0,8) = substring(convert(VARCHAR(100),dateadd(mm,11,'$Year$'+'-09-01' ),23),0,8)
+			THEN dds.box ELSE  0 END ) AS TY_8
+			
+
+	FROM 	RPT_DATA_SALE dds
+			--关联产品
+			INNER JOIN MDM_PRODUCT mp ON mp.PROD_CODE=dds.TARGET_PROD_CODE 
+			LEFT JOIN BASE_DICT_ITEM AS brand ON mp.BRAND_ID=brand.DICT_ITEM_ID AND brand.DICT_ID='prodBrand'
+			--关联门店
+			INNER JOIN MDM_STORE AS ms ON ms.STORE_CODE=dds.TARGET_STORE_CODE 
+			LEFT JOIN BASE_DICT_ITEM AS banner ON ms.CORP_ID=banner.DICT_ITEM_ID AND banner.DICT_ID='storeCorp'
+			LEFT JOIN BASE_DICT_ITEM AS channel ON ms.TYPE_ID=channel.DICT_ITEM_ID AND channel.DICT_ID='storeType'
+			
+			LEFT JOIN DMS_CLIENT dc ON dds.CLIENT_ID=dc.CLIENT_ID
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID=dc.DIST_ID
+			LEFT JOIN BASE_ORG bo ON bo.ORG_ID=md.ORG_ID
+
+	WHERE 	dds.BILL_DATE >= convert(VARCHAR,dateadd(mm,-12,'$Year$'+'-09-01 00:00:00'),120) and 
+			dds.BILL_DATE <= convert(VARCHAR,dateadd(mm,12,'$Year$'+'-08-31 23:59:59'),120) 
+			AND ms.CORP_ID IS NOT NULL 
+			AND ms.TYPE_ID IS NOT NULL 
+			AND mp.BRAND_ID IS NOT NULL 
+			$orgId$ $distId$ $bannerId$ $channelId$ $brandId$ $simsOrgId$ 
+			and mp.PROD_CODE not in ('zengpin','qita','tingchan')
+			
+	GROUP BY ms.CORP_ID, banner.ITEM_NAME, ms.TYPE_ID, channel.ITEM_NAME, mp.BRAND_ID, brand.ITEM_NAME, mp.PROD_CODE, mp.PROD_ALIAS, mp.SORT
+)
+
+SELECT * INTO #TEMP_TABLE FROM base
+
+--明细
+SELECT	channelName, corpName, brandName, prodName
+		,CAST(sum(LY_9) AS decimal(38,2)) as LY_9, CAST(sum(TY_9) AS decimal(38,2)) as TY_9
+		,CASE WHEN sum(TY_9) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_9) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_9) - sum(LY_9))/sum(LY_9)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r1
+		,CAST(sum(LY_10) AS decimal(38,2)) as LY_10, CAST(sum(TY_10) AS decimal(38,2)) as TY_10
+		,CASE WHEN sum(TY_10) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_10) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_10) - sum(LY_10))/sum(LY_10)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r2
+		,CAST(sum(LY_11) AS decimal(38,2)) as LY_11, CAST(sum(TY_11) AS decimal(38,2)) as TY_11
+		,CASE WHEN sum(TY_11) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_11) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_11) - sum(LY_11))/sum(LY_11)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r3  
+		,CAST(sum(LY_12) AS decimal(38,2)) as LY_12, CAST(sum(TY_12) AS decimal(38,2)) as TY_12
+		,CASE WHEN sum(TY_12) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_12) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_12) - sum(LY_12))/sum(LY_12)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r4  
+		,CAST(sum(LY_1) AS decimal(38,2)) as LY_1, CAST(sum(TY_1) AS decimal(38,2)) as TY_1
+		,CASE WHEN sum(TY_1) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_1) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_1) - sum(LY_1))/sum(LY_1)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r5  
+		,CAST(sum(LY_2) AS decimal(38,2)) as LY_2, CAST(sum(TY_2) AS decimal(38,2)) as TY_2
+		,CASE WHEN sum(TY_2) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_2) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_2) - sum(LY_2))/sum(LY_2)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r6  
+		,CAST(sum(LY_3) AS decimal(38,2)) as LY_3, CAST(sum(TY_3) AS decimal(38,2)) as TY_3
+		,CASE WHEN sum(TY_3) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_3) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_3) - sum(LY_3))/sum(LY_3)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r7  
+		,CAST(sum(LY_4) AS decimal(38,2)) as LY_4, CAST(sum(TY_4) AS decimal(38,2)) as TY_4
+		,CASE WHEN sum(TY_4) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_4) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_4) - sum(LY_4))/sum(LY_4)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r8  
+		,CAST(sum(LY_5) AS decimal(38,2)) as LY_5, CAST(sum(TY_5) AS decimal(38,2)) as TY_5
+		,CASE WHEN sum(TY_5) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_5) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_5) - sum(LY_5))/sum(LY_5)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r9 
+		,CAST(sum(LY_6) AS decimal(38,2)) as LY_6, CAST(sum(TY_6) AS decimal(38,2)) as TY_6
+		,CASE WHEN sum(TY_6) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_6) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_6) - sum(LY_6))/sum(LY_6)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r10  
+		,CAST(sum(LY_7) AS decimal(38,2)) as LY_7, CAST(sum(TY_7) AS decimal(38,2)) as TY_7
+		,CASE WHEN sum(TY_7) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_7) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_7) - sum(LY_7))/sum(LY_7)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r11 
+		,CAST(sum(LY_8) AS decimal(38,2)) as LY_8, CAST(sum(TY_8) AS decimal(38,2)) as TY_8
+		,CASE WHEN sum(TY_8) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_8) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_8) - sum(LY_8))/sum(LY_8)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r12 
+		
+		,CAST(sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8) AS decimal(38,2)) as LY
+		,CAST(sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) AS decimal(38,2)) as TY
+		
+		,CASE WHEN sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) - 
+		sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8))/ 
+		sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8)*100
+		AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r12
+		
+		,CASE WHEN sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) =0 THEN '0%'
+		ELSE CASE WHEN (SELECT sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) FROM #TEMP_TABLE) =0 THEN '100%'
+		ELSE 
+		cast(cast(sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8)/(SELECT sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) FROM #TEMP_TABLE)*100
+		AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r14
+FROM	#TEMP_TABLE
+GROUP BY channelName, corpName, brandName, prodName
+
+
+UNION ALL 
+
+
+--渠道合计
+SELECT	channelName, '', '', ''
+		,CAST(sum(LY_9) AS decimal(38,2)) as LY_9, CAST(sum(TY_9) AS decimal(38,2)) as TY_9
+		,CASE WHEN sum(TY_9) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_9) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_9) - sum(LY_9))/sum(LY_9)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r1
+		,CAST(sum(LY_10) AS decimal(38,2)) as LY_10, CAST(sum(TY_10) AS decimal(38,2)) as TY_10
+		,CASE WHEN sum(TY_10) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_10) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_10) - sum(LY_10))/sum(LY_10)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r2
+		,CAST(sum(LY_11) AS decimal(38,2)) as LY_11, CAST(sum(TY_11) AS decimal(38,2)) as TY_11
+		,CASE WHEN sum(TY_11) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_11) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_11) - sum(LY_11))/sum(LY_11)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r3  
+		,CAST(sum(LY_12) AS decimal(38,2)) as LY_12, CAST(sum(TY_12) AS decimal(38,2)) as TY_12
+		,CASE WHEN sum(TY_12) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_12) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_12) - sum(LY_12))/sum(LY_12)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r4  
+		,CAST(sum(LY_1) AS decimal(38,2)) as LY_1, CAST(sum(TY_1) AS decimal(38,2)) as TY_1
+		,CASE WHEN sum(TY_1) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_1) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_1) - sum(LY_1))/sum(LY_1)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r5  
+		,CAST(sum(LY_2) AS decimal(38,2)) as LY_2, CAST(sum(TY_2) AS decimal(38,2)) as TY_2
+		,CASE WHEN sum(TY_2) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_2) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_2) - sum(LY_2))/sum(LY_2)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r6  
+		,CAST(sum(LY_3) AS decimal(38,2)) as LY_3, CAST(sum(TY_3) AS decimal(38,2)) as TY_3
+		,CASE WHEN sum(TY_3) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_3) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_3) - sum(LY_3))/sum(LY_3)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r7  
+		,CAST(sum(LY_4) AS decimal(38,2)) as LY_4, CAST(sum(TY_4) AS decimal(38,2)) as TY_4
+		,CASE WHEN sum(TY_4) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_4) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_4) - sum(LY_4))/sum(LY_4)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r8  
+		,CAST(sum(LY_5) AS decimal(38,2)) as LY_5, CAST(sum(TY_5) AS decimal(38,2)) as TY_5
+		,CASE WHEN sum(TY_5) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_5) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_5) - sum(LY_5))/sum(LY_5)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r9 
+		,CAST(sum(LY_6) AS decimal(38,2)) as LY_6, CAST(sum(TY_6) AS decimal(38,2)) as TY_6
+		,CASE WHEN sum(TY_6) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_6) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_6) - sum(LY_6))/sum(LY_6)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r10  
+		,CAST(sum(LY_7) AS decimal(38,2)) as LY_7, CAST(sum(TY_7) AS decimal(38,2)) as TY_7
+		,CASE WHEN sum(TY_7) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_7) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_7) - sum(LY_7))/sum(LY_7)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r11 
+		,CAST(sum(LY_8) AS decimal(38,2)) as LY_8, CAST(sum(TY_8) AS decimal(38,2)) as TY_8
+		,CASE WHEN sum(TY_8) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_8) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_8) - sum(LY_8))/sum(LY_8)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r12 
+		
+		,CAST(sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8) AS decimal(38,2)) as LY
+		,CAST(sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) AS decimal(38,2)) as TY
+		
+		,CASE WHEN sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) - 
+		sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8))/ 
+		sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8)*100
+		AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r12
+		
+		,CASE WHEN sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) =0 THEN '0%'
+		ELSE CASE WHEN (SELECT sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) FROM #TEMP_TABLE) =0 THEN '100%'
+		ELSE 
+		cast(cast(sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8)/(SELECT sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) FROM #TEMP_TABLE)*100
+		AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r14
+FROM	#TEMP_TABLE
+GROUP BY channelName
+
+
+UNION ALL 
+
+
+--门店组织合计
+SELECT	'', corpName, '', ''
+		,CAST(sum(LY_9) AS decimal(38,2)) as LY_9, CAST(sum(TY_9) AS decimal(38,2)) as TY_9
+		,CASE WHEN sum(TY_9) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_9) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_9) - sum(LY_9))/sum(LY_9)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r1
+		,CAST(sum(LY_10) AS decimal(38,2)) as LY_10, CAST(sum(TY_10) AS decimal(38,2)) as TY_10
+		,CASE WHEN sum(TY_10) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_10) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_10) - sum(LY_10))/sum(LY_10)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r2
+		,CAST(sum(LY_11) AS decimal(38,2)) as LY_11, CAST(sum(TY_11) AS decimal(38,2)) as TY_11
+		,CASE WHEN sum(TY_11) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_11) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_11) - sum(LY_11))/sum(LY_11)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r3  
+		,CAST(sum(LY_12) AS decimal(38,2)) as LY_12, CAST(sum(TY_12) AS decimal(38,2)) as TY_12
+		,CASE WHEN sum(TY_12) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_12) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_12) - sum(LY_12))/sum(LY_12)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r4  
+		,CAST(sum(LY_1) AS decimal(38,2)) as LY_1, CAST(sum(TY_1) AS decimal(38,2)) as TY_1
+		,CASE WHEN sum(TY_1) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_1) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_1) - sum(LY_1))/sum(LY_1)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r5  
+		,CAST(sum(LY_2) AS decimal(38,2)) as LY_2, CAST(sum(TY_2) AS decimal(38,2)) as TY_2
+		,CASE WHEN sum(TY_2) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_2) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_2) - sum(LY_2))/sum(LY_2)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r6  
+		,CAST(sum(LY_3) AS decimal(38,2)) as LY_3, CAST(sum(TY_3) AS decimal(38,2)) as TY_3
+		,CASE WHEN sum(TY_3) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_3) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_3) - sum(LY_3))/sum(LY_3)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r7  
+		,CAST(sum(LY_4) AS decimal(38,2)) as LY_4, CAST(sum(TY_4) AS decimal(38,2)) as TY_4
+		,CASE WHEN sum(TY_4) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_4) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_4) - sum(LY_4))/sum(LY_4)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r8  
+		,CAST(sum(LY_5) AS decimal(38,2)) as LY_5, CAST(sum(TY_5) AS decimal(38,2)) as TY_5
+		,CASE WHEN sum(TY_5) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_5) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_5) - sum(LY_5))/sum(LY_5)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r9 
+		,CAST(sum(LY_6) AS decimal(38,2)) as LY_6, CAST(sum(TY_6) AS decimal(38,2)) as TY_6
+		,CASE WHEN sum(TY_6) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_6) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_6) - sum(LY_6))/sum(LY_6)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r10  
+		,CAST(sum(LY_7) AS decimal(38,2)) as LY_7, CAST(sum(TY_7) AS decimal(38,2)) as TY_7
+		,CASE WHEN sum(TY_7) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_7) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_7) - sum(LY_7))/sum(LY_7)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r11 
+		,CAST(sum(LY_8) AS decimal(38,2)) as LY_8, CAST(sum(TY_8) AS decimal(38,2)) as TY_8
+		,CASE WHEN sum(TY_8) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_8) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_8) - sum(LY_8))/sum(LY_8)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r12 
+		
+		,CAST(sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8) AS decimal(38,2)) as LY
+		,CAST(sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) AS decimal(38,2)) as TY
+		
+		,CASE WHEN sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) - 
+		sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8))/ 
+		sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8)*100
+		AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r12
+		
+		,CASE WHEN sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) =0 THEN '0%'
+		ELSE CASE WHEN (SELECT sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) FROM #TEMP_TABLE) =0 THEN '100%'
+		ELSE 
+		cast(cast(sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8)/(SELECT sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) FROM #TEMP_TABLE)*100
+		AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r14
+FROM	#TEMP_TABLE
+GROUP BY corpName
+
+
+UNION ALL 
+
+--品牌合计
+SELECT	'', '', brandName, ''
+		,CAST(sum(LY_9) AS decimal(38,2)) as LY_9, CAST(sum(TY_9) AS decimal(38,2)) as TY_9
+		,CASE WHEN sum(TY_9) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_9) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_9) - sum(LY_9))/sum(LY_9)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r1
+		,CAST(sum(LY_10) AS decimal(38,2)) as LY_10, CAST(sum(TY_10) AS decimal(38,2)) as TY_10
+		,CASE WHEN sum(TY_10) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_10) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_10) - sum(LY_10))/sum(LY_10)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r2
+		,CAST(sum(LY_11) AS decimal(38,2)) as LY_11, CAST(sum(TY_11) AS decimal(38,2)) as TY_11
+		,CASE WHEN sum(TY_11) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_11) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_11) - sum(LY_11))/sum(LY_11)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r3  
+		,CAST(sum(LY_12) AS decimal(38,2)) as LY_12, CAST(sum(TY_12) AS decimal(38,2)) as TY_12
+		,CASE WHEN sum(TY_12) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_12) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_12) - sum(LY_12))/sum(LY_12)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r4  
+		,CAST(sum(LY_1) AS decimal(38,2)) as LY_1, CAST(sum(TY_1) AS decimal(38,2)) as TY_1
+		,CASE WHEN sum(TY_1) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_1) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_1) - sum(LY_1))/sum(LY_1)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r5  
+		,CAST(sum(LY_2) AS decimal(38,2)) as LY_2, CAST(sum(TY_2) AS decimal(38,2)) as TY_2
+		,CASE WHEN sum(TY_2) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_2) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_2) - sum(LY_2))/sum(LY_2)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r6  
+		,CAST(sum(LY_3) AS decimal(38,2)) as LY_3, CAST(sum(TY_3) AS decimal(38,2)) as TY_3
+		,CASE WHEN sum(TY_3) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_3) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_3) - sum(LY_3))/sum(LY_3)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r7  
+		,CAST(sum(LY_4) AS decimal(38,2)) as LY_4, CAST(sum(TY_4) AS decimal(38,2)) as TY_4
+		,CASE WHEN sum(TY_4) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_4) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_4) - sum(LY_4))/sum(LY_4)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r8  
+		,CAST(sum(LY_5) AS decimal(38,2)) as LY_5, CAST(sum(TY_5) AS decimal(38,2)) as TY_5
+		,CASE WHEN sum(TY_5) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_5) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_5) - sum(LY_5))/sum(LY_5)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r9 
+		,CAST(sum(LY_6) AS decimal(38,2)) as LY_6, CAST(sum(TY_6) AS decimal(38,2)) as TY_6
+		,CASE WHEN sum(TY_6) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_6) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_6) - sum(LY_6))/sum(LY_6)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r10  
+		,CAST(sum(LY_7) AS decimal(38,2)) as LY_7, CAST(sum(TY_7) AS decimal(38,2)) as TY_7
+		,CASE WHEN sum(TY_7) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_7) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_7) - sum(LY_7))/sum(LY_7)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r11 
+		,CAST(sum(LY_8) AS decimal(38,2)) as LY_8, CAST(sum(TY_8) AS decimal(38,2)) as TY_8
+		,CASE WHEN sum(TY_8) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_8) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_8) - sum(LY_8))/sum(LY_8)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r12 
+		
+		,CAST(sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8) AS decimal(38,2)) as LY
+		,CAST(sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) AS decimal(38,2)) as TY
+		
+		,CASE WHEN sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) - 
+		sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8))/ 
+		sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8)*100
+		AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r12
+		
+		,CASE WHEN sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) =0 THEN '0%'
+		ELSE CASE WHEN (SELECT sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) FROM #TEMP_TABLE) =0 THEN '100%'
+		ELSE 
+		cast(cast(sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8)/(SELECT sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) FROM #TEMP_TABLE)*100
+		AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r14
+FROM	#TEMP_TABLE
+GROUP BY brandName
+
+
+UNION ALL 
+
+--总计
+SELECT	'Total:', '', '', ''
+		,CAST(sum(LY_9) AS decimal(38,2)) as LY_9, CAST(sum(TY_9) AS decimal(38,2)) as TY_9
+		,CASE WHEN sum(TY_9) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_9) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_9) - sum(LY_9))/sum(LY_9)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r1
+		,CAST(sum(LY_10) AS decimal(38,2)) as LY_10, CAST(sum(TY_10) AS decimal(38,2)) as TY_10
+		,CASE WHEN sum(TY_10) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_10) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_10) - sum(LY_10))/sum(LY_10)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r2
+		,CAST(sum(LY_11) AS decimal(38,2)) as LY_11, CAST(sum(TY_11) AS decimal(38,2)) as TY_11
+		,CASE WHEN sum(TY_11) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_11) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_11) - sum(LY_11))/sum(LY_11)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r3  
+		,CAST(sum(LY_12) AS decimal(38,2)) as LY_12, CAST(sum(TY_12) AS decimal(38,2)) as TY_12
+		,CASE WHEN sum(TY_12) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_12) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_12) - sum(LY_12))/sum(LY_12)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r4  
+		,CAST(sum(LY_1) AS decimal(38,2)) as LY_1, CAST(sum(TY_1) AS decimal(38,2)) as TY_1
+		,CASE WHEN sum(TY_1) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_1) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_1) - sum(LY_1))/sum(LY_1)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r5  
+		,CAST(sum(LY_2) AS decimal(38,2)) as LY_2, CAST(sum(TY_2) AS decimal(38,2)) as TY_2
+		,CASE WHEN sum(TY_2) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_2) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_2) - sum(LY_2))/sum(LY_2)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r6  
+		,CAST(sum(LY_3) AS decimal(38,2)) as LY_3, CAST(sum(TY_3) AS decimal(38,2)) as TY_3
+		,CASE WHEN sum(TY_3) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_3) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_3) - sum(LY_3))/sum(LY_3)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r7  
+		,CAST(sum(LY_4) AS decimal(38,2)) as LY_4, CAST(sum(TY_4) AS decimal(38,2)) as TY_4
+		,CASE WHEN sum(TY_4) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_4) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_4) - sum(LY_4))/sum(LY_4)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r8  
+		,CAST(sum(LY_5) AS decimal(38,2)) as LY_5, CAST(sum(TY_5) AS decimal(38,2)) as TY_5
+		,CASE WHEN sum(TY_5) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_5) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_5) - sum(LY_5))/sum(LY_5)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r9 
+		,CAST(sum(LY_6) AS decimal(38,2)) as LY_6, CAST(sum(TY_6) AS decimal(38,2)) as TY_6
+		,CASE WHEN sum(TY_6) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_6) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_6) - sum(LY_6))/sum(LY_6)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r10  
+		,CAST(sum(LY_7) AS decimal(38,2)) as LY_7, CAST(sum(TY_7) AS decimal(38,2)) as TY_7
+		,CASE WHEN sum(TY_7) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_7) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_7) - sum(LY_7))/sum(LY_7)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r11 
+		,CAST(sum(LY_8) AS decimal(38,2)) as LY_8, CAST(sum(TY_8) AS decimal(38,2)) as TY_8
+		,CASE WHEN sum(TY_8) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_8) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_8) - sum(LY_8))/sum(LY_8)*100 AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r12 
+		
+		,CAST(sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8) AS decimal(38,2)) as LY
+		,CAST(sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) AS decimal(38,2)) as TY
+		
+		,CASE WHEN sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) =0 THEN '-'
+		ELSE CASE WHEN sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8) =0 THEN 'NEW'
+		ELSE 
+		cast(cast((sum(TY_9 + TY_10 + TY_11 + TY_12 + TY_1 + TY_2 + TY_3 + TY_4 + TY_5 + TY_6 + TY_7 + TY_8) - 
+		sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8))/ 
+		sum(LY_9 + LY_10 + LY_11 + LY_12 + LY_1 + LY_2 + LY_3 + LY_4 + LY_5 + LY_6 + LY_7 + LY_8)*100
+		AS decimal(38,0) )AS VARCHAR)+'%'
+		END 
+		END as r12
+		
+		,'100%' as r14
+FROM	#TEMP_TABLE
+
+ 
+]]>
+		</sql>
+	</content>
+	
+</config>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title></title>
+	
+	<header>
+		<column property="0" title="上级组织" width="300"/>
+	</header>
+	
+	<content>
+		<param id="stockDate">$stockDate$</param>
+		<sql>
+<![CDATA[
+select dist.OWNERGRP_NAME as ownergroupname,
+	stock.STOCK_TYPE as storenumber,
+	convert(varchar(10),stock.stock_date,120) as stockdate,
+	left(mapping.TARGET_PROD_CODE,10) as materialnumber,
+	SUM(stock.PROD_QUANTITY+ISNULL(stock.ROAD_QTY,0)) 
+from DMS_DATA_STOCK stock
+	inner join DMS_CLIENT client on stock.CLIENT_ID=client.CLIENT_ID
+	inner join MDM_DISTRIBUTOR dist on client.DIST_ID=dist.DIST_ID
+	inner join DMS_PROD_MAPPING mapping on stock.PROD_CODE=mapping.DIST_PROD_CODE and stock.PROD_NAME=mapping.DIST_PROD_NAME and stock.PROD_UNIT=mapping.DIST_PROD_UNIT and stock.CLIENT_ID=mapping.CLIENT_ID 
+	left join dms_store_mapping dsm on dsm.client_id=stock.client_id and dsm.dist_store_code=stock.stock_type
+where stock.stock_date='$stockDate$' and mapping.TARGET_PROD_CODE!='nonike'
+	and stock.STATE='1' and (dsm.isreturn_data!='0' or dsm.isreturn_data is null) and dist.pass_back_date is not null
+group by dist.OWNERGRP_NAME,stock.STOCK_TYPE,stock.stock_date,left(mapping.TARGET_PROD_CODE,10)
+]]>
+		</sql>
+	</content>
+	
+</config>

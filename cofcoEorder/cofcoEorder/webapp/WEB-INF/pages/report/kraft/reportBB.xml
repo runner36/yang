@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>经销商销售报告</title>
+	
+	<header>
+		<column title="卡夫" width="200"/>
+		<column title="管理大区" width="100"/>
+		<column title="管理地区" width="100"/>
+		<column title="管理单元" width="100"/>
+		<column title="经销商名称" width="200" />
+		<column title="总计(箱)" width="100" align="right" cell="number" format="0.0000"/>
+		<column title="总计(吨)" width="100" align="right" cell="number" format="0.0000"/>
+		<column title="总计(毛销售未税)" width="100" align="right" cell="number" format="0.0000"/>
+	</header>
+	
+	<content>
+		<param id="ge_billDate" initValue="_FIRST_DAY_OF_MONTH" template=" and data.BILL_DATE >= '$ge_billDate$' ">$ge_billDate$</param>
+		<param id="le_billDate" initValue="_YESTERDAY" template=" and data.BILL_DATE &lt;= '$le_billDate$ 23:59:59' ">$le_billDate$</param>
+		<param id="orgId" template=" and dist.ORG_ID in ($orgId$)">$orgId$</param>
+		<param id="distId" template=" and dist.dist_id in ($distId$)">$distId$</param>
+		<param id="corpId" template=" and store.CORP_ID in ($corpId$) ">$corpId$</param>
+		<param id="typeId" template=" and store.TYPE_ID in ($typeId$) ">$typeId$</param>
+		<param id="channelId" template=" and store.CHANNEL_ID in ($channelId$) ">$channelId$</param>
+		<sql>
+		
+			<![CDATA[
+
+WITH bs AS (
+	SELECT 	org.PI2 AS areaId, org.PN2 AS areaName,
+			org.PI3 AS geoId,  org.PN3 AS geoName,
+			org.PI4 AS unitId, org.PN4 AS unitName,
+			dist.DIST_CODE AS distCode, dist.DIST_NAME AS distName,
+			
+			sum(data.box) AS box,
+			sum(data.ton) AS ton,
+			sum(data.GROSS_SALES) AS price
+			
+	FROM 	rpt_data_sale data
+			inner join mdm_product prod on data.TARGET_PROD_CODE=prod.PROD_CODE 
+			left join mdm_store store on data.TARGET_STORE_CODE=store.STORE_CODE
+			
+			inner join dms_client client on data.CLIENT_ID=client.CLIENT_ID
+			inner join mdm_distributor dist on client.DIST_ID=dist.DIST_ID
+			left join base_org org on org.ORG_ID=dist.ORG_ID 
+						
+	WHERE 	1=1 $ge_billDate$ $le_billDate$ $orgId$ $distId$ $corpId$ $typeId$ $channelId$  
+			AND org.PI2 IS NOT NULL 
+			AND org.PI3 IS NOT NULL 
+			AND org.PI4 IS NOT NULL 	
+	GROUP BY org.PI2, org.PN2, org.PI3, org.PN3, org.PI4, org.PN4, dist.DIST_CODE, dist.DIST_NAME
+)
+
+--创建临时表
+SELECT * INTO #TEMP_TABLE FROM bs
+
+	SELECT 	'a','Total','Kraft','','','','',
+			sum(box),sum(ton),sum(price)
+	FROM 	#TEMP_TABLE
+	
+	UNION all
+	
+	SELECT 	'Total',CAST(areaId AS VARCHAR),'Kraft',areaName,'','','',
+			sum(box),sum(ton),sum(price)
+	
+	FROM 	#TEMP_TABLE
+	GROUP BY areaId,areaName
+	
+	UNION all
+	
+	SELECT 	CAST(areaId AS VARCHAR),CAST(geoId AS VARCHAR),'Kraft',areaName,geoName,'','',
+			sum(box),sum(ton),sum(price)
+	
+	FROM 	#TEMP_TABLE
+	GROUP BY areaId,areaName, geoId,geoName
+	
+	UNION all
+	
+	SELECT 	CAST(geoId AS VARCHAR),CAST(unitId AS VARCHAR),'Kraft',areaName,geoName,unitName,'',
+			sum(box),sum(ton),sum(price)
+	
+	FROM 	#TEMP_TABLE
+	GROUP BY areaId,areaName, geoId,geoName, unitId,unitName
+	
+	UNION all
+	
+	SELECT 	CAST(unitId AS VARCHAR),distCode,'Kraft',areaName,geoName,unitName,distName,
+			sum(box),sum(ton),sum(price)
+	
+	FROM 	#TEMP_TABLE
+	GROUP BY areaId,areaName, geoId,geoName, unitId,unitName, distCode,distName
+
+
+--删除临时表
+IF object_id('tempdb..#TEMP_TABLE') IS NOT NULL BEGIN 
+    DROP TABLE #TEMP_TABLE
+END
+
+			]]>
+		</sql>
+	</content>
+</config>

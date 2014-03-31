@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+  
+	<title  bundle="page" key="customize.title.distProdMatchCheck">经销商产品匹配检查</title>
+	<header>
+		<column property="0" title="经销商编码" bundle="page" key="common.distCode" />
+		<column property="1" title="经销商名称" bundle="page" key="common.distName" />
+		<column property="2" title="经销商处产品名称" bundle="page" key="common.distProdName"/>
+		<column property="3" title="产品标准名称" bundle="page" key="common.pordStandardName" />
+		<column property="4" title="销售额(实际)" bundle="page" key="common.salesActual" cell="number" format="#0.00"/>
+		<column property="5" title="销售额(标准价折算)" bundle="page" key="common.salesStandPriceConv" cell="number" format="#0.00" />
+		<column property="6" title="加价率" bundle="page" key="common.prodAmountIncreaseRate" />
+		<column property="7" title="统计单位" bundle="page" key="common.statisticsUnit" />
+		<column property="8" title="厂家发货数量" bundle="page" key="common.factoryShipNum" cell="number" format="#0"/>
+		<column property="9" title="经销商到货数量" bundle="page" key="common.distArrivalNum" cell="number" format="#0"/>
+		<column property="10" title="到货比率" bundle="page" key="common.arrivalRate" />
+		<column property="11" title="经销商条码"  bundle="page" key="common.distProdBarcode"/>
+		<column property="12" title="条码检查状态" bundle="page" key="common.prodBarCheckStatus" />
+		<column property="17" title="经销商产品编码" bundle="page" key="common.distProdCode"/>
+		<column property="13" title="产品标准编码" bundle="page" key="common.pordStandardCode" />
+		<column property="14" title="备注"  bundle="page" key="common.memo"/>
+		<column property="15" title="匹配记录创建日期"  bundle="page" key="common.createdTime"  cell="date" format="yyyy-MM-dd HH:mm:ss"/>
+		<column property="16" title="匹配记录最近更新日期"  bundle="page" key="common.updatedTime" cell="date" format="yyyy-MM-dd HH:mm:ss"/>
+	</header>
+	    
+	<content>	
+		<param id="dist_code" template=" AND mdist.DIST_CODE = '$dist_code$' ">$dist_code$</param>
+		<param id="distId" template=" AND mdist.DIST_ID in ($distId$)">$distId$</param>
+		<param id="target_prod_name" template=" AND mprod.PROD_NAME LIKE '%$target_prod_name$%'  ">$target_prod_name$</param>
+		<param id="prod_name" template=" AND dap.PROD_NAME LIKE '%$prod_name$%'  ">$prod_name$</param>
+		<param id="stat_date1" template=" AND SS.STAT_DATE>='$stat_date1$' ">$stat_date1$</param>
+		<param id="stat_date2" template=" AND SS.STAT_DATE&lt;='$stat_date2$' ">$stat_date2$</param>
+		
+		<sql>
+		<![CDATA[
+			SELECT DISTINCT 
+				mdist.dist_code,
+				mdist.DIST_NAME,
+				dap.PROD_NAME,
+				mprod.PROD_NAME TARGET_PROD_NAME,
+				sdata.SUM_AMOUNT,
+				sdata.STAT_SUM_AMOUNT,
+				sdata.addRate,
+				item.ITEM_NAME,
+				sdata.SEND_NUM,
+				sdata.RECEIVER_NUM,
+				sdata.REC_RATE,
+				ddp.PROD_BAR_CODE,
+				CASE WHEN ddp.PROD_BAR_CODE IS NULL OR mprod.PROD_BARCODE IS NULL THEN '未校验'
+				WHEN ddp.PROD_BAR_CODE=mprod.PROD_BARCODE THEN '成功' ELSE '失败' END BAR_CODE_STATE,
+				mprod.PROD_CODE TARGET_PROD_CODE,
+				ddp.REMARK,
+				dpm.CREATED,
+				dpm.UPDATED,
+				dap.PROD_CODE,
+				dap.PROD_UNIT	 
+			
+			FROM DMS_ACTIVE_PRODUCT dap
+			INNER JOIN DMS_CLIENT client ON dap.CLIENT_ID=client.CLIENT_ID INNER JOIN MDM_DISTRIBUTOR mdist ON client.DIST_ID=mdist.DIST_ID
+			LEFT JOIN DMS_PROD_MAPPING dpm ON dap.CLIENT_ID=dpm.CLIENT_ID AND dap.PROD_CODE=dpm.DIST_PROD_CODE AND dap.PROD_UNIT=dpm.DIST_PROD_UNIT
+			LEFT JOIN MDM_PRODUCT mprod ON dpm.TARGET_PROD_CODE=mprod.PROD_CODE
+			LEFT JOIN BASE_DICT_ITEM item ON mprod.PROD_COUNTUNIT_ID = item.DICT_ITEM_ID
+			LEFT JOIN DMS_DATA_PRODUCT ddp
+			ON dap.state=1 AND dap.CLIENT_ID=ddp.CLIENT_ID AND dap.PROD_CODE=ddp.PROD_CODE AND dap.PROD_UNIT=ddp.PROD_UNIT AND dap.PROD_NAME=ddp.PROD_NAME
+			
+			LEFT JOIN (
+			
+				SELECT 
+							smonth.DIST_CODE,
+							smonth.DIST_NAME,
+							smonth.PROD_NAME,
+							prod.PROD_NAME TARGET_PROD_NAME,
+							smonth.SUM_AMOUNT,
+							smonth.STAT_SUM_AMOUNT,
+							convert(VARCHAR(10),CAST(smonth.SUM_AMOUNT*100/smonth.STAT_SUM_AMOUNT-100 AS NUMERIC(10)))+'%' addRate,
+							item.ITEM_NAME,
+							CC.STAT_SUM_NUM SEND_NUM,
+							rdpm.STAT_SUM_NUM RECEIVER_NUM,
+							CASE WHEN CC.STAT_SUM_NUM!=0
+								THEN convert(VARCHAR(10),CAST(rdpm.STAT_SUM_NUM*100/CC.STAT_SUM_NUM as NUMERIC(10)))+'%' ELSE NULL END REC_RATE,
+							smonth.TARGET_PROD_CODE,
+							--mp.CREATED MP_CREATED,
+							--mp.UPDATED MP_UPDATED,	
+							--smonth.UPDATED,
+							--prod.PROD_BARCODE,
+							smonth.PROD_CODE,
+							--smonth.STAT_DATE,
+							smonth.DIST_ID,
+							smonth.PROD_UNIT
+						
+						FROM (	
+							SELECT 
+								SS.CLIENT_ID,SS.PROD_CODE,SS.PROD_UNIT,SS.DIST_ID,
+								SS.DIST_CODE,SS.DIST_NAME,SS.PROD_NAME,
+								SS.TARGET_PROD_UNIT,SS.TARGET_PROD_CODE,
+								sum(SS.SUM_AMOUNT) SUM_AMOUNT,
+								sum(SS.STAT_SUM_AMOUNT) STAT_SUM_AMOUNT
+							FROM RPT_DATA_SALE_MONTH SS
+							WHERE 1=1 $stat_date1$ $stat_date2$
+							GROUP BY SS.CLIENT_ID,SS.PROD_CODE,SS.PROD_UNIT,SS.DIST_ID,SS.DIST_CODE,SS.DIST_NAME,SS.PROD_NAME,SS.TARGET_PROD_UNIT,SS.TARGET_PROD_CODE	
+						) smonth
+						
+						LEFT JOIN DMS_PROD_MAPPING mp ON smonth.CLIENT_ID=mp.CLIENT_ID AND smonth.PROD_CODE=mp.DIST_PROD_CODE AND smonth.PROD_UNIT = mp.DIST_PROD_UNIT
+						LEFT JOIN MDM_PRODUCT prod ON smonth.TARGET_PROD_CODE=prod.PROD_CODE
+						LEFT JOIN BASE_DICT_ITEM item ON smonth.TARGET_PROD_UNIT=item.DICT_ITEM_ID
+						LEFT JOIN (
+							SELECT 
+								SS.STORE_CODE DIST_CODE,
+								SS.TARGET_PROD_CODE,		
+								coalesce(sum(SS.STAT_SUM_NUM),0) STAT_SUM_NUM	
+								
+							FROM RPT_DATA_STORE_SALES_MONTH SS 
+							INNER JOIN DMS_CLIENT client ON SS.CLIENT_ID=client.CLIENT_ID
+								 AND client.CLIENT_CODE='kraft'
+							WHERE 1=1 $stat_date1$ $stat_date2$
+							GROUP BY SS.STORE_CODE,SS.TARGET_PROD_CODE
+								
+						) CC ON smonth.DIST_CODE = CC.DIST_CODE AND smonth.TARGET_PROD_CODE = CC.TARGET_PROD_CODE 
+						
+						LEFT JOIN (
+							SELECT 
+								SS.DIST_CODE,
+								SS.TARGET_PROD_CODE,
+								coalesce(sum(SS.STAT_SUM_NUM),0) STAT_SUM_NUM,
+								coalesce(sum(SS.SUM_NUM),0) SUM_NUM
+							FROM RPT_DATA_PURCHASE_MONTH SS 
+							WHERE 1=1 $stat_date1$ $stat_date2$
+							GROUP BY SS.DIST_CODE,SS.TARGET_PROD_CODE
+						
+						) rdpm ON smonth.DIST_CODE = rdpm.DIST_CODE AND smonth.TARGET_PROD_CODE = rdpm.TARGET_PROD_CODE 
+						WHERE smonth.STAT_SUM_AMOUNT!=0
+			) sdata ON 
+			mdist.dist_code=sdata.dist_code AND dap.PROD_CODE=sdata.PROD_CODE AND dap.PROD_UNIT=sdata.PROD_UNIT AND dap.PROD_NAME=sdata.PROD_NAME
+			where 1=1
+			$dist_code$ $distId$ $target_prod_name$ $prod_name$
+								       
+		]]>
+		</sql>
+	</content>
+
+</config>

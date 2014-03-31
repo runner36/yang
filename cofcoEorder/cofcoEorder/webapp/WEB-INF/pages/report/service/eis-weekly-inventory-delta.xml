@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false"
+	sortable="true">
+	<title></title>
+
+	<header>
+		<column property="0" title="上级组织" width="300" />
+	</header>
+
+	<content>
+		<param id="startDate">$startDate$</param>
+		<param id="endDate">$endDate$</param>
+		<param id="stockDate">$stockDate$</param>
+		<sql>
+<![CDATA[
+select 
+	REPLICATE('0',10-LEN(dist.OWNERGRP_CODE))+dist.OWNERGRP_CODE+stock.STOCK_TYPE as doorkey,
+	dist.OWNERGRP_CODE as ownergrpnumber,  
+	stock.STOCK_TYPE as storenumber,
+	mp.EXT_CODE as materialnumber,
+	replace('$stockDate$','-','') as inventorydate,
+	mp.PROD_PC_BARCODE as UPC,
+	replace(mp.PROD_CODE,mp.EXT_CODE+'-','') as size,
+	'CNY' as currencycode, 'CN' as countrycode,
+	convert(integer,sum(ISNULL(stock.PROD_QUANTITY,0)+ISNULL(stock.ROAD_QTY,0))) AS UnitOnHand
+from 
+	DMS_DATA_STOCK stock
+	inner join DMS_CLIENT client
+	on stock.CLIENT_ID=client.CLIENT_ID
+	inner join MDM_DISTRIBUTOR dist
+	on client.DIST_ID=dist.DIST_ID
+	inner join DMS_PROD_MAPPING mapping
+	on stock.PROD_CODE=mapping.DIST_PROD_CODE
+	and stock.PROD_NAME=mapping.DIST_PROD_NAME
+	and stock.PROD_UNIT=mapping.DIST_PROD_UNIT
+	and stock.CLIENT_ID=mapping.CLIENT_ID
+	left join DMS_STORE_MAPPING sm
+	on stock.STOCK_TYPE=sm.DIST_STORE_CODE
+	and stock.CLIENT_ID=sm.CLIENT_ID
+	inner join MDM_PRODUCT mp
+	on mapping.TARGET_PROD_CODE=mp.PROD_CODE
+where stock.STOCK_DATE='$stockDate$'
+	and stock.UPLOAD_TIME>='$startDate$' and stock.UPLOAD_TIME<'$endDate$'
+	and stock.STATE='1' and dist.pass_back_date is not null and mapping.TARGET_PROD_CODE!='nonike'
+	and (sm.isreturn_data!='0' or sm.isreturn_data is null)
+group by REPLICATE('0',10-LEN(dist.OWNERGRP_CODE))+dist.OWNERGRP_CODE+stock.STOCK_TYPE,
+	dist.OWNERGRP_CODE,stock.STOCK_TYPE,mp.EXT_CODE,
+	mp.PROD_PC_BARCODE,replace(mp.PROD_CODE,mp.EXT_CODE+'-','')
+order by dist.OWNERGRP_CODE
+]]>
+		</sql>
+	</content>
+
+</config>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>客户订货活跃度报告</title>
+	
+	<header>
+		<column property="0" title="大区"/>
+		<column property="1" title="办事处"/>
+		<column property="2" title="业务单元"/>
+		<column property="3" title="经销商名称"/>
+		<column property="4" title="经销商编码"/>
+		<column property="5" title="渠道"/>
+		<column property="6" title="客户名称"/>
+		<column property="7" title="客户编码"/>
+		<column property="8" title="客户等级"/>
+		<column property="9" title="第一次订单时间" cell="date" format="yyyy-MM-dd"/>
+		<column property="10" title="最后一次订单时间" cell="date" format="yyyy-MM-dd"/>
+		<column property="11" title="最近90天订单数" cell="number" format="0" style="text-align:right"/>
+		<column property="12" title="月平均订单数" cell="number" format="0" style="text-align:right"/>
+		<column property="13" title="最近90天总计箱数" cell="number" format="0.00" style="text-align:right"/>
+		<column property="14" title="最近90天毛销售（含税）" cell="number" format="0.00" style="text-align:right"/>
+		<column property="15" title="活跃度标示" cell="number" format="0.00" style="text-align:center" styleClass="color_red,color_yellow,color_orange,color_black;2,4,6"/>
+	</header>
+	
+	<content>
+		<param id="_orgAuthExp" initValue="" defaultValue="">$orgAuth$</param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="orgSubCode" template="and org.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+		<param id="distId" template="and dist.dist_id in ($distId$)">$distId$</param>
+		<param id="storeName" template="and store.store_name like '%$storeName$%'">$storeName$</param>
+		<!-- 
+		<param id="lastDate1" template="and sale.lastDate>='$lastDate1$'">$lastDate1$</param>
+		<param id="lastDate2" template="and sale.lastDate&lt;='$lastDate2$ 23:59:59'">$lastDate2$</param>
+		 -->
+		<sql>
+<![CDATA[
+select org.pn2,org.pn3,org.pn4,dist.dist_name,dist.dist_code,channel.item_name,store.store_name,store.store_code,store.store_level,
+	store.first_item_date,sale.lastDate,sale.cnt,sale.cnt/3,sale.qty,sale.amt,datediff(dd,sale.lastdate,getdate())/30.00
+from 
+	(
+	select sale.dist_id,sale.target_store_code,max(sale.bill_date) as lastDate,count(distinct sale.bill_code) as cnt,sum(sale.box) as qty,sum(sale.box*prod.prod_price) as amt
+	from rpt_data_sale sale left join mdm_product prod on sale.target_prod_code=prod.prod_code
+	where sale.bill_date>=convert(char(10),dateadd(mm,-3,getdate()),23)
+	group by sale.dist_id,sale.target_store_code
+	) sale
+	left join mdm_distributor dist on sale.dist_id=dist.dist_id
+	left join base_org org on dist.org_id=org.org_id
+	inner join mdm_store store on sale.target_store_code=store.store_code
+	left join base_dict_item channel on store.channel_id=channel.dict_item_id
+where 1=1 $orgSubCode$ $distId$ $storeName$ 
+]]>
+		</sql>
+	</content>
+	
+</config>

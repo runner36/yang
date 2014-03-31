@@ -1,0 +1,696 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>Ex-Distributor Analysis (By Brand)</title>
+	
+	<header>
+		<column title="SKU" width="450"/>
+		<column title="September,2008" width="70"  align="center"  />
+		<column title="September,2009" width="70" align="center"  />
+		<column title="September,%" width="70" align="center"  />
+		<column title="October,2008" width="70" align="center"  />
+		<column title="October,2009" width="70" align="center"  />
+		<column title="October,%" width="70" align="center"  />
+		<column title="November,2008" width="70" align="center"  />
+		<column title="November,2009" width="70" align="center"  />
+		<column title="November,%" width="70" align="center"  />
+		<column title="December,2008" width="70" align="center"  />
+		<column title="December,2009" width="70" align="center"  />
+		<column title="December,%" width="70" align="center"  />
+		<column title="January,2009" width="70" align="center"  />
+		<column title="January,2010" width="70" align="center"  />
+		<column title="January,%" width="70" align="center"  />	
+		<column title="Feburary,2009" width="70" align="center"  />
+		<column title="Feburary,2010" width="70" align="center"  />
+		<column title="Feburary,%" width="70" align="center"  />
+		<column title="March,2009" width="70" align="center"  />
+		<column title="March,2010" width="70" align="center"  />
+		<column title="March,%" width="70" align="center"  />
+		<column title="April,2009" width="70" align="center"  />
+		<column title="April,2010" width="70" align="center"  />
+		<column title="April,%" width="70" align="center"  />
+		<column title="May,2009" width="70" align="center"  />
+		<column title="May,2010" width="70" align="center"  />
+		<column title="May,%" width="70" align="center"  />
+		<column title="June,2009" width="70" align="center"  />
+		<column title="June,2010" width="70" align="center"  />
+		<column title="June,%" width="70" align="center"  />
+		<column title="July,2009" width="70" align="center"  />
+		<column title="July,2010" width="70" align="center"  />
+		<column title="July,%" width="70" align="center"  />
+		<column title="August,2009" width="70" align="center"  />
+		<column title="August,2010" width="70" align="center"  />
+		<column title="August,%" width="70" align="center"  />
+		
+		
+		<column title="YTD(同期),2009" width="70" align="center"  />
+		<column title="YTD(同期),2010" width="70" align="center"  />
+		<column title="YTD(同期),%" width="70" align="center"  />
+		<column title="Mix,2010" width="70" align="center"  />				
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH -->
+ 		<param id="brand" initValue="" defaultValue="" template="and (brand like '$brand$%') ">$brand$</param>
+ 		<param id="region" initValue="" defaultValue="" template="and (region like '$region$%') ">$region$</param>
+ 		
+ 		<!-- by luobin 2010-09-08 修改city查询条件为多选-->
+ 		<!-- 
+ 		<param id="city" initValue="" defaultValue="" template="and (city like '$city$%') ">$city$</param>
+ 		-->
+ 		<param id="city" initValue="" defaultValue="" template="and city in ($city$) " dataType="char">$city$</param>
+ 		
+ 		<param id="distName" initValue="" defaultValue="" template="and ( DISTRIBUTOR like '$distName$%') ">$distName$</param>
+ 		
+		<sql>
+<![CDATA[
+SELECT  null, 'Grand Total','Grand Total'
+		
+        ,cast(isnull([2008September],0) as decimal(38,2))
+        ,cast(isnull([2009September],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2009September],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008September],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2009September],0)- isnull([2008September],0)  )/ isnull([2008September],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2009September],0)- isnull([2008September],0)  )*100/ isnull([2008September],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2009September],0)- isnull([2008September],0)  )*100/ isnull([2008September],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+        
+        ,cast(isnull([2008October],0) as decimal(38,2))
+        ,cast(isnull([2009October],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2009October],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008October],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2009October],0)- isnull([2008October],0)  )/ isnull([2008October],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2009October],0)- isnull([2008October],0)  )*100/ isnull([2008October],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2009October],0)- isnull([2008October],0)  )*100/ isnull([2008October],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+        
+        ,cast(isnull([2008November],0) as decimal(38,2))
+        ,cast(isnull([2009November],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2009November],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008November],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2009November],0)- isnull([2008November],0)  )/ isnull([2008November],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2009November],0)- isnull([2008November],0)  )*100/ isnull([2008November],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2009November],0)- isnull([2008November],0)  )*100/ isnull([2008November],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2008December],0) as decimal(38,2))
+        ,cast(isnull([2009December],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2009December],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008December],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2009December],0)- isnull([2008December],0)  )/ isnull([2008December],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2009December],0)- isnull([2008December],0)  )*100/ isnull([2008December],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2009December],0)- isnull([2008December],0)  )*100/ isnull([2008December],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2009January],0) as decimal(38,2))
+        ,cast(isnull([2010January],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010January],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009January],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010January],0)- isnull([2009January],0)  )/ isnull([2009January],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010January],0)- isnull([2009January],0)  )*100/ isnull([2009January],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010January],0)- isnull([2009January],0)  )*100/ isnull([2009January],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2009February],0) as decimal(38,2))
+        ,cast(isnull([2010February],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010February],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009February],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010February],0)- isnull([2009February],0)  )/ isnull([2009February],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010February],0)- isnull([2009February],0)  )*100/ isnull([2009February],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010February],0)- isnull([2009February],0)  )*100/ isnull([2009February],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2009March],0) as decimal(38,2))
+        ,cast(isnull([2010March],0) as decimal(38,2))
+                ,CASE  WHEN   isnull([2010March],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009March],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010March],0)- isnull([2009March],0)  )/ isnull([2009March],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010March],0)- isnull([2009March],0)  )*100/ isnull([2009March],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010March],0)- isnull([2009March],0)  )*100/ isnull([2009March],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+        
+        ,cast(isnull([2009April],0) as decimal(38,2))
+        ,cast(isnull([2010April],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010April],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009April],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010April],0)- isnull([2009April],0)  )/ isnull([2009April],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010April],0)- isnull([2009April],0)  )*100/ isnull([2009April],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010April],0)- isnull([2009April],0)  )*100/ isnull([2009April],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2009May],0) as decimal(38,2))
+        ,cast(isnull([2010May],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010May],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009May],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010May],0)- isnull([2009May],0)  )/ isnull([2009May],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010May],0)- isnull([2009May],0)  )*100/ isnull([2009May],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010May],0)- isnull([2009May],0)  )*100/ isnull([2009May],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		
+		,cast(isnull([2009June],0) as decimal(38,2))
+        ,cast(isnull([2010June],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010June],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009June],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010June],0)- isnull([2009June],0)  )/ isnull([2009June],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010June],0)- isnull([2009June],0)  )*100/ isnull([2009June],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010June],0)- isnull([2009June],0)  )*100/ isnull([2009June],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		
+		,cast(isnull([2009July],0) as decimal(38,2))
+        ,cast(isnull([2010July],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010July],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009July],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010July],0)- isnull([2009July],0)  )/ isnull([2009July],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010July],0)- isnull([2009July],0)  )*100/ isnull([2009July],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010July],0)- isnull([2009July],0)  )*100/ isnull([2009July],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END   
+		      
+        ,cast(isnull([2009August],0) as decimal(38,2))
+        ,cast(isnull([2010August],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010August],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009August],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010August],0)- isnull([2009August],0)  )/ isnull([2009August],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010August],0)- isnull([2009August],0)  )*100/ isnull([2009August],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010August],0)- isnull([2009August],0)  )*100/ isnull([2009August],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+        ----------------
+        ,cast(isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0) as decimal(38,2))
+        ,cast(isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0) as decimal(38,2))
+        ,CASE  WHEN   cast(isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0) as decimal(38,2)) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0) =0 THEN '<font color=green>NEW</font>'
+           ELSE  CASE  WHEN  ( 
+							  isnull( (
+ 						   (isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0)
+ 						   	-
+ 						   	isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0)
+ 						   )
+ 						   *100/
+ 						   (isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0))
+ 						     ),0 )	
+						    	)<0 
+               THEN   CAST(CAST( isnull( (
+ 						     
+ 						   (isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0)
+ 						   	-
+ 						   	isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0)
+ 						   )
+ 						   *100/
+ 						   (isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0))
+ 						     
+ 						     ),0 )	
+          AS  decimal(38,2) )   AS VARCHAR) +'%'
+        ELSE  CAST(CAST( isnull( (
+ 						     
+ 						   (isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0)
+ 						   	-
+ 						   	isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0)
+ 						   )
+ 						   *100/
+ 						   (isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0))
+ 						     ),0 )	
+          AS  decimal(38,2) )   AS VARCHAR) +'%'
+	  	 	END  END END 
+      
+         
+ 	   ,  
+ 	   --------------
+ 	   	CASE  WHEN  (
+ 	   	--2010-09-17 luobin update
+ 		--SELECT   (isnull([2008September],0)+isnull([2008October],0) +isnull([2008November],0)+isnull([2008December],0) +isnull([2009January],0) +isnull([2009February],0) +isnull([2009March],0) +isnull([2009April],0) +isnull([2009May],0) +isnull([2009June],0) +isnull([2009July],0) +isnull([2009August],0) )
+ 		SELECT   (isnull([2009September],0)+isnull([2009October],0) +isnull([2009November],0)+isnull([2009December],0) +isnull([2010January],0) +isnull([2010February],0) +isnull([2010March],0) +isnull([2010April],0) +isnull([2010May],0) +isnull([2010June],0) +isnull([2010July],0) +isnull([2010August],0) )
+		AS all_qil   
+			FROM (  
+				SELECT   qli,year+ month AS month FROM  TMP_SOURCE_DATA  
+				WHERE FERRERO_NAME IS NOT null       $brand$ $region$ $city$ $distName$
+				) AS TMP_SOURCE_DATA  
+				
+			PIVOT ( SUM(qli) FOR month IN 
+			  		([2008January],[2008February],[2008March],[2008April],[2008May],[2008June],[2008July],[2008August],[2008September],[2008October],[2008November],[2008December]
+			  		,[2009January],[2009February],[2009March],[2009April],[2009May],[2009June],[2009July],[2009August],[2009September],[2009October],[2009November],[2009December]
+			  		,[2010January],[2010February],[2010March],[2010April],[2010May],[2010June],[2010July],[2010August],[2010September],[2010October],[2010November],[2010December]
+			  		) ) AS ourPivot 
+	  )		  		=0
+ 	   	
+ 	   	THEN '0%'
+ 	   	
+ 	   	ELSE
+ 	   	
+ 	  		 CAST( CAST(
+ 	   
+ 	    --(isnull([2008September],0)+isnull([2008October],0) +isnull([2008November],0)+isnull([2008December],0) +isnull([2009January],0) +isnull([2009February],0) +isnull([2009March],0) +isnull([2009April],0) +isnull([2009May],0) +isnull([2009June],0) +isnull([2009July],0) +isnull([2009August],0) )
+ 	    (isnull([2009September],0)+isnull([2009October],0) +isnull([2009November],0)+isnull([2009December],0) +isnull([2010January],0) +isnull([2010February],0) +isnull([2010March],0) +isnull([2010April],0) +isnull([2010May],0) +isnull([2010June],0) +isnull([2010July],0) +isnull([2010August],0) )
+ 	  	*100/
+ 	  	(
+			--SELECT   (isnull([2008September],0)+isnull([2008October],0) +isnull([2008November],0)+isnull([2008December],0) +isnull([2009January],0) +isnull([2009February],0) +isnull([2009March],0) +isnull([2009April],0) +isnull([2009May],0) +isnull([2009June],0) +isnull([2009July],0) +isnull([2009August],0) )
+			SELECT   (isnull([2009September],0)+isnull([2009October],0) +isnull([2009November],0)+isnull([2009December],0) +isnull([2010January],0) +isnull([2010February],0) +isnull([2010March],0) +isnull([2010April],0) +isnull([2010May],0) +isnull([2010June],0) +isnull([2010July],0) +isnull([2010August],0) )
+			FROM (  
+				SELECT   qli,year+ month AS month FROM  TMP_SOURCE_DATA  
+				WHERE FERRERO_NAME IS NOT null      $brand$ $region$ $city$ $distName$
+				) AS TMP_SOURCE_DATA  
+				
+			PIVOT ( SUM(qli) FOR month IN 
+			  		([2008January],[2008February],[2008March],[2008April],[2008May],[2008June],[2008July],[2008August],[2008September],[2008October],[2008November],[2008December]
+			  		,[2009January],[2009February],[2009March],[2009April],[2009May],[2009June],[2009July],[2009August],[2009September],[2009October],[2009November],[2009December]
+			  		,[2010January],[2010February],[2010March],[2010April],[2010May],[2010June],[2010July],[2010August],[2010September],[2010October],[2010November],[2010December]
+			  		) ) AS ourPivot 
+			 	     )
+ 	  
+ 	    AS decimal(38,2))	AS VARCHAR )
+ 	  	+'%'
+  
+ 	  	END
+ 	  
+ 	  
+  
+FROM (  
+	SELECT  qli,year+ month AS month FROM  TMP_SOURCE_DATA   WHERE FERRERO_NAME IS NOT null $brand$  $region$ $city$ $distName$
+	) AS TMP_SOURCE_DATA  
+	
+PIVOT ( SUM(qli) FOR month IN 
+  		([2008January],[2008February],[2008March],[2008April],[2008May],[2008June],[2008July],[2008August],[2008September],[2008October],[2008November],[2008December]
+  		,[2009January],[2009February],[2009March],[2009April],[2009May],[2009June],[2009July],[2009August],[2009September],[2009October],[2009November],[2009December]
+  		,[2010January],[2010February],[2010March],[2010April],[2010May],[2010June],[2010July],[2010August],[2010September],[2010October],[2010November],[2010December]
+  		) 
+  		 
+  	   ) AS ourPivot 
+----------------------------
+ 
+UNION ALL
+SELECT  'Grand Total', BRAND ,BRAND
+		
+        ,cast(isnull([2008September],0) as decimal(38,2))
+        ,cast(isnull([2009September],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2009September],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008September],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2009September],0)- isnull([2008September],0)  )/ isnull([2008September],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2009September],0)- isnull([2008September],0)  )*100/ isnull([2008September],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2009September],0)- isnull([2008September],0)  )*100/ isnull([2008September],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+        
+        ,cast(isnull([2008October],0) as decimal(38,2))
+        ,cast(isnull([2009October],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2009October],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008October],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2009October],0)- isnull([2008October],0)  )/ isnull([2008October],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2009October],0)- isnull([2008October],0)  )*100/ isnull([2008October],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2009October],0)- isnull([2008October],0)  )*100/ isnull([2008October],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+        
+        ,cast(isnull([2008November],0) as decimal(38,2))
+        ,cast(isnull([2009November],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2009November],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008November],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2009November],0)- isnull([2008November],0)  )/ isnull([2008November],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2009November],0)- isnull([2008November],0)  )*100/ isnull([2008November],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2009November],0)- isnull([2008November],0)  )*100/ isnull([2008November],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2008December],0) as decimal(38,2))
+        ,cast(isnull([2009December],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2009December],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008December],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2009December],0)- isnull([2008December],0)  )/ isnull([2008December],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2009December],0)- isnull([2008December],0)  )*100/ isnull([2008December],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2009December],0)- isnull([2008December],0)  )*100/ isnull([2008December],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2009January],0) as decimal(38,2))
+        ,cast(isnull([2010January],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010January],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009January],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010January],0)- isnull([2009January],0)  )/ isnull([2009January],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010January],0)- isnull([2009January],0)  )*100/ isnull([2009January],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010January],0)- isnull([2009January],0)  )*100/ isnull([2009January],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2009February],0) as decimal(38,2))
+        ,cast(isnull([2010February],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010February],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009February],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010February],0)- isnull([2009February],0)  )/ isnull([2009February],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010February],0)- isnull([2009February],0)  )*100/ isnull([2009February],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010February],0)- isnull([2009February],0)  )*100/ isnull([2009February],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2009March],0) as decimal(38,2))
+        ,cast(isnull([2010March],0) as decimal(38,2))
+                ,CASE  WHEN   isnull([2010March],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009March],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010March],0)- isnull([2009March],0)  )/ isnull([2009March],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010March],0)- isnull([2009March],0)  )*100/ isnull([2009March],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010March],0)- isnull([2009March],0)  )*100/ isnull([2009March],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+        
+        ,cast(isnull([2009April],0) as decimal(38,2))
+        ,cast(isnull([2010April],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010April],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009April],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010April],0)- isnull([2009April],0)  )/ isnull([2009April],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010April],0)- isnull([2009April],0)  )*100/ isnull([2009April],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010April],0)- isnull([2009April],0)  )*100/ isnull([2009April],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2009May],0) as decimal(38,2))
+        ,cast(isnull([2010May],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010May],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009May],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010May],0)- isnull([2009May],0)  )/ isnull([2009May],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010May],0)- isnull([2009May],0)  )*100/ isnull([2009May],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010May],0)- isnull([2009May],0)  )*100/ isnull([2009May],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		
+		,cast(isnull([2009June],0) as decimal(38,2))
+        ,cast(isnull([2010June],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010June],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009June],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010June],0)- isnull([2009June],0)  )/ isnull([2009June],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010June],0)- isnull([2009June],0)  )*100/ isnull([2009June],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010June],0)- isnull([2009June],0)  )*100/ isnull([2009June],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		
+		,cast(isnull([2009July],0) as decimal(38,2))
+        ,cast(isnull([2010July],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010July],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009July],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010July],0)- isnull([2009July],0)  )/ isnull([2009July],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010July],0)- isnull([2009July],0)  )*100/ isnull([2009July],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010July],0)- isnull([2009July],0)  )*100/ isnull([2009July],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END   
+		      
+        ,cast(isnull([2009August],0) as decimal(38,2))
+        ,cast(isnull([2010August],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010August],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009August],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010August],0)- isnull([2009August],0)  )/ isnull([2009August],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010August],0)- isnull([2009August],0)  )*100/ isnull([2009August],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010August],0)- isnull([2009August],0)  )*100/ isnull([2009August],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+        ----------------
+        ,cast(isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0) as decimal(38,2))
+        ,cast(isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0) as decimal(38,2))
+
+                ,CASE  WHEN   cast(isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0) as decimal(38,2)) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0) =0 THEN '<font color=green>NEW</font>'
+           ELSE  CASE  WHEN  ( 
+							  isnull( (
+ 						   (isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0)
+ 						   	-
+ 						   	isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0)
+ 						   )
+ 						   *100/
+ 						   (isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0))
+ 						     ),0 )	
+						    	)<0 
+               THEN   CAST(CAST( isnull( (
+ 						     
+ 						   (isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0)
+ 						   	-
+ 						   	isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0)
+ 						   )
+ 						   *100/
+ 						   (isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0))
+ 						     
+ 						     ),0 )	
+          AS  decimal(38,2) )   AS VARCHAR) +'%'
+        ELSE  CAST(CAST( isnull( (
+ 						     
+ 						   (isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0)
+ 						   	-
+ 						   	isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0)
+ 						   )
+ 						   *100/
+ 						   (isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0))
+ 						     ),0 )	
+          AS  decimal(38,2) )   AS VARCHAR) +'%'
+	  	 	END  END END 
+ 	   ,  
+ 	CASE  WHEN  (
+ 		--2010-09-17 luobin update
+ 		--SELECT   (isnull([2008September],0)+isnull([2008October],0) +isnull([2008November],0)+isnull([2008December],0) +isnull([2009January],0) +isnull([2009February],0) +isnull([2009March],0) +isnull([2009April],0) +isnull([2009May],0) +isnull([2009June],0) +isnull([2009July],0) +isnull([2009August],0) )
+ 		SELECT   (isnull([2009September],0)+isnull([2009October],0) +isnull([2009November],0)+isnull([2009December],0) +isnull([2010January],0) +isnull([2010February],0) +isnull([2010March],0) +isnull([2010April],0) +isnull([2010May],0) +isnull([2010June],0) +isnull([2010July],0) +isnull([2010August],0) )
+		AS all_qil   
+			FROM (  
+				SELECT   qli,year+ month AS month FROM  TMP_SOURCE_DATA  
+				WHERE FERRERO_NAME IS NOT null       $brand$ $region$ $city$ $distName$
+				) AS TMP_SOURCE_DATA  
+				
+			PIVOT ( SUM(qli) FOR month IN 
+			  		([2008January],[2008February],[2008March],[2008April],[2008May],[2008June],[2008July],[2008August],[2008September],[2008October],[2008November],[2008December]
+			  		,[2009January],[2009February],[2009March],[2009April],[2009May],[2009June],[2009July],[2009August],[2009September],[2009October],[2009November],[2009December]
+			  		,[2010January],[2010February],[2010March],[2010April],[2010May],[2010June],[2010July],[2010August],[2010September],[2010October],[2010November],[2010December]
+			  		) ) AS ourPivot 
+	  )		  		=0
+ 	   	
+ 	   	THEN '0%'
+ 	   	
+ 	   	ELSE
+ 	   	
+ 	  		 CAST( CAST(
+ 	   
+ 	    --(isnull([2008September],0)+isnull([2008October],0) +isnull([2008November],0)+isnull([2008December],0) +isnull([2009January],0) +isnull([2009February],0) +isnull([2009March],0) +isnull([2009April],0) +isnull([2009May],0) +isnull([2009June],0) +isnull([2009July],0) +isnull([2009August],0) )
+ 	    (isnull([2009September],0)+isnull([2009October],0) +isnull([2009November],0)+isnull([2009December],0) +isnull([2010January],0) +isnull([2010February],0) +isnull([2010March],0) +isnull([2010April],0) +isnull([2010May],0) +isnull([2010June],0) +isnull([2010July],0) +isnull([2010August],0) )
+ 	  	*100/
+ 	  	(
+			--SELECT   (isnull([2008September],0)+isnull([2008October],0) +isnull([2008November],0)+isnull([2008December],0) +isnull([2009January],0) +isnull([2009February],0) +isnull([2009March],0) +isnull([2009April],0) +isnull([2009May],0) +isnull([2009June],0) +isnull([2009July],0) +isnull([2009August],0) )
+			SELECT   (isnull([2009September],0)+isnull([2009October],0) +isnull([2009November],0)+isnull([2009December],0) +isnull([2010January],0) +isnull([2010February],0) +isnull([2010March],0) +isnull([2010April],0) +isnull([2010May],0) +isnull([2010June],0) +isnull([2010July],0) +isnull([2010August],0) )
+			FROM (  
+				SELECT   qli,year+ month AS month FROM  TMP_SOURCE_DATA  
+				WHERE FERRERO_NAME IS NOT null      $brand$ $region$ $city$ $distName$
+				) AS TMP_SOURCE_DATA  
+				
+			PIVOT ( SUM(qli) FOR month IN 
+			  		([2008January],[2008February],[2008March],[2008April],[2008May],[2008June],[2008July],[2008August],[2008September],[2008October],[2008November],[2008December]
+			  		,[2009January],[2009February],[2009March],[2009April],[2009May],[2009June],[2009July],[2009August],[2009September],[2009October],[2009November],[2009December]
+			  		,[2010January],[2010February],[2010March],[2010April],[2010May],[2010June],[2010July],[2010August],[2010September],[2010October],[2010November],[2010December]
+			  		) ) AS ourPivot 
+			 	     )
+ 	  
+ 	    AS decimal(38,2))	AS VARCHAR )
+ 	  	+'%'
+  
+ 	  	END
+  
+FROM (  
+	SELECT  BRAND,qli,year+ month AS month FROM  TMP_SOURCE_DATA   WHERE FERRERO_NAME IS NOT null $brand$  $region$ $city$ $distName$
+	) AS TMP_SOURCE_DATA  
+	
+PIVOT ( SUM(qli) FOR month IN 
+  		([2008January],[2008February],[2008March],[2008April],[2008May],[2008June],[2008July],[2008August],[2008September],[2008October],[2008November],[2008December]
+  		,[2009January],[2009February],[2009March],[2009April],[2009May],[2009June],[2009July],[2009August],[2009September],[2009October],[2009November],[2009December]
+  		,[2010January],[2010February],[2010March],[2010April],[2010May],[2010June],[2010July],[2010August],[2010September],[2010October],[2010November],[2010December]
+  		) 
+  		 
+  	   ) AS ourPivot 
+----------------------------
+ 
+UNION ALL
+SELECT   BRAND, FERRERO_NAME,FERRERO_NAME
+        ,cast(isnull([2008September],0) as decimal(38,2))
+        ,cast(isnull([2009September],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2009September],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008September],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2009September],0)- isnull([2008September],0)  )/ isnull([2008September],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2009September],0)- isnull([2008September],0)  )*100/ isnull([2008September],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2009September],0)- isnull([2008September],0)  )*100/ isnull([2008September],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+        
+        ,cast(isnull([2008October],0) as decimal(38,2))
+        ,cast(isnull([2009October],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2009October],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008October],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2009October],0)- isnull([2008October],0)  )/ isnull([2008October],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2009October],0)- isnull([2008October],0)  )*100/ isnull([2008October],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2009October],0)- isnull([2008October],0)  )*100/ isnull([2008October],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+        
+        ,cast(isnull([2008November],0) as decimal(38,2))
+        ,cast(isnull([2009November],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2009November],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008November],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2009November],0)- isnull([2008November],0)  )/ isnull([2008November],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2009November],0)- isnull([2008November],0)  )*100/ isnull([2008November],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2009November],0)- isnull([2008November],0)  )*100/ isnull([2008November],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2008December],0) as decimal(38,2))
+        ,cast(isnull([2009December],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2009December],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008December],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2009December],0)- isnull([2008December],0)  )/ isnull([2008December],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2009December],0)- isnull([2008December],0)  )*100/ isnull([2008December],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2009December],0)- isnull([2008December],0)  )*100/ isnull([2008December],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2009January],0) as decimal(38,2))
+        ,cast(isnull([2010January],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010January],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009January],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010January],0)- isnull([2009January],0)  )/ isnull([2009January],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010January],0)- isnull([2009January],0)  )*100/ isnull([2009January],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010January],0)- isnull([2009January],0)  )*100/ isnull([2009January],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2009February],0) as decimal(38,2))
+        ,cast(isnull([2010February],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010February],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009February],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010February],0)- isnull([2009February],0)  )/ isnull([2009February],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010February],0)- isnull([2009February],0)  )*100/ isnull([2009February],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010February],0)- isnull([2009February],0)  )*100/ isnull([2009February],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2009March],0) as decimal(38,2))
+        ,cast(isnull([2010March],0) as decimal(38,2))
+                ,CASE  WHEN   isnull([2010March],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009March],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010March],0)- isnull([2009March],0)  )/ isnull([2009March],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010March],0)- isnull([2009March],0)  )*100/ isnull([2009March],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010March],0)- isnull([2009March],0)  )*100/ isnull([2009March],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+        
+        ,cast(isnull([2009April],0) as decimal(38,2))
+        ,cast(isnull([2010April],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010April],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009April],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010April],0)- isnull([2009April],0)  )/ isnull([2009April],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010April],0)- isnull([2009April],0)  )*100/ isnull([2009April],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010April],0)- isnull([2009April],0)  )*100/ isnull([2009April],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		        
+        ,cast(isnull([2009May],0) as decimal(38,2))
+        ,cast(isnull([2010May],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010May],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009May],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010May],0)- isnull([2009May],0)  )/ isnull([2009May],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010May],0)- isnull([2009May],0)  )*100/ isnull([2009May],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010May],0)- isnull([2009May],0)  )*100/ isnull([2009May],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		
+		,cast(isnull([2009June],0) as decimal(38,2))
+        ,cast(isnull([2010June],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010June],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009June],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010June],0)- isnull([2009June],0)  )/ isnull([2009June],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010June],0)- isnull([2009June],0)  )*100/ isnull([2009June],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010June],0)- isnull([2009June],0)  )*100/ isnull([2009June],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+		
+		,cast(isnull([2009July],0) as decimal(38,2))
+        ,cast(isnull([2010July],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010July],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009July],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010July],0)- isnull([2009July],0)  )/ isnull([2009July],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010July],0)- isnull([2009July],0)  )*100/ isnull([2009July],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010July],0)- isnull([2009July],0)  )*100/ isnull([2009July],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END   
+		      
+        ,cast(isnull([2009August],0) as decimal(38,2))
+        ,cast(isnull([2010August],0) as decimal(38,2))
+        ,CASE  WHEN   isnull([2010August],0) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2009August],0) =0 THEN '<font color=green>NEW</font>'
+         ELSE  CASE  WHEN  (  isnull([2010August],0)- isnull([2009August],0)  )/ isnull([2009August],0)<0 
+               THEN  '<font color=red>'+CAST(CAST((  isnull([2010August],0)- isnull([2009August],0)  )*100/ isnull([2009August],0) AS  decimal(38,2))  AS VARCHAR)+'%</font>'
+         ELSE  CAST(CAST((isnull([2010August],0)- isnull([2009August],0)  )*100/ isnull([2009August],0) AS  decimal(38,2) )   AS VARCHAR) +'%'
+		END END END 
+        ----------------
+       ,cast(isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0) as decimal(38,2))
+        ,cast(isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0) as decimal(38,2))
+
+                ,CASE  WHEN   cast(isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0) as decimal(38,2)) =0 THEN '-'
+         ELSE  CASE  WHEN   isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0) =0 THEN '<font color=green>NEW</font>'
+           ELSE  CASE  WHEN  ( 
+							  isnull( (
+ 						   (isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0)
+ 						   	-
+ 						   	isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0)
+ 						   )
+ 						   *100/
+ 						   (isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0))
+ 						     ),0 )	
+						    	)<0 
+               THEN   CAST(CAST( isnull( (
+ 						     
+ 						   (isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0)
+ 						   	-
+ 						   	isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0)
+ 						   )
+ 						   *100/
+ 						   (isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0))
+ 						     
+ 						     ),0 )	
+          AS  decimal(38,2) )   AS VARCHAR) +'%'
+        ELSE  CAST(CAST( isnull( (
+ 						     
+ 						   (isnull([2009September],0)+isnull([2009October],0)+isnull([2009November],0)+isnull([2009December],0)+isnull([2010January],0)+isnull([2010February],0)+isnull([2010March],0)+isnull([2010April],0)+isnull([2010May],0)+isnull([2010June],0)+isnull([2010July],0)+isnull([2010August],0)
+ 						   	-
+ 						   	isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0)
+ 						   )
+ 						   *100/
+ 						   (isnull([2008September],0)+isnull([2008October],0)+isnull([2008November],0)+isnull([2008December],0)+isnull([2009January],0)+isnull([2009February],0)+isnull([2009March],0)+isnull([2009April],0)+isnull([2009May],0)+isnull([2009June],0)+isnull([2009July],0)+isnull([2009August],0))
+ 						     ),0 )	
+          AS  decimal(38,2) )   AS VARCHAR) +'%'
+	  	 	END  END END 
+	  	 	
+ 	   ,   	CASE  WHEN  (
+ 	   
+ 	    --2010-09-17 luobin update
+ 		--SELECT   (isnull([2008September],0)+isnull([2008October],0) +isnull([2008November],0)+isnull([2008December],0) +isnull([2009January],0) +isnull([2009February],0) +isnull([2009March],0) +isnull([2009April],0) +isnull([2009May],0) +isnull([2009June],0) +isnull([2009July],0) +isnull([2009August],0) )
+ 		SELECT   (isnull([2009September],0)+isnull([2009October],0) +isnull([2009November],0)+isnull([2009December],0) +isnull([2010January],0) +isnull([2010February],0) +isnull([2010March],0) +isnull([2010April],0) +isnull([2010May],0) +isnull([2010June],0) +isnull([2010July],0) +isnull([2010August],0) )
+		AS all_qil   
+			FROM (  
+				SELECT   qli,year+ month AS month FROM  TMP_SOURCE_DATA  
+				WHERE FERRERO_NAME IS NOT null       $brand$ $region$ $city$ $distName$
+				) AS TMP_SOURCE_DATA  
+				
+			PIVOT ( SUM(qli) FOR month IN 
+			  		([2008January],[2008February],[2008March],[2008April],[2008May],[2008June],[2008July],[2008August],[2008September],[2008October],[2008November],[2008December]
+			  		,[2009January],[2009February],[2009March],[2009April],[2009May],[2009June],[2009July],[2009August],[2009September],[2009October],[2009November],[2009December]
+			  		,[2010January],[2010February],[2010March],[2010April],[2010May],[2010June],[2010July],[2010August],[2010September],[2010October],[2010November],[2010December]
+			  		) ) AS ourPivot 
+	  )		  		=0
+ 	   	
+ 	   	THEN '0%'
+ 	   	
+ 	   	ELSE
+ 	   	
+ 	  		 CAST( CAST(
+ 	   
+ 	    --(isnull([2008September],0)+isnull([2008October],0) +isnull([2008November],0)+isnull([2008December],0) +isnull([2009January],0) +isnull([2009February],0) +isnull([2009March],0) +isnull([2009April],0) +isnull([2009May],0) +isnull([2009June],0) +isnull([2009July],0) +isnull([2009August],0) )
+ 	    (isnull([2009September],0)+isnull([2009October],0) +isnull([2009November],0)+isnull([2009December],0) +isnull([2010January],0) +isnull([2010February],0) +isnull([2010March],0) +isnull([2010April],0) +isnull([2010May],0) +isnull([2010June],0) +isnull([2010July],0) +isnull([2010August],0) )
+ 	  	*100/
+ 	  	(
+			--SELECT   (isnull([2008September],0)+isnull([2008October],0) +isnull([2008November],0)+isnull([2008December],0) +isnull([2009January],0) +isnull([2009February],0) +isnull([2009March],0) +isnull([2009April],0) +isnull([2009May],0) +isnull([2009June],0) +isnull([2009July],0) +isnull([2009August],0) )
+			SELECT   (isnull([2009September],0)+isnull([2009October],0) +isnull([2009November],0)+isnull([2009December],0) +isnull([2010January],0) +isnull([2010February],0) +isnull([2010March],0) +isnull([2010April],0) +isnull([2010May],0) +isnull([2010June],0) +isnull([2010July],0) +isnull([2010August],0) )
+			FROM (  
+				SELECT   qli,year+ month AS month FROM  TMP_SOURCE_DATA  
+				WHERE FERRERO_NAME IS NOT null      $brand$ $region$ $city$ $distName$
+				) AS TMP_SOURCE_DATA  
+				
+			PIVOT ( SUM(qli) FOR month IN 
+			  		([2008January],[2008February],[2008March],[2008April],[2008May],[2008June],[2008July],[2008August],[2008September],[2008October],[2008November],[2008December]
+			  		,[2009January],[2009February],[2009March],[2009April],[2009May],[2009June],[2009July],[2009August],[2009September],[2009October],[2009November],[2009December]
+			  		,[2010January],[2010February],[2010March],[2010April],[2010May],[2010June],[2010July],[2010August],[2010September],[2010October],[2010November],[2010December]
+			  		) ) AS ourPivot 
+			 	     )
+ 	  
+ 	    AS decimal(38,2))	AS VARCHAR )
+ 	  	+'%'
+  
+ 	  	END
+  
+FROM (  
+	SELECT FERRERO_NAME, BRAND, qli,year+ month AS month FROM  TMP_SOURCE_DATA  WHERE FERRERO_NAME IS NOT null $brand$ $region$ $city$ $distName$
+	) AS TMP_SOURCE_DATA  
+	
+PIVOT ( SUM(qli) FOR month IN 
+  		([2008January],[2008February],[2008March],[2008April],[2008May],[2008June],[2008July],[2008August],[2008September],[2008October],[2008November],[2008December]
+  		,[2009January],[2009February],[2009March],[2009April],[2009May],[2009June],[2009July],[2009August],[2009September],[2009October],[2009November],[2009December]
+  		,[2010January],[2010February],[2010March],[2010April],[2010May],[2010June],[2010July],[2010August],[2010September],[2010October],[2010November],[2010December]
+  		) 
+  		 
+  	   ) AS ourPivot 
+
+]]>
+		</sql>
+	</content>
+	
+</config>

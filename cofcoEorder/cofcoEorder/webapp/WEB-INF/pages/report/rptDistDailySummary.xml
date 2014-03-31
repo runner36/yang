@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title bundle="page" key="customize.title.rptDistDailySummary">经销商每日汇总表</title>
+	<condition title="经销商名称" bundle="page" key="common.distName" property="distId"/>
+	<condition title="经销商编码" bundle="page" key="common.distCode" property="distCode"/>
+	<condition title="单据日期" bundle="page" key="common.billDate" property="billDate1,billDate2"/>
+	<condition title="记录更新时间" bundle="page" key="common.updatedTime" property="updateTime1,updateTime2"/>
+	<header>
+		<column property="1" title="经销商编码" bundle="page" key="common.distCode"/>
+		<column property="2" title="经销商名称" bundle="page" key="common.distName"/>
+		<column property="3" title="单据日期" bundle="page" key="common.billDate" cell="date" format="yyyy-MM-dd"/>
+		
+		<column property="4" title="正常产品销售SKU数" bundle="page" key="common.normalProdSku" cell="number" format="0" />
+		<column property="5" title="正常产品销售数量" bundle="page" key="common.normalProdSales" cell="number" format="0.00" />
+		<column property="6" title="正常产品销售金额" bundle="page" key="common.normalProdSAmount" cell="number" format="0.000" />
+		<column property="7" title="正常产品销售数量(%)" bundle="page" key="common.normalProdSkuPerce" cell="number" format="0.000%" />
+		<column property="8" title="正常产品销售金额(%)" bundle="page" key="common.normalProdAmountPerce" cell="number" format="0.000%" />
+		
+		<column property="9" title="待匹配产品销售SKU数" bundle="page" key="common.beMatchedProdSku" cell="number" format="0" />
+		<column property="10" title="待匹配产品销售数量" bundle="page" key="common.beMatchedProdSales" cell="number" format="0.00" />
+		<column property="11" title="待匹配产品销售金额" bundle="page" key="common.beMatchedProdSAmount" cell="number" format="0.000" />
+		
+		<column property="12" title="其他产品销售SKU数" bundle="page" key="common.otherProdSku" cell="number" format="0" />
+		<column property="13" title="其他产品销售数量" bundle="page" key="common.otherProdSales" cell="number" format="0.00" />
+		<column property="14" title="其他产品销售金额" bundle="page" key="common.otherProdSAmount" cell="number" format="0.000" />
+		
+		<column property="15" title="库存数据所在期间" bundle="page" key="common.mappingStockDate" cell="date" format="yyyy-MM-dd"/>
+		<column property="16" title="正常产品库存SKU数" bundle="page" key="common.normalProdStockSku" cell="number" format="0" />
+		<column property="17" title="正常产品库存数量" bundle="page" key="common.normalProdStocks" cell="number" format="0.00" />
+		<column property="18" title="正常产品库存数量(%)" bundle="page" key="common.normalProdStockSkuPerce" cell="number" format="0.000%" />
+
+		<column property="19" title="待匹配产品库存SKU数" bundle="page" key="common.beMatchedProdStockSku" cell="number" format="0" />
+		<column property="20" title="待匹配产品库存数量" bundle="page" key="common.beMatchedProdStocks" cell="number" format="0.00" />
+		
+		<column property="21" title="其他产品库存SKU数" bundle="page" key="common.otherProdStockSku" cell="number" format="0" />
+		<column property="22" title="其他产品库存数量" bundle="page" key="common.otherProdStocks" cell="number" format="0.00" />
+
+		<column property="23" title="原始数据最近更新日期 " bundle="page" key="common.origianlDataUpdateTime" cell="date" format="yyyy-MM-dd"/>
+		<column property="24" title="记录最近更新时间" bundle="page" key="common.recordLastUpdate" cell="date" format="yyyy-MM-dd HH:mm"/>
+	</header>
+	
+	<content>
+		<param id="distId" template="and dist.dist_id in ($distId$)">$distId$</param>
+		<param id="distCode" template="and dist.dist_code like '%$distCode$%'">$distCode$</param>
+		<param id="billDate1" template="and salesku.bill_date>='$billDate1$'">$billDate1$</param>
+		<param id="billDate2" template="and salesku.bill_date&lt;='$billDate2$ 23:59:59'">$billDate2$</param>
+		<param id="updateTime1" template="and salesku.update_time>='$updateTime1$'">$updateTime1$</param>
+		<param id="updateTime2" template="and salesku.update_time&lt;='$updateTime2$ 23:59:59'">$updateTime2$</param>
+		<sql>
+		<![CDATA[
+		select 
+		salesku.dist_id,
+		dist.dist_code,
+		dist.dist_name,
+		salesku.bill_date,
+		salesku.正常产品销售SKU数,
+		saleqty.正常产品销售数量,
+		amount.正常产品销售金额,
+		case when (saleqty.正常产品销售数量+saleqty.待匹配产品销售数量+saleqty.其它产品销售数量)<>0 then saleqty.正常产品销售数量/(saleqty.正常产品销售数量+saleqty.待匹配产品销售数量+saleqty.其它产品销售数量) else 0.0000 end '正常产品销售数量(%)',
+		case when (amount.正常产品销售金额+amount.待匹配产品销售金额+amount.其它产品销售金额) <>0 then amount.正常产品销售金额/(amount.正常产品销售金额+amount.待匹配产品销售金额+amount.其它产品销售金额) else 0.0000 end  '正常产品销售金额(%)',
+		
+		salesku.待匹配产品销售SKU数,
+		saleqty.待匹配产品销售数量,
+		amount.待匹配产品销售金额,
+		
+		salesku.其它产品销售SKU数,		
+		saleqty.其它产品销售数量,		
+		amount.其它产品销售金额,
+		
+		stockDate.stock_date,
+		
+		stocksku.正常产品库存SKU数,
+		stockqty.正常产品库存数量,
+		case when (stockqty.正常产品库存数量+stockqty.待匹配产品库存数量+stockqty.其它产品库存数量)<>0 then stockqty.正常产品库存数量/(stockqty.正常产品库存数量+stockqty.待匹配产品库存数量+stockqty.其它产品库存数量) else 0.0000 end '正常产品库存数量(%)',
+		
+		stocksku.待匹配产品库存SKU数,
+		stockqty.待匹配产品库存数量,
+		
+		stocksku.其它产品库存SKU数,
+		stockqty.其它产品库存数量,
+				
+		salesku.data_update_time,
+		salesku.update_time
+		
+		from
+		(select dist_id,bill_date,data_update_time,update_time,case when [正常] is null then 0 else [正常] end '正常产品销售SKU数',case when [未匹配] is null then 0 else [未匹配] end '待匹配产品销售SKU数',case when [其它] is null then 0 else [其它] end '其它产品销售SKU数' from (select dist_id,bill_date,data_update_time,update_time,prodtype_Name,sale_sku from rpt_dist_DailySummary) a pivot (sum(sale_sku) for prodtype_Name in (正常,未匹配,其它)) b) salesku
+		inner join
+		(select dist_id,bill_date,case when [正常] is null then 0 else [正常] end '正常产品销售数量',case when [未匹配] is null then 0 else [未匹配] end '待匹配产品销售数量',case when [其它] is null then 0 else [其它] end '其它产品销售数量' from (select dist_id,bill_date,prodtype_Name,sale_quantity from rpt_dist_DailySummary) a pivot (sum(sale_quantity) for prodtype_Name in (正常,未匹配,其它)) b) saleqty
+		on salesku.dist_id=saleqty.dist_id and salesku.bill_date=saleqty.bill_date
+		inner join
+		(select dist_id,bill_date,case when [正常] is null then 0 else [正常] end '正常产品销售金额',case when [未匹配] is null then 0 else [未匹配] end '待匹配产品销售金额',case when [其它] is null then 0 else [其它] end '其它产品销售金额' from (select dist_id,bill_date,prodtype_Name,sale_amount from rpt_dist_DailySummary) a pivot (sum(sale_amount) for prodtype_Name in (正常,未匹配,其它)) b) amount
+		on salesku.dist_id=amount.dist_id and salesku.bill_date=amount.bill_date
+		inner join
+		(select dist_id,bill_date,case when [正常] is null then 0 else [正常] end '正常产品库存SKU数',case when [未匹配] is null then 0 else [未匹配] end '待匹配产品库存SKU数',case when [其它] is null then 0 else [其它] end '其它产品库存SKU数' from (select dist_id,bill_date,prodtype_Name,stock_sku from rpt_dist_DailySummary) a pivot (sum(stock_sku) for prodtype_Name in (正常,未匹配,其它)) b) stocksku
+		on salesku.dist_id=stocksku.dist_id and salesku.bill_date=stocksku.bill_date 
+		inner join
+		(select dist_id,bill_date,case when [正常] is null then 0 else [正常] end '正常产品库存数量',case when [未匹配] is null then 0 else [未匹配] end '待匹配产品库存数量',case when [其它] is null then 0 else [其它] end '其它产品库存数量' from (select dist_id,bill_date,prodtype_Name,stock_quantity from rpt_dist_DailySummary) a pivot (sum(stock_quantity) for prodtype_Name in (正常,未匹配,其它)) b) stockqty
+		on salesku.dist_id=stockqty.dist_id and salesku.bill_date=stockqty.bill_date 
+		inner join mdm_distributor dist on salesku.dist_id=dist.dist_id
+		left join 
+		DMS_STOCK_Date_MAPPING stockDate on salesku.dist_id=stockDate.dist_id and salesku.bill_date=stockDate.bill_date
+		where 1=1 $distId$ $distCode$ $billDate1$ $billDate2$ $updateTime1$ $updateTime2$
+		order by salesku.bill_date desc,dist.dist_code
+		]]>
+		</sql>
+	</content>
+	
+</config>

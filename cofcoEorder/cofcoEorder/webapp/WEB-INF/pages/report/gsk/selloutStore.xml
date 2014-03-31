@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+<title>出货分析日报</title>
+	
+	<header>
+			
+			<column property="0" title="卖出大区" align="right" />
+			<column property="1" title="卖出TSM" align="right" />
+			<column property="2" title="卖出城市" align="right" />
+			<column property="3" title="经销商性质" align="right" />
+			<column property="4" title="经销商编码" bundle="page" key="common.distCode" align="right" />
+			<column property="5" title="经销商名称" bundle="page" key="common.distName"  align="right" />
+			<column property="6" title="购买大区" align="right" />
+			<column property="7" title="购买TSM"  align="right" />
+			<column property="8" title="城市" align="right"  />
+			<column property="9" title="购买性质"  align="right" />
+			<column property="10" title="购买客户代码" align="right" />
+			<column property="11" title="购买客户名称" align="right" />
+			<column property="12" title="渠道" align="right" />
+			<column property="13" title="品牌" align="right" />
+			
+			<column property="14" title="经销商产品编码" bundle="page" key="common.distProdCode" align="right" />
+			<column property="15" title="经销商产品名称" bundle="page" key="common.distProdName" align="right" />
+			<column property="16" title="产品标准单价" bundle="page" key="common.pordStandardPrice" align="right" />
+			
+			<column property="17" title="昨日,数量" style="text-align:right;" cell="number" format="#0"/>
+			<column property="18" title="昨日,金额" style="text-align:right;" cell="number" format="#0.00"/>
+			<column property="19" title="MTD,数量" style="text-align:right;" cell="number" format="#0"/>
+			<column property="20" title="MTD,金额" style="text-align:right;" cell="number" format="#0.00"/>
+			
+	</header>
+	
+	<content>
+		<!-- 经销商性质 -->
+		<param id="storeLevelCode" template="AND d.LEVEL_CODE =$storeLevelCode$">$storeLevelCode$</param>
+		<!-- 购买性质 -->
+		<param id="natureId" template="AND ds.nature_id in ($natureId$)">$natureId$</param>
+		<!-- 地理区域 -->
+		<param id="cityCode" template="AND ds.CITY_ID in ($cityCode$)">$cityCode$</param>
+		<!-- 渠道 -->
+		<param id="channelId" template="AND ds.CHANNEL_ID in ($channelId$)">$channelId$</param>
+		<!-- 产品 -->
+		<param id="prodId" initValue="" defaultValue="" template=" and dp.PROD_ID in ($prodId$) ">$prodId$</param>
+		<!-- 时间 -->
+		<param id="billDate" initValue="" defaultValue="" template="">$billDate$</param>
+		<sql>
+<![CDATA[
+	SELECT 	
+	--经销商信息
+			o1.org_name AS region, 
+			o1.EMP_NAME AS regionName,
+			d.city_name as regionCity,
+			CASE WHEN d.LEVEL_CODE=1 THEN '一级' ELSE '二级' END AS aa,
+			d.DIST_CODE AS distCode, 
+			d.DIST_NAME AS distName,
+	--门店信息		
+			org.PN2 AS storeRegion, 
+			emp.EMP_NAME AS storeTMSname,
+			ds.CITY_NAME AS c, 
+			ds.NATURE_NAME AS d, 
+			ds.STORE_CODE AS e, 
+			ds.STORE_NAME AS f, 
+			ds.CHANNEL_NAME AS g,
+	--产品信息		
+			dp.BRAND_NAME AS h, 
+			dp.PROD_CODE AS i, 
+			dp.PROD_NAME AS j, 
+			dp.PROD_PRICE AS k,
+	--单日出货数据		
+			isnull(daySale.BOX,0) AS qli,
+			isnull(daySale.GROSS_SALES/1000,0) AS amount,
+	--MTD出货数据		
+			isnull(ms.BOX,0) AS qli_total,
+			isnull(ms.GROSS_SALES/1000,0) AS amount_total
+
+	FROM 	
+			--销售
+			rpt_data_sale sale 
+			--月销售
+			INNER JOIN (
+				SELECT 	s.ID, s.BOX, s.GROSS_SALES
+				FROM 	rpt_data_sale s
+				WHERE 	s.TARGET_STORE_CODE IS NOT NULL AND s.TARGET_PROD_CODE IS NOT NULL 
+						AND substring(convert(VARCHAR(100),s.BILL_DATE,23),0,8) = substring(convert(VARCHAR(100),'$billDate$',23),0,8) 
+						AND substring(convert(VARCHAR(100),s.BILL_DATE,23),0,11)<convert(VARCHAR(100),'$billDate$',23) 
+			) ms ON ms.ID=sale.ID
+			--昨日销售		
+			LEFT JOIN (
+				SELECT 	s.ID, s.BOX, s.GROSS_SALES
+				FROM 	rpt_data_sale s
+				WHERE 	s.TARGET_STORE_CODE IS NOT NULL AND s.TARGET_PROD_CODE IS NOT NULL 
+						AND s.BILL_DATE=convert(VARCHAR(100),dateadd(day,-1,'$billDate$'),23)
+			) daySale ON daySale.ID=sale.ID
+			LEFT JOIN DIM_DISTRIBUTOR d ON sale.DIST_ID=d.DIST_ID
+			LEFT JOIN DIM_ORG o ON o.ORG_ID=d.ORG_ID
+			LEFT JOIN DIM_ORG o1 ON o1.ORG_ID=o.parent_org_id
+			--门店
+			inner JOIN DIM_STORE ds ON ds.STORE_CODE=sale.TARGET_STORE_CODE
+			
+			INNER JOIN BASE_ORG org ON org.ORG_ID=ds.ORG_ID
+			INNER JOIN BASE_ORG org1 ON org1.ORG_ID=org.PI2
+			LEFT JOIN BASE_EMPLOYEE emp ON emp.EMP_ID=org1.EMP_ID
+			--产品表
+			LEFT JOIN DIM_PRODUCT dp ON dp.PROD_CODE=sale.TARGET_PROD_CODE
+	WHERE 1=1 $storeLevelCode$ $natureId$ $cityCode$ $channelId$ $prodId$
+
+]]>
+		</sql>
+	</content>
+
+
+
+
+</config>

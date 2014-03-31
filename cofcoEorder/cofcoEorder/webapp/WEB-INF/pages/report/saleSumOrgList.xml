@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+  
+	<title>销售汇总日报-组织</title>
+	<header>
+	   <column title="ABC" width="240" align="center" />
+		<column title="大区"   width="140" align="center" />
+		<column title="大分区" width="140" align="center"  />
+		<column title="分区" width="140" align="center" />
+		<column title="小分区" width="140" align="center" />
+		<column title="细分区" width="140" align="center" />
+		<column title="办事处"  width="140" align="center" />
+		<column title="经销商" width="140" align="center" />
+		<column title="门店"  width="140" align="center" />
+		<column title="本月累计销售"  width="140" align="center" format="0.00"/>
+		<column title="目标" width="70" align="center" format="0.00"/>
+		<column title="完成率" width="70" align="center" format="0.00"/>
+		<column title="去年同期销量" width="160" align="center" format="0.00"/>
+		<column title="销售同比增长" width="160" align="center" format="0.00"/>
+		<column title="上月同期销量"  width="160" align="center" format="0.00"/>
+		<column title="销售环比增长" width="160" align="center" format="0.00"/>
+		<column title="1"  width="70" align="center" format="0.00"/>
+		<column title="2"  width="70" align="center" format="0.00"/>
+		<column title="3"  width="70" align="center" format="0.00"/>
+		<column title="4"  width="70" align="center" format="0.00"/>
+		<column title="5"  width="70" align="center" format="0.00"/>
+		<column title="6"  width="70" align="center" format="0.00"/>
+		<column title="7" width="70" align="center" format="0.00"/>
+		<column title="8"  width="70" align="center" format="0.00"/>
+		<column title="9"  width="70" align="center"  format="0.00"/>
+		<column title="10" width="70" align="center"  format="0.00"/>
+		<column title="11" width="70" align="center"  format="0.00"/>
+		<column title="12" width="70" align="center" format="0.00"/>
+		<column title="13" width="70" align="center" format="0.00"/>
+		<column title="14" width="70" align="center" format="0.00"/>
+		<column title="15" width="70" align="center" format="0.00"/>
+		<column title="16" width="70" align="center" format="0.00"/>
+		<column title="17" width="70" align="center" format="0.00"/>
+		<column title="18" width="70" align="center" format="0.00"/>
+		<column title="19" width="70" align="center" format="0.00"/>
+		<column title="20" width="70" align="center" format="0.00"/>
+		<column title="21" width="70" align="center" format="0.00"/>
+		<column title="22" width="70" align="center" format="0.00"/>
+		<column title="23" width="70" align="center" format="0.00"/>
+		<column title="24" width="70" align="center" format="0.00"/>
+		<column title="25" width="70" align="center" format="0.00"/>
+		<column title="26" width="70" align="center" format="0.00"/>
+		<column title="27" width="70" align="center" format="0.00"/>
+		<column title="28" width="70" align="center" format="0.00" />
+		<column title="29" width="70" align="center" format="0.00"/>
+		<column title="30" width="70" align="center" format="0.00"/>
+		<column title="31" width="70" align="center" format="0.00"/>				
+	</header>
+	
+	<content>	
+		<param id="Year">$Year$</param>
+		<param id="Years">$Years$</param>
+		<param id="Month">$Month$</param>
+		<param id="upMonth">$upMonth$</param>
+		
+		<param id="distId" template="AND ms.DIST_ID in ($distId$)">$distId$</param>
+		<param id="geoId" template="and ms.GEO_ID in ($geoId$) ">$geoId$</param>
+		<param id="storeId" template="and  ms.STORE_NAME like '%$storeId$%' ">$storeId$</param>
+		<!-- 渠道 -->
+		<param id="channelId" template="and   ms.CHANNEL_ID   in  ($channelId$)">$channelId$</param>
+		<!-- 门店创建时间和结束时间 -->
+		<param id="storeStartDate" template=" and  ms.CREATED >='$storeStartDate$' ">$storeStartDate$</param> 
+		<param id="storeEndDate"   template=" and  ms.CREATED &lt;= '$storeEndDate$' ">$storeEndDate$</param>
+		<!-- 商场类型  -->
+		<param id="typeId" template=" and   ms.TYPE_ID  in ($typeId$)">$typeId$</param>  
+		<param id="channelId1" template=" and  ms.CHANNEL_ID  in ($channelId1$) ">$channelId1$</param>
+		<param id="channelId2" template=" and  ms.CHANNEL_ID  in ($channelId2$) ">$channelId2$</param>
+		<param id="corpId" template=" and  ms.CORP_ID in ($corpId$) ">$corpId$</param>
+		
+		<param id="prodUnit" template="and p.PROD_UNIT = '$prodUnit$'">$prodUnit$</param>
+		<param id="out" >$out$</param>
+		<param id="prodName" template=" and p.PROD_NAME like '$prodName$'">$prodName$</param>
+		
+	
+		<sql>
+		
+	
+   
+		<![CDATA[ 
+WITH BASE AS (
+ SELECT
+	bo5.ORG_NAME AS ON_1,
+	bo4.ORG_NAME AS ON_2, 
+	bo3.ORG_NAME AS ON_3, 
+	bo2.ORG_NAME AS ON_4, 
+	bo1.ORG_NAME AS ON_5, 
+	bo.ORG_NAME AS ON_6, 
+	md.DIST_NAME AS DIST_NAME, 
+	ms.STORE_NAME AS STORE_NAME,
+      CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-01 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-01 23:59:59'  THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  end  ELSE 0 END AS TD_1,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-02 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-02 23:59:59'  THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END  ELSE 0 END AS TD_2,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-03 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-03 23:59:59'  THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END  ELSE 0 END AS TD_3,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-04 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-04 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END  ELSE 0 END AS TD_4,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-05 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-05 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END  ELSE 0 END AS TD_5,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-06 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-06 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END  ELSE 0 END AS TD_6,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-07 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-07 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END  ELSE 0 END AS TD_7,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-08 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-08 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_8,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-09 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-09 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_9,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-10 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-10 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_10,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-11 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-11 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_11,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-12 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-12 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END    ELSE 0 END AS TD_12,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-13 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-13 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_13,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-14 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-14 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_14,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-15 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-15 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_15,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-16 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-16 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_16,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-17 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-17 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_17,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-18 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-18 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_18,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-19 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-19 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_19,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-20 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-20 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_20,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-21 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-21 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_21,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-22 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-22 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_22,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-23 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-23 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_23,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-24 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-24 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_24,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-25 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-25 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_25,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-26 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-26 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_26,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-27 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-27 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END    ELSE 0 END AS TD_27,
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-28 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-28 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END    ELSE 0 END AS TD_28,
+ --  CASE WHEN dds.BILL_DATE >= '2010'+'-12'+'-29 0:00:00' AND dds.BILL_DATE<=  '2010'+'-12'+'-29 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END    ELSE 0 END AS TD_29,
+  -- CASE WHEN dds.BILL_DATE >= '2010'+'-12'+'-30 0:00:00' AND dds.BILL_DATE<=  '2010'+'-12'+'-30 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_30,
+  -- CASE WHEN dds.BILL_DATE >= '2010'+'-12'+'-31 0:00:00' AND dds.BILL_DATE<=  '2010'+'-12'+'-31 23:59:59' THEN    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END   ELSE 0 END AS TD_31,
+  
+  --判断当前年月中是否有29号
+    CASE WHEN convert(INT, '$Month$' )=2 
+      THEN        
+	      CASE WHEN 
+		       convert(INT, '$Month$' )=2 
+		       AND (convert(INT, '$Year$' )%400=0  OR   convert(INT, '$Year$' )%4=0   
+		       AND convert(INT, '$Year$' )%100<>0) 
+	      THEN       
+		      CASE WHEN 
+		          dds.BILL_DATE >= '$Year$'+'-$Month$'+'-29 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-29 23:59:59'
+	          THEN isnull(dds.box,0) ELSE 0 END
+	          ELSE 0 END
+	      ELSE 
+		      CASE WHEN 
+		             dds.BILL_DATE >= '$Year$'+'-$Month$'+'-29 0:00:00' AND dds.BILL_DATE <=  '$Year$'+'-$Month$'+'-29 23:59:59'
+		      THEN isnull(dds.box,0) ELSE 0  END
+      END AS TD_29,
+      
+    --判断当前年月中是否有30号  
+	   CASE WHEN 
+	         convert(INT, '$Month$' )<>2 
+			    THEN
+			      CASE WHEN 
+			             dds.BILL_DATE >= '$Year$'+'-$Month$'+'-30 0:00:00' AND dds.BILL_DATE <=  '$Year$'+'-$Month$'+'-30 23:59:59'
+			           THEN
+			              isnull(dds.box,0)
+			           ELSE 0 END 
+			    ELSE 0  end   
+	    AS TD_30,
+    
+	--判断当前年月中是否有31号
+     CASE WHEN 
+	           convert(INT, '$Month$' )<>2
+	  THEN
+	       CASE WHEN 
+	          convert(INT, '$Month$' )=1 OR convert(INT, '$Month$' )=3 OR 
+	          convert(INT, '$Month$' )=5 OR convert(INT, '$Month$' )=7 OR 
+	          convert(INT, '$Month$' )=8 OR convert(INT, '$Month$' )=10 OR 
+	          convert(INT, '$Month$' )=12	
+	       THEN
+		        CASE WHEN
+		           dds.BILL_DATE >= '$Year$'+'-$Month$'+'-31 0:00:00' AND dds.BILL_DATE<=  '$Year$'+'-$Month$'+'-31 23:59:59'   
+		        THEN        
+		           isnull(dds.box,0)
+		        ELSE 0 END
+	       ELSE 0 END 
+	  ELSE 0 END
+    AS TD_31,
+   
+   --去年同期
+    CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-01' AND dds.BILL_DATE <= '$Year$'+'-$Month$'+'-31' THEN 
+    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END
+    ELSE 0 END AS LY_MONTH
+   --上月同期
+   ,CASE WHEN dds.BILL_DATE >= '$Year$'+'-$Month$'+'-01' AND dds.BILL_DATE <= '$Year$'+'-$Month$'+'-30' THEN 
+    CASE WHEN dds.BOX IS NULL THEN 0 ELSE dds.box  END 
+    ELSE 0 END AS LAST_MONTH,
+    p.PROD_UNIT, --单位 
+    p.PROD_CODE, --商品
+    p.PROD_NAME,
+    ms.CHANNEL_ID, --渠道
+    ms.TYPE_ID, --商场类型
+    ms.CREATED , --门店创建时间
+   	ms.CORP_ID,  --组织   
+   	ms.STORE_ID,   --门店ID
+   
+   	ms.GEO_ID ,  --经销商地理区域
+   	ms.DIST_ID,
+   	bo1.ORG_ID AS ON_ID_1,
+   	bo2.ORG_ID AS ON_ID_2,
+   	bo3.ORG_ID AS ON_ID_3,
+   	bo4.ORG_ID AS ON_ID_4,
+   	bo5.ORG_ID AS ON_ID_5,
+    bo.ORG_ID  AS ON_ID_6
+ FROM  RPT_DATA_SALE dds
+   --关联产品
+   INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE 
+   INNER JOIN DMS_PROD_MAPPING dpm ON dds.PROD_CODE = dpm.DIST_PROD_CODE AND dds.CLIENT_ID = dpm.CLIENT_ID AND dds.PROD_UNIT=dpm.DIST_PROD_UNIT
+   --关联门店
+   INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dds.TARGET_STORE_CODE
+   --关联经销商
+   INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dds.DIST_ID
+   --关联组织结构
+   INNER JOIN BASE_ORG bo ON bo.ORG_ID = dds.ORG_ID
+   INNER JOIN BASE_ORG bo1 ON bo1.ORG_ID = bo.PARENT_ORG_ID
+   INNER JOIN BASE_ORG bo2 ON bo2.ORG_ID = bo1.PARENT_ORG_ID
+   INNER JOIN BASE_ORG bo3 ON bo3.ORG_ID = bo2.PARENT_ORG_ID
+   INNER JOIN BASE_ORG bo4 ON bo4.ORG_ID = bo3.PARENT_ORG_ID
+   INNER JOIN BASE_ORG bo5 ON bo5.ORG_ID = bo4.PARENT_ORG_ID
+ 
+	  WHERE 1=1 
+        --and  DATEPART(yy, dds.BILL_DATE) = '$Year$' AND DATEPART(mm, dds.BILL_DATE) = '$Month$'
+   		$distId$   $geoId$  $storeId$ $channelId$ $storeStartDate$
+		$storeEndDate$  $typeId$  $channelId1$ $channelId2$ $corpId$ $prodUnit$ $out$ $prodName$ 
+   --GROUP BY 
+   -- bo5.ORG_NAME ,
+   -- dds.BOX,
+   --	bo4.ORG_NAME , 
+   --	bo3.ORG_NAME , 
+   --	bo2.ORG_NAME , 
+   --	dds.BILL_DATE,
+  --	bo1.ORG_NAME , 
+  --	bo.ORG_NAME  , 
+  --	md.DIST_NAME , 
+  --	ms.STORE_NAME,
+  --  p.PROD_UNIT, --单位 
+   -- p.PROD_CODE, --商品
+  --  ms.CHANNEL_ID, --渠道
+  --  ms.TYPE_ID, --商场类型
+  --  ms.CREATED , --门店创建时间
+  -- 	ms.CORP_ID,  --组织   
+  -- 	ms.STORE_ID,   --门店ID
+  -- 	ms.GEO_ID ,  --经销商地理区域
+  -- 	ms.DIST_ID
+ 
+)
+
+
+--大区
+SELECT  '0','a','ABC','','','','','','','','',
+  
+  sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+
+   TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31) AS 本月累计销量,
+  '-' AS 目标,
+  '-' AS 完成率,
+
+  sum(LY_MONTH) AS 去年同期 , 
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LY_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LY_MONTH))/sum(LY_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END  AS 销售同比增长 ,
+  
+  sum(LAST_MONTH) AS 上月同期销量 ,
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LAST_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LAST_MONTH))/sum(LAST_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END  AS 销售环比增长,
+  
+  sum(TD_1),sum(TD_2),sum(TD_3),sum(TD_4),sum(TD_5),sum(TD_6),sum(TD_7),sum(TD_8),sum(TD_9),sum(TD_10),
+  sum(TD_11),sum(TD_12),sum(TD_13),sum(TD_14),sum(TD_15),sum(TD_16),sum(TD_17),sum(TD_18),sum(TD_19),sum(TD_20),
+  sum(TD_21),sum(TD_22),sum(TD_23),sum(TD_24),sum(TD_25),sum(TD_26),sum(TD_27),sum(TD_28),sum(TD_29),sum(TD_30),sum(TD_31)
+
+FROM  BASE
+
+--GROUP BY ON_1
+
+
+UNION ALL 
+
+
+--大分区
+SELECT  'a','a'+CAST(ON_ID_1 AS VARCHAR),'ABC' ,CAST(ON_1 AS VARCHAR) ,'','','','','','','',
+  
+  sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+
+   TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31),
+  '-','-',
+
+  sum(LY_MONTH), 
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LY_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LY_MONTH))/sum(LY_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(LAST_MONTH),
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LAST_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LAST_MONTH))/sum(LAST_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(TD_1),sum(TD_2),sum(TD_3),sum(TD_4),sum(TD_5),sum(TD_6),sum(TD_7),sum(TD_8),sum(TD_9),sum(TD_10),
+  sum(TD_11),sum(TD_12),sum(TD_13),sum(TD_14),sum(TD_15),sum(TD_16),sum(TD_17),sum(TD_18),sum(TD_19),sum(TD_20),
+  sum(TD_21),sum(TD_22),sum(TD_23),sum(TD_24),sum(TD_25),sum(TD_26),sum(TD_27),sum(TD_28),sum(TD_29),sum(TD_30),sum(TD_31)
+
+FROM  BASE
+
+GROUP BY ON_ID_1,ON_1
+
+
+UNION ALL 
+
+
+--分区
+SELECT  'a'+CAST(ON_ID_1 AS VARCHAR),CAST(ON_ID_1 AS VARCHAR)+CAST(ON_ID_2 AS VARCHAR),'ABC' ,CAST(ON_1 AS VARCHAR),CAST(ON_2 AS VARCHAR),'','','','','','',
+  
+  sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+
+   TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31),
+  '-','-',
+
+  sum(LY_MONTH), 
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LY_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LY_MONTH))/sum(LY_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(LAST_MONTH),
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LAST_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LAST_MONTH))/sum(LAST_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(TD_1),sum(TD_2),sum(TD_3),sum(TD_4),sum(TD_5),sum(TD_6),sum(TD_7),sum(TD_8),sum(TD_9),sum(TD_10),
+  sum(TD_11),sum(TD_12),sum(TD_13),sum(TD_14),sum(TD_15),sum(TD_16),sum(TD_17),sum(TD_18),sum(TD_19),sum(TD_20),
+  sum(TD_21),sum(TD_22),sum(TD_23),sum(TD_24),sum(TD_25),sum(TD_26),sum(TD_27),sum(TD_28),sum(TD_29),sum(TD_30),sum(TD_31)
+
+FROM  BASE
+
+GROUP BY ON_ID_1,ON_ID_2,ON_2,ON_1
+
+
+UNION ALL 
+
+
+--小分区
+SELECT CAST(ON_ID_1 AS VARCHAR)+CAST(ON_ID_2 AS VARCHAR),CAST(ON_ID_1 AS VARCHAR)+CAST(ON_ID_2 AS VARCHAR)+CAST(ON_ID_3 AS VARCHAR),'ABC' ,CAST(ON_1 AS VARCHAR),CAST(ON_2 AS VARCHAR),CAST(ON_3 AS VARCHAR),'','','','','',
+  
+  sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+
+   TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31),
+  '-','-',
+
+  sum(LY_MONTH), 
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LY_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LY_MONTH))/sum(LY_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(LAST_MONTH),
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LAST_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LAST_MONTH))/sum(LAST_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(TD_1),sum(TD_2),sum(TD_3),sum(TD_4),sum(TD_5),sum(TD_6),sum(TD_7),sum(TD_8),sum(TD_9),sum(TD_10),
+  sum(TD_11),sum(TD_12),sum(TD_13),sum(TD_14),sum(TD_15),sum(TD_16),sum(TD_17),sum(TD_18),sum(TD_19),sum(TD_20),
+  sum(TD_21),sum(TD_22),sum(TD_23),sum(TD_24),sum(TD_25),sum(TD_26),sum(TD_27),sum(TD_28),sum(TD_29),sum(TD_30),sum(TD_31)
+
+FROM  BASE
+
+GROUP BY ON_ID_1,ON_ID_2,ON_ID_3,ON_1,ON_2,ON_3
+
+
+UNION ALL 
+
+
+--细分区
+SELECT CAST(ON_ID_1 AS VARCHAR)+CAST(ON_ID_2 AS VARCHAR)+CAST(ON_ID_3 AS VARCHAR),CAST(ON_ID_1 AS VARCHAR)+CAST(ON_ID_2 AS VARCHAR)+CAST(ON_ID_3 AS VARCHAR)+CAST(ON_ID_4 AS VARCHAR),'ABC',CAST(ON_1 AS VARCHAR),CAST(ON_2 AS VARCHAR),CAST(ON_3 AS VARCHAR),CAST(ON_4 AS VARCHAR),'','','','',
+  
+  sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+
+   TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31),
+  '-','-',
+
+  sum(LY_MONTH), 
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LY_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LY_MONTH))/sum(LY_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(LAST_MONTH),
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LAST_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LAST_MONTH))/sum(LAST_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(TD_1),sum(TD_2),sum(TD_3),sum(TD_4),sum(TD_5),sum(TD_6),sum(TD_7),sum(TD_8),sum(TD_9),sum(TD_10),
+  sum(TD_11),sum(TD_12),sum(TD_13),sum(TD_14),sum(TD_15),sum(TD_16),sum(TD_17),sum(TD_18),sum(TD_19),sum(TD_20),
+  sum(TD_21),sum(TD_22),sum(TD_23),sum(TD_24),sum(TD_25),sum(TD_26),sum(TD_27),sum(TD_28),sum(TD_29),sum(TD_30),sum(TD_31)
+
+FROM  BASE
+
+GROUP BY ON_ID_1,ON_ID_2,ON_ID_3,ON_ID_4,ON_1,ON_2,ON_3,ON_4
+
+
+UNION ALL 
+
+
+--办事处
+SELECT  CAST(ON_ID_1 AS VARCHAR)+CAST(ON_ID_2 AS VARCHAR)+CAST(ON_ID_3 AS VARCHAR)+CAST(ON_ID_4 AS VARCHAR),CAST(ON_ID_1 AS VARCHAR)+CAST(ON_ID_2 AS VARCHAR)+CAST(ON_ID_3 AS VARCHAR)+CAST(ON_ID_4 AS VARCHAR)+CAST(ON_ID_5 AS VARCHAR),'ABC',CAST(ON_1 AS VARCHAR),CAST(ON_2 AS VARCHAR),CAST(ON_3 AS VARCHAR),CAST(ON_4 AS VARCHAR),CAST(ON_5 AS VARCHAR),'','','',
+  
+  sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+
+   TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31),
+  '-','-',
+
+  sum(LY_MONTH), 
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LY_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LY_MONTH))/sum(LY_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(LAST_MONTH),
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LAST_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LAST_MONTH))/sum(LAST_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(TD_1),sum(TD_2),sum(TD_3),sum(TD_4),sum(TD_5),sum(TD_6),sum(TD_7),sum(TD_8),sum(TD_9),sum(TD_10),
+  sum(TD_11),sum(TD_12),sum(TD_13),sum(TD_14),sum(TD_15),sum(TD_16),sum(TD_17),sum(TD_18),sum(TD_19),sum(TD_20),
+  sum(TD_21),sum(TD_22),sum(TD_23),sum(TD_24),sum(TD_25),sum(TD_26),sum(TD_27),sum(TD_28),sum(TD_29),sum(TD_30),sum(TD_31)
+
+FROM  BASE
+
+GROUP BY ON_ID_1,ON_ID_2,ON_ID_3,ON_ID_4,ON_ID_5,ON_1,ON_2,ON_3,ON_4,ON_5
+
+
+UNION ALL 
+
+
+--经销商
+SELECT CAST(ON_ID_1 AS VARCHAR)+CAST(ON_ID_2 AS VARCHAR)+CAST(ON_ID_3 AS VARCHAR)+CAST(ON_ID_4 AS VARCHAR)+CAST(ON_ID_5 AS VARCHAR),CAST(ON_ID_1 AS VARCHAR)+CAST(ON_ID_2 AS VARCHAR)+CAST(ON_ID_3 AS VARCHAR)+CAST(ON_ID_4 AS VARCHAR)+CAST(ON_ID_5 AS VARCHAR)+CAST(ON_ID_6 AS VARCHAR),'ABC',CAST(ON_1 AS VARCHAR),CAST(ON_2 AS VARCHAR),CAST(ON_3 AS VARCHAR),CAST(ON_4 AS VARCHAR),CAST(ON_5 AS VARCHAR),CAST(ON_6 AS VARCHAR),'','',
+  
+  sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+
+   TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31),
+  '-','-',
+
+  sum(LY_MONTH), 
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LY_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LY_MONTH))/sum(LY_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(LAST_MONTH),
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LAST_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LAST_MONTH))/sum(LAST_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(TD_1),sum(TD_2),sum(TD_3),sum(TD_4),sum(TD_5),sum(TD_6),sum(TD_7),sum(TD_8),sum(TD_9),sum(TD_10),
+  sum(TD_11),sum(TD_12),sum(TD_13),sum(TD_14),sum(TD_15),sum(TD_16),sum(TD_17),sum(TD_18),sum(TD_19),sum(TD_20),
+  sum(TD_21),sum(TD_22),sum(TD_23),sum(TD_24),sum(TD_25),sum(TD_26),sum(TD_27),sum(TD_28),sum(TD_29),sum(TD_30),sum(TD_31)
+
+FROM  BASE
+
+GROUP BY ON_ID_1,ON_ID_2,ON_ID_3,ON_ID_4,ON_ID_5,ON_ID_6,ON_1,ON_2,ON_3,ON_4,ON_5,ON_6
+
+
+UNION ALL 
+
+
+--经销商
+SELECT  CAST(ON_ID_1 AS VARCHAR)+CAST(ON_ID_2 AS VARCHAR)+CAST(ON_ID_3 AS VARCHAR)+CAST(ON_ID_4 AS VARCHAR)+CAST(ON_ID_5 AS VARCHAR)+CAST(ON_ID_6 AS VARCHAR),CAST(ON_ID_1 AS VARCHAR)+CAST(ON_ID_2 AS VARCHAR)+CAST(ON_ID_3 AS VARCHAR)+CAST(ON_ID_4 AS VARCHAR)+CAST(ON_ID_5 AS VARCHAR)+CAST(ON_ID_6 AS VARCHAR)+CAST(DIST_ID AS VARCHAR),'ABC',CAST(ON_1 AS VARCHAR),CAST(ON_2 AS VARCHAR),CAST(ON_3 AS VARCHAR),CAST(ON_4 AS VARCHAR),CAST(ON_5 AS VARCHAR),CAST(ON_6 AS VARCHAR),CAST(DIST_NAME AS VARCHAR),'',
+  
+  sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+
+   TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31),
+  '-','-',
+
+  sum(LY_MONTH), 
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LY_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LY_MONTH))/sum(LY_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(LAST_MONTH),
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LAST_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LAST_MONTH))/sum(LAST_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(TD_1),sum(TD_2),sum(TD_3),sum(TD_4),sum(TD_5),sum(TD_6),sum(TD_7),sum(TD_8),sum(TD_9),sum(TD_10),
+  sum(TD_11),sum(TD_12),sum(TD_13),sum(TD_14),sum(TD_15),sum(TD_16),sum(TD_17),sum(TD_18),sum(TD_19),sum(TD_20),
+  sum(TD_21),sum(TD_22),sum(TD_23),sum(TD_24),sum(TD_25),sum(TD_26),sum(TD_27),sum(TD_28),sum(TD_29),sum(TD_30),sum(TD_31)
+
+FROM  BASE
+
+GROUP BY ON_ID_1,ON_ID_2,ON_ID_3,ON_ID_4,ON_ID_5,ON_ID_6,ON_1,ON_2,ON_3,ON_4,ON_5,ON_6,DIST_ID,DIST_NAME
+
+
+UNION ALL 
+
+
+--门店
+SELECT CAST(ON_ID_1 AS VARCHAR)+CAST(ON_ID_2 AS VARCHAR)+CAST(ON_ID_3 AS VARCHAR)+CAST(ON_ID_4 AS VARCHAR)+CAST(ON_ID_5 AS VARCHAR)+CAST(ON_ID_6 AS VARCHAR)+CAST(DIST_ID AS VARCHAR),CAST(STORE_ID AS VARCHAR),'ABC',CAST(ON_1 AS VARCHAR),CAST(ON_2 AS VARCHAR),CAST(ON_3 AS VARCHAR),CAST(ON_4 AS VARCHAR),CAST(ON_5 AS VARCHAR),CAST(ON_6 AS VARCHAR),CAST(DIST_NAME AS VARCHAR),CAST(STORE_NAME AS VARCHAR),
+  
+  sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+
+   TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31),
+  '-','-',
+
+  sum(LY_MONTH), 
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LY_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LY_MONTH))/sum(LY_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(LAST_MONTH),
+  CASE WHEN sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)=0 THEN '-'
+   ELSE CASE WHEN sum(LAST_MONTH)=0 THEN 'NEW'
+   ELSE CAST(CAST((sum(TD_1+TD_2+TD_3+TD_4+TD_5+TD_6+TD_7+TD_8+TD_9+TD_10+TD_11+TD_12+TD_13+TD_14+TD_15+TD_16+TD_17+TD_18+TD_19+TD_20+TD_21+TD_22+TD_23+TD_24+TD_25+TD_26+TD_27+TD_28+TD_29+TD_30+TD_31)-sum(LAST_MONTH))/sum(LAST_MONTH)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'
+   END 
+  END,
+  
+  sum(TD_1),sum(TD_2),sum(TD_3),sum(TD_4),sum(TD_5),sum(TD_6),sum(TD_7),sum(TD_8),sum(TD_9),sum(TD_10),
+  sum(TD_11),sum(TD_12),sum(TD_13),sum(TD_14),sum(TD_15),sum(TD_16),sum(TD_17),sum(TD_18),sum(TD_19),sum(TD_20),
+  sum(TD_21),sum(TD_22),sum(TD_23),sum(TD_24),sum(TD_25),sum(TD_26),sum(TD_27),sum(TD_28),sum(TD_29),sum(TD_30),sum(TD_31)
+  
+FROM  BASE
+
+GROUP BY ON_ID_1,ON_ID_2,ON_ID_3,ON_ID_4,ON_ID_5,ON_ID_6,ON_1,ON_2,ON_3,ON_4,ON_5,ON_6,DIST_ID,DIST_NAME,STORE_ID,STORE_NAME
+ 
+ 
+ 
+		]]>
+		</sql>
+	</content>
+
+</config>

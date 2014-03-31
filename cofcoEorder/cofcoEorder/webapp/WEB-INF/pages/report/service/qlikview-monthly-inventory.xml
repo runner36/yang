@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title></title>
+	
+	<header>
+		<column property="0" title="上级组织" width="300"/>
+	</header>
+	
+	<content>
+		<param id="monthStockDate">$monthStockDate$</param>
+		<param id="monthStockEnd">$monthStockEnd$</param>
+		<sql>
+<![CDATA[
+with stock_date as(
+	select a.CLIENT_ID,MAX(a.STOCK_DATE) as stock_date from DMS_DATA_STOCK a
+	inner join DMS_CLIENT client on a.CLIENT_ID=client.CLIENT_ID
+	inner join MDM_DISTRIBUTOR dist on client.DIST_ID=dist.DIST_ID
+	where convert(varchar(7), a.STOCK_DATE, 120)='$monthStockDate$'
+	and dist.pass_back_date is not null
+	group by a.CLIENT_ID
+)
+select dist.OWNERGRP_NAME as ownergroupname,
+	stock.STOCK_TYPE as storenumber,
+	dict.ITEM_CODE as citycode,
+	'$monthStockEnd$' as stockdate,
+	left(mapping.TARGET_PROD_CODE,10) as materialnumber,
+	SUM(stock.PROD_QUANTITY+ISNULL(stock.ROAD_QTY,0)) 
+from DMS_DATA_STOCK stock
+	inner join stock_date sd on sd.CLIENT_ID=stock.CLIENT_ID and sd.stock_date=stock.STOCK_DATE
+	inner join DMS_CLIENT client on stock.CLIENT_ID=client.CLIENT_ID
+	inner join MDM_DISTRIBUTOR dist on client.DIST_ID=dist.DIST_ID
+	inner join DMS_PROD_MAPPING mapping on stock.PROD_CODE=mapping.DIST_PROD_CODE and stock.PROD_NAME=mapping.DIST_PROD_NAME and stock.PROD_UNIT=mapping.DIST_PROD_UNIT and stock.CLIENT_ID=mapping.CLIENT_ID
+	left join DMS_STORE_MAPPING sm on stock.STOCK_TYPE=sm.DIST_STORE_CODE and sm.client_id=stock.client_id
+	left join BASE_DICT_ITEM dict on dict.DICT_ID='geography' and sm.GEO_ID=dict.DICT_ITEM_ID
+where mapping.TARGET_PROD_CODE!='nonike' 
+	and stock.STATE='1' and (sm.isreturn_data!='0' or sm.isreturn_data is null)
+	and dist.pass_back_date is not null
+group by dist.OWNERGRP_NAME,stock.STOCK_TYPE,dict.ITEM_CODE,left(mapping.TARGET_PROD_CODE,10)
+]]>
+		</sql>
+	</content>
+	
+</config>

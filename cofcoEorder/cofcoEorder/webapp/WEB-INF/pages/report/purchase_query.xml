@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <config showSql="false" cacheTime="0" firstQuery="false" paging="true">
+  
+	<title bundle="page" key="customize.title.purchaseDataQuery">进货数据查询</title>
+	<header>
+		<column property="0" title="组织名称" bundle="page" key="common.orgName" />
+		<column property="1" title="经销商编码" bundle="page" key="common.distCode" />
+		<column property="2" title="经销商名称" bundle="page" key="common.distName" />
+		<column property="3" title="单据编号" bundle="page" key="common.billNumber" />
+		<column property="4" title="状态" bundle="page" key="common.status" />
+		<column property="5" title="单据类型" bundle="page" key="common.billType" />
+		<column property="6" title="单据日期"  bundle="page" key="common.billDate" cell="date" format="yyyy-MM-dd"/>
+	    <column property="7" title="经销商产品编码" bundle="page" key="common.distProdCode" />
+		<column property="8" title="经销商产品名称" bundle="page" key="common.distProdName" />
+		<column property="9" title="经销商产品数量"  bundle="page" key="common.distProdQuantity"/>
+		<column property="10" title="经销商产品单位" bundle="page" key="common.distProdUnit" />
+		<column property="11" title="经销商产品金额" bundle="page" key="common.distProdAmount"/>
+		<column property="12" title="产品标准编码" bundle="page" key="common.pordStandardCode" />
+		<column property="13" title="产品标准名称" bundle="page" key="common.pordStandardName" />
+		<column property="14"  title="客户端编码" bundle="page" key="common.clientCode"/>
+		<column property="15" title="创建日期"  bundle="page" key="common.createdTime" cell="date" format="yyyy-MM-dd HH:mm"/>
+		<column property="16"  title="更新时间" bundle="page" key="common.updatedTime" cell="date" format="yyyy-MM-dd HH:mm"/>
+	</header>
+	    
+	<content>	
+		<param id="p_distId" template=" AND dist.dist_id in($p_distId$)">$p_distId$</param>
+		<param id="p_prodName" template=" AND purchase.prod_name LIKE '$p_prodName$'">$p_prodName$</param>
+		<param id="p_state" template=" and purchase.STATE = $p_state$">$p_state$</param>
+		<param id="p_billDate1" template="and purchase.bill_date>='$p_billDate1$'">$p_billDate1$</param>
+		<param id="p_billDate2" template="and purchase.bill_date&lt;='$p_billDate2$ 23:59:59'">$p_billDate2$</param>
+		<param id="p_updateTime1" template="and purchase.update_time>='$p_updateTime1$'">$p_updateTime1$</param>
+		<param id="p_updateTime2" template="and purchase.update_time&lt;='$p_updateTime2$ 23:59:59'">$p_updateTime2$</param>
+		<param id="p_createTime1" template="and purchase.CREATE_TIME>='$p_createTime1$'">$p_createTime1$</param>
+		<param id="p_createTime2" template="and purchase.CREATE_TIME&lt;='$p_createTime2$ 23:59:59'">$p_createTime2$</param>
+		
+		<sql>
+		<![CDATA[
+		select	org.ORG_NAME,dist.DIST_CODE,dist.DIST_NAME,purchase.BILL_CODE,case purchase.STATE when 1 then '有效' else '无效' end,
+		        purchase.BILL_TYPE,purchase.BILL_DATE,purchase.PROD_CODE,purchase.PROD_NAME,
+		        purchase.PROD_QUANTITY,purchase.PROD_UNIT,purchase.PROD_AMOUNT,prod.PROD_CODE as TARGET_PROD_CODE,
+		        prod.PROD_NAME as TARGET_PROD_NAME,client.CLIENT_CODE,purchase.CREATE_TIME,purchase.UPDATE_TIME 
+		from	DMS_DATA_PURCHASE purchase
+				inner join DMS_CLIENT client
+				on purchase.CLIENT_ID = client.CLIENT_ID
+				inner join MDM_DISTRIBUTOR dist
+				on client.DIST_ID = dist.DIST_ID
+				inner join BASE_ORG org
+				on dist.ORG_ID = org.ORG_ID
+				left join DMS_PROD_MAPPING mapping
+				on purchase.CLIENT_ID = mapping.CLIENT_ID
+				AND purchase.PROD_CODE = mapping.DIST_PROD_CODE
+				and purchase.PROD_UNIT = mapping.DIST_PROD_UNIT
+				left join MDM_PRODUCT prod
+				on mapping.TARGET_PROD_CODE = prod.PROD_CODE
+		where	1=1 $p_distId$ $p_prodName$ $p_state$ $p_billDate1$ $p_billDate2$ $p_updateTime1$ $p_updateTime2$ $p_createTime1$ $p_createTime2$
+		]]>
+		</sql>
+	</content>
+
+</config>

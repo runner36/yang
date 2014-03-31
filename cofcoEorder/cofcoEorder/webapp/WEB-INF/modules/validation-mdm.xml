@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE form-validation PUBLIC
+     "-//Apache Software Foundation//DTD Commons Validator Rules Configuration 1.1.3//EN"
+     "http://jakarta.apache.org/commons/dtds/validator_1_1_3.dtd">
+<form-validation>
+	<formset>
+		<form name="mdmProductForm">
+			<field property="prodCode" depends="required">
+				<arg key="产品编码" resource="false" />
+			</field>
+			<field property="prodName" depends="required">
+				<arg key="产品名称" resource="false" />
+			</field>
+			<!-- 
+			<field property="prodPrice" depends="double">
+				<arg key="产品单价" resource="false" />
+			</field>
+			<field property="prodWeight" depends="double">
+				<arg key="产品重量" resource="false" />
+			</field>
+			<field property="prodMinWeight" depends="double">
+				<arg key="最小单位重量" resource="false" />
+			</field>
+			<field property="prodContent" depends="double">
+				<arg key="产品含量" resource="false" />
+			</field>
+			<field property="prodMinContent" depends="double">
+				<arg key="最小单位含量" resource="false" />
+			</field>
+			<field property="sort" depends="long">
+				<arg key="排序" resource="false" />
+			</field>
+			<field property="prodBaseUnitId" depends="required">
+				<arg key="基本单位" resource="false" />
+			</field>
+			<field property="prodUnitId" depends="required">
+				<arg key="统计单位" resource="false" />
+			</field>
+			<field property="prodPricUnitId" depends="required">
+				<arg key="单位单价" resource="false" />
+			</field>
+			<field property="prodPrice" depends="required">
+				<arg key="产品单价" resource="false" />
+			</field> -->
+		</form>
+
+		<form name="mdmStoreForm">
+			<field property="storeCode" depends="required">
+				<arg key="门店编码" resource="false" />
+			</field>
+			<field property="storeName" depends="required">
+				<arg key="门店名称" resource="false" />
+			</field>
+			<field property="orgName" depends="required">
+				<arg key="组织" resource="false" />
+			</field>
+			<field property="geoName" depends="required">
+				<arg key="地理区域" resource="false" />
+			</field>
+			<field property="levelCode" depends="long">
+				<arg key="层次级别" resource="false" />
+			</field>
+			<field property="sort" depends="long">
+				<arg key="排序" resource="false" />
+			</field>
+			<field property="storeLevel" depends="long">
+				<arg key="客户等级" resource="false" />
+			</field>
+		</form>
+
+		<form name="mdmDistributorForm">
+			<field property="distCode" depends="required">
+				<arg key="客户编码" resource="false" />
+			</field>
+			<field property="distName" depends="required">
+				<arg key="客户名称" resource="false" />
+			</field>
+			<field property="orgName" depends="required">
+				<arg key="组织" resource="false" />
+			</field>
+			<!-- <field property="geoName" depends="required">
+				<arg key="地理区域" resource="false" />
+			</field> -->
+			<field property="levelCode" depends="long">
+				<arg key="层次级别" resource="false" />
+			</field>
+			<field property="sort" depends="long">
+				<arg key="排序" resource="false" />
+			</field>
+		</form>
+
+		<form name="mdmCalendarForm">
+			<field property="calYear" depends="long">
+				<arg key="年" resource="false" />
+			</field>
+			<field property="calQuarter" depends="long">
+				<arg key="季" resource="false" />
+			</field>
+			<field property="calMonth" depends="long">
+				<arg key="月" resource="false" />
+			</field>
+			<field property="calWeek" depends="long">
+				<arg key="周" resource="false" />
+			</field>
+			<field property="calWeekOfMonth" depends="long">
+				<arg key="月周" resource="false" />
+			</field>
+			<field property="calDay" depends="long">
+				<arg key="日" resource="false" />
+			</field>
+		</form>
+		<form name="mdmAfsLocationForm">
+			<field property="afsLocationCode" depends="required">
+				<arg key="AFSLocation编码" resource="false" />
+			</field>
+			<field property="afsLocationName" depends="required">
+				<arg key="AFSLocation名称" resource="false" />
+			</field>
+			<field property="orgName" depends="required">
+				<arg key="组织" resource="false" />
+			</field>
+			<field property="geoName" depends="required">
+				<arg key="地理区域" resource="false" />
+			</field>
+			<field property="sort" depends="long">
+				<arg key="排序" resource="false" />
+			</field>
+		</form>
+	</formset>
+</form-validation>

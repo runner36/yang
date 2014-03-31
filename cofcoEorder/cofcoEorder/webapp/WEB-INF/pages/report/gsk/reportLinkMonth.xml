@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>链接版月报</title>
+	
+	<header>
+		<column property="1" title="经销商号" sortable="false"/>
+		<column property="2" title="经销商名称" bundle="page" key="common.distName" sortable="false"/>
+		<column property="3" title="原始交易日期" sortable="false"/>
+		<column property="4" title="原始产品名称" sortable="false"/>
+		<column property="5" title="原始规格" sortable="false"/>
+		<column property="6" title="原始产品单位" sortable="false"/>
+		<column property="7" title="原始单价" sortable="false"/>
+		<column property="8" title="原始金额" sortable="false"/>
+		<column property="9" title="原始数量" sortable="false"/>
+		<column property="10" title="原始批号" sortable="false"/>
+		<column property="11" title="原始客户名称" sortable="false"/>
+		<column property="12" title="客户名称(整理2)" sortable="false"/>
+		<column property="13" title="产品单位代码" sortable="false"/>
+		<column property="14" title="卖出客户代码" sortable="false"/>
+		<column property="15" title="标准产品名称" sortable="false"/>
+		<column property="16" title="购买客户代码" sortable="false"/>
+		<column property="17" title="产品代码" sortable="false"/>
+		<column property="18" title="交易日期" sortable="false"/>
+		<column property="19" title="批号" sortable="false"/>
+		<column property="20" title="数量" sortable="false"/>
+		<column property="21" title="产品单价" sortable="false"/>
+		<column property="22" title="来源批号-序号" sortable="false"/>
+		<column property="23" title="业务类型" sortable="false"/>
+		<column property="24" title="计算日期" sortable="false"/>
+		<column property="25" title="标准产品单价" sortable="false"/>
+		<column property="26" title="匹配方式" sortable="false"/>
+	</header>
+	
+	<content>
+		<sql>
+<![CDATA[
+	SELECT 
+		A.DIST_ID,
+		B.DIST_CODE,
+		B.DIST_NAME,
+		convert(char(10),A.BILL_DATE,23),
+		A.PROD_NAME,
+		C.PROD_SPEC,
+		A.PROD_UNIT,
+		cast(coalesce(A.PROD_PRICE,0) as numeric(10,2)),
+		cast(coalesce(A.PROD_AMOUNT,0) as numeric(10,2)),
+		cast(coalesce(A.PROD_QUANTITY,0) as numeric(15)),
+		C.PROD_NUM,
+		A.STORE_NAME,
+		D.STORE_NAME TARGET_STORE_NAME,
+		'' PROD_UNIT_CODE,
+		B.DIST_CODE,
+		E.PROD_NAME,
+		D.STORE_CODE,
+		E.PROD_CODE,
+		convert(char(10),A.BILL_DATE,23) bill_date1,
+		C.PROD_NUM,
+		cast(coalesce(A.BOX,0) as numeric(15)),
+		cast(coalesce(A.PROD_PRICE,0) as numeric(10,2)),
+		convert(CHAR(6),A.BILL_DATE,112)+CASE WHEN B.LEVEL_CODE='1' THEN 'YJFMCG' ELSE 'EJFMCG' END NSEQ,
+		C.PROD_NUM,
+		convert(CHAR(7),getdate(),23)+'-01',
+		cast(coalesce(E.PROD_PRICE,0) as numeric(10,2)) TARGET_PROD_PRICE,
+		'人工匹配' MAPPING_TYPE
+	FROM RPT_DATA_SALE A INNER JOIN DIM_DISTRIBUTOR B ON A.DIST_ID=B.DIST_ID 
+	INNER JOIN DMS_DATA_PRODUCT C ON A.PROD_CODE=C.PROD_CODE AND A.CLIENT_ID=C.CLIENT_ID
+	INNER JOIN MDM_STORE D ON A.TARGET_STORE_CODE=D.STORE_CODE
+	INNER JOIN MDM_PRODUCT E ON A.TARGET_PROD_CODE = E.PROD_CODE
+	
+	WHERE 1=1 AND A.BILL_DATE>=dateAdd(month, datediff(month,'19000101',getdate())-1,'19000101')
+	 AND A.BILL_DATE<dateAdd(month, datediff(month,'19000101',getdate()),'19000101')
+]]>
+		</sql>
+	</content>
+	
+</config>

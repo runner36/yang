@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="true">
+	<title bundle="page" key="customize.title.invoicingBalance">进销存平衡表</title>
+	<header>
+		<column property="0" title="经销商编码" bundle="page" key="common.distCode"  />
+		<column property="1" title="经销商名称" bundle="page" key="common.distName"  />
+		<column property="2" title="经销商产品编码" bundle="page" key="common.distProdCode"  />
+		<column property="3" title="经销商产品名称" bundle="page" key="common.distProdName"  />
+		<column property="4" title="库存单位" bundle="page" key="common.stockUnits"  />
+		<column property="5" title="期初库存" bundle="page" key="common.beginningStocks" cell="currency" format="0" style="text-align:right"/>
+		<column property="6" title="期间进货" bundle="page" key="common.duringPurchaseQty"  cell="currency" format="0" style="text-align:right"/>
+		<column property="7" title="期间销售" bundle="page" key="common.duringSaleQty"  cell="currency" format="0" style="text-align:right"/>
+		<column property="8" title="出入库" bundle="page" key="common.duringOtherInOutQty" cell="currency" format="0"  style="text-align:right"/>
+		<column property="9" title="计算期末库存" bundle="page" key="common.calculateEndStock" cell="currency" format="0"  style="text-align:right"/>
+		<column property="10" title="期末库存" bundle="page" key="common.endStock" cell="currency" format="0" style="text-align:right"/>
+		<column property="11" title="期末库存差值" bundle="page" key="common.endStockDiff" cell="currency" format="0" style="text-align:right"/>
+		<column property="12" title="库存差异天数"  style="text-align:right" cell="number" format="0"/>
+		<column property="13" title="期初日期" bundle="page" key="common.initialDate" cell="date" format="yyyy-MM-dd"/>
+		<column property="14" title="期末日期" bundle="page" key="common.endDate" cell="date" format="yyyy-MM-dd"/>
+		<column property="15" title="XML最近更新时间" bundle="page" key="common.xmlFileUpdateTime" cell="date" format="yyyy-MM-dd"/>
+		<column property="16" title="软件名称"  bundle="page" key="common.softwareName"/>
+		<column property="17" title="客户端编码" bundle="page" key="common.clientCode"/>
+		<column property="18" title="客户端ID" bundle="page" key="common.clientId"/>
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH -->
+		
+		<!-- 权限 -->
+		<param id="_orgAuthExp" initValue="" defaultValue="" valueList="" dataType="char"></param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+        <!-- 期初日期 期末日期 -->
+        <param id="beginDate" initValue="" defaultValue="">$beginDate$</param>
+		<param id="endDate" initValue="" defaultValue="" >$endDate$</param>
+		<!-- 组织机构 经销商 -->
+		<param id="orgName" initValue="" defaultValue="">$orgName$</param>
+		<param id="orgId" initValue="" defaultValue="" template="and dist.org_id in ($orgId$)">$orgId$</param>
+		
+		<param id="distName" initValue="" defaultValue="">$distName$</param>
+		<param id="distId" initValue="" defaultValue="" template="and dist.dist_id in ($distId$)">$distId$</param>
+		<param id="distCode" initValue="" defaultValue="" template="and dist.dist_id in (SELECT c.DIST_ID FROM MDM_DISTRIBUTOR c WHERE c.dist_code='$distCode$')">$distCode$</param>
+		<param id="softId" initValue="" defaultValue="" template="and dist.dist_id in (SELECT c.DIST_ID FROM DMS_SOFTWARE a,DMS_CLIENT b,MDM_DISTRIBUTOR c WHERE b.DIST_ID = c.DIST_ID AND a.SOFT_ID = b.SOFT_ID AND a.SOFT_ID IN ($softId$))">$softId$</param>
+		<!-- 库存差异率 -->
+		<param id="stockDiff" initValue="" defaultValue="">$stockDiff$</param>
+		<sql>
+            <![CDATA[                
+			WITH period AS(
+			  	SELECT px.startDate
+			         , px.endDate
+			         , px.dist_name
+			         , px.dist_id
+			         , px.prod_code
+			         , px.prod_unit
+			       --, px.PROD_NAME
+					 , px.dist_code
+					 , px.CLIENT_ID
+					 , px.upload_time
+					 , px.SOFT_NAME
+					 , px.CLIENT_CODE
+			         , (SELECT sum (RPT.PROD_QUANTITY)
+			            FROM RPT_DATA_STOCK RPT WITH (nolock)
+			            WHERE 	RPT.UPDATE_TIME = px.startDate 
+			            AND 	px.DIST_ID = RPT.DIST_ID 
+			            AND 	px.PROD_CODE = RPT.PROD_CODE 
+			            AND 	px.PROD_UNIT = RPT.PROD_UNIT
+			            AND 	px.CLIENT_ID = RPT.CLIENT_ID
+			            ) AS be
+			         , (SELECT sum (RPT.PROD_QUANTITY)
+			            FROM RPT_DATA_STOCK RPT WITH (nolock)
+			            WHERE 	RPT.UPDATE_TIME = px.endDate 
+			            AND 	px.DIST_ID = RPT.DIST_ID 
+			            AND 	px.PROD_CODE = RPT.PROD_CODE 
+			            AND 	px.PROD_UNIT = RPT.PROD_UNIT
+			            AND 	px.CLIENT_ID = RPT.CLIENT_ID
+			            ) AS ee
+			         --期间进货数量 
+			        ,(  SELECT sum (RDP.PROD_QUANTITY)
+						FROM RPT_DATA_PURCHASE  AS RDP  
+						WHERE  	RDP.UPDATE_TIME > px.startDate 
+						AND 	RDP.UPDATE_TIME < dateadd (ss, 1, px.endDate)
+						AND 	RDP.DIST_ID   	= px.DIST_ID 
+						AND 	RDP.PROD_CODE 	= px.PROD_CODE 
+						AND 	RDP.PROD_UNIT 	= px.PROD_UNIT
+						AND 	RDP.CLIENT_ID 	= px.CLIENT_ID
+						) AS  PURCHASE
+						--期间销售数量 
+					,(	SELECT SUM (RDS.PROD_QUANTITY)
+						FROM  RPT_DATA_SALE AS RDS 
+						WHERE 	RDS.UPDATE_TIME > px.startDate 
+						AND  	RDS.UPDATE_TIME < dateadd (ss, 1, px.endDate)
+						AND  	RDS.DIST_ID		= px.DIST_ID
+						AND  	RDS.PROD_CODE 	= px.PROD_CODE
+						AND  	RDS.PROD_UNIT	= px.PROD_UNIT
+						AND  	RDS.CLIENT_ID  	= px.CLIENT_ID
+						) AS SALE
+						--期间其它出入库数量
+				   ,(  	SELECT SUM (RDI.PROD_QUANTITY)
+						FROM RPT_DATA_INOUT RDI
+						WHERE 	RDI.UPDATE_TIME > px.startDate 
+						AND 	RDI.UPDATE_TIME < dateadd (ss, 1, px.endDate)
+						AND 	RDI.DIST_ID   	= px.DIST_ID 
+						AND 	RDI.PROD_CODE 	= px.PROD_CODE 
+						AND 	RDI.PROD_UNIT 	= px.PROD_UNIT
+						AND 	RDI.CLIENT_ID 	= px.CLIENT_ID
+						) AS INOUT 
+			     FROM (
+						SELECT min (RPT.UPDATE_TIME) AS startDate
+						   ,  max (RPT.UPDATE_TIME) AS endDate
+						   ,  RPT.prod_code
+						   ,  RPT.prod_unit
+						   ,  RPT.dist_id
+						   ,  RPT.CLIENT_ID
+						   ,  xml_upload.SOFT_NAME
+						   ,  xml_upload.CLIENT_CODE
+						   ,  xml_upload.UPLOAD_TIME
+						   ,  dist.dist_name
+						   ,  dist.dist_code
+						FROM RPT_DATA_STOCK RPT WITH (nolock)
+						left join MDM_DISTRIBUTOR AS dist WITH (nolock) 
+						on RPT.dist_id = dist.dist_id AND dist.STATE = '1'
+						left join
+						(
+							SELECT 
+							MAX(c.UPLOAD_TIME) UPLOAD_TIME
+								, c.SOFT_NAME
+								, b.CLIENT_ID
+								, b.CLIENT_CODE
+							FROM DMS_CLIENT b WITH (nolock) 
+								, DMS_SOFTWARE c WITH (nolock)
+								, DMS_RUN_LOG d WITH (nolock)
+							WHERE b.SOFT_ID = c.SOFT_ID
+								AND b.CLIENT_ID = d.CLIENT_ID
+								AND d.UPLOAD_TIME BETWEEN '$beginDate$' AND '$endDate$ 23:59:59'
+							GROUP BY c.SOFT_NAME,b.CLIENT_ID, b.CLIENT_CODE
+						) xml_upload
+						on RPT.CLIENT_ID=xml_upload.CLIENT_ID
+						WHERE RPT.PROD_QUANTITY IS NOT NULL 
+						AND RPT.UPDATE_TIME 
+						--BETWEEN '2011-05-01' AND '2011-07-31 23:59:59'
+						BETWEEN case when xml_upload.UPLOAD_TIME is not null and xml_upload.UPLOAD_TIME>'$beginDate$'  and 
+						xml_upload.UPLOAD_TIME<'$endDate$ 23:59:59' then 
+						xml_upload.UPLOAD_TIME else '$beginDate$' end
+						AND '$endDate$ 23:59:59'
+						$softId$ $orgId$ $distId$ $distCode$
+						GROUP BY RPT.DIST_ID, RPT.PROD_CODE, RPT.PROD_UNIT, RPT.CLIENT_ID,xml_upload.UPLOAD_TIME,xml_upload.SOFT_NAME
+						   ,xml_upload.CLIENT_CODE,dist.dist_name,  dist.dist_code
+			           ) px 			           
+			),prod_name as(
+				select 
+					a.client_id,a.prod_code,a.prod_name
+				from
+				(
+					select 
+						row_number()
+						over
+						(partition by a.client_id,a.prod_code order by a.prod_name desc) as rn
+						,a.client_id,a.prod_code,a.prod_name
+					from dms_active_product a
+					left join dms_client c
+					on a.client_id=c.client_id
+					left join mdm_distributor dist
+					on c.dist_id=dist.dist_id
+					where dist.STATE='1' $softId$ $orgId$ $distId$ $distCode$
+				) a
+				where a.rn=1
+			)
+			SELECT 
+				  t.dist_code AS distCode
+				, t.DIST_NAME AS distName
+				, t.PROD_CODE AS prodCode
+				, name.prod_name
+				, t.PROD_UNIT AS stockUnit
+				, t.be as startStock
+				, t.PURCHASE as purchase
+				, t.SALE as sale
+				, t.INOUT as otherInOut
+				, isnull(t.be,0)+isnull(t.PURCHASE,0)-isnull(t.SALE,0)+isnull(t.INOUT,0) as calcEndStock
+				, t.ee as endStock
+				, isnull (t.ee, 0) -(isnull (t.be, 0) + isnull (t.PURCHASE, 0) -isnull (t.SALE, 0) + isnull (t.INOUT, 0)) AS gap
+				, case when t.SALE is null or t.SALE=0 then null else
+				abs(isnull (t.ee, 0) -(isnull (t.be, 0) + isnull (t.PURCHASE, 0) -isnull (t.SALE, 0) + isnull (t.INOUT, 0)))/t.SALE*datediff(day,t.startDate,t.endDate) end AS gap_day
+				, t.startDate
+				, t.endDate
+				, t.upload_time AS xmlUploadTime
+				, t.SOFT_NAME AS softName
+				, t.CLIENT_CODE AS clientCode
+				, t.CLIENT_ID AS clientId				
+				FROM period AS t WITH (nolock)
+				left join prod_name name
+				on t.CLIENT_ID=name.CLIENT_ID
+				and t.PROD_CODE=name.PROD_CODE
+          ]]>
+		</sql>
+	</content>
+	
+</config>

@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts-config PUBLIC
+		"-//Apache Software Foundation//DTD Struts Configuration 1.2//EN"
+		"http://struts.apache.org/dtds/struts-config_1_2.dtd">
+<struts-config>
+	<form-beans>
+		<form-bean name="dmsDistributorForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsSoftwareForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsClientForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsProdMappingForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsStoreMappingForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsRunLogForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsClientJobForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+
+		<form-bean name="dmsDataPurchaseForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsDataSaleForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsDataStockForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsDataStoreForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsDataProductForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsDataInoutForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsDataOrderForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		
+		<form-bean name="dmsDataWeeklyForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsDataMonthlyForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		
+		<form-bean name="dmsLocationMappingForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsStockDateMappingForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="matcherForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+
+		<form-bean name="dmsTurnoverDaysCurveForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="salesFlowReportForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsMessageForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+	    <form-bean name="dmsMessOrgForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="dmsProdMappingLogForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<!--
+		<form-bean name="dmsProdMappingStatusForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		-->
+		<form-bean name="purchaseValidateForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="featureTypeForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="featureForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="featureKeywordForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		<form-bean name="featureExtractionForm" type="org.apache.struts.validator.LazyValidatorForm"/>
+		</form-beans>
+
+	<action-mappings>
+		<!--使用通配符-->
+		<action path="/server/*" name="{1}Form" parameter="method" scope="request" validate="false">
+			<forward name="index" path="/WEB-INF/pages/server/{1}Index.jsp"/>
+			<forward name="list" path="/WEB-INF/pages/server/{1}List.jsp"/>
+			<forward name="edit" path="/WEB-INF/pages/server/{1}Edit.jsp"/>
+			<forward name="view" path="/WEB-INF/pages/server/{1}View.jsp"/>
+			<forward name="success" path="/server/{1}.do?method=list" redirect="false"/>
+			<forward name="listSp" path="/WEB-INF/pages/server/{1}ListSp.jsp"/>
+		</action>
+		
+		<action path="/server/matcher" name="matcherForm" parameter="method" scope="request" validate="false">
+			<forward name="skuKeywordPage" path="/WEB-INF/pages/server/dmsProdKeyword.jsp"/>
+			<forward name="skuPreMappingPage" path="/WEB-INF/pages/server/dmsProdreadyKey.jsp"/>
+		</action>
+		
+		<action path="/report/salesFlowReportAction" name="salesFlowReportForm" parameter="method" scope="request" validate="false">
+			<forward name="index" path="/WEB-INF/pages/report/gsk/salesFlowReportIndex.jsp"/>
+		</action>
+		<action path="/report/flexReport" parameter="fileName" scope="request" validate="false"/>	
+			<action path="/report/myTreeReport" parameter="method" scope="request" validate="false">
+			<forward name="treeView" path="/widgets/treetable/treeview.jsp"/>
+		</action>
+		
+		<action path="/clientService" parameter="method" scope="request" validate="false"/>
+		<action path="/tree/dmsTree" parameter="method" scope="request" validate="false"/>
+		
+		<action path="/server/*Feature*" name="feature{2}Form" parameter="method" scope="request" validate="false">
+			<forward name="index" path="/WEB-INF/pages/server/{1}Feature{2}Index.jsp"/>
+			<forward name="list" path="/WEB-INF/pages/server/{1}Feature{2}List.jsp"/>
+			<forward name="edit" path="/WEB-INF/pages/server/{1}Feature{2}Edit.jsp"/>
+			<forward name="view" path="/WEB-INF/pages/server/{1}Feature{2}View.jsp"/>
+			<forward name="success" path="/server/{1}Feature{2}.do?method=list" redirect="false"/>
+		</action>
+		
+	</action-mappings>
+
+</struts-config>

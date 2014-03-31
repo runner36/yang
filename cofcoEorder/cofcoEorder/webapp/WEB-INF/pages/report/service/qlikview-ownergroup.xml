@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title></title>
+	
+	<header>
+		<column property="0" title="上级组织" width="300"/>
+	</header>
+	
+	<content>
+		<sql>
+<![CDATA[
+select dist.OWNERGRP_NAME,dist.OWNERGRP_CODE 
+from MDM_DISTRIBUTOR dist
+where dist.OWNERGRP_CODE is not null and dist.OWNERGRP_NAME is not null and dist.pass_back_date is not null
+]]>
+		</sql>
+	</content>
+	
+</config>

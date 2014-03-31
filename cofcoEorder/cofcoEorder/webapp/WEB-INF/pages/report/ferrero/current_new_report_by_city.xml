@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="true" paging="false">
+	<title>Ex-Distributor Analysis (By City)</title>
+	
+	<header>
+		<column title="City" width="300"/>
+		<column title="MTD,2009" width="80" align="center" cell="number" format="0.00"/>
+		<column title="MTD,2010" width="80" align="center" cell="number" format="0.00"/>
+		<column title="MTD,%" width="80" align="center" cell="number" format="0.00"/>
+		<column title="YTD,2009" width="80" align="center" cell="number" format="0.00"/>
+		<column title="YTD,2010" width="80" align="center" cell="number" format="0.00"/>
+		<column title="YTD,%" width="80" align="center" cell="number" format="0.00"/>				
+	</header>
+	
+	<content>
+	    <param id="yyyyMm" initValue="" defaultValue="">$yyyyMm</param>
+	    <param id="subCode" initValue="" defaultValue="" template=" and bo.SUB_CODE LIKE '$subCode%' ">$subCode</param>
+	    <param id="bannerIds" initValue="" defaultValue="" template=" and mst.CORP_ID IN ($bannerIds)">$bannerIds</param>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH -->
+		<param id="_orgAuthExp" initValue="" defaultValue="" valueList="" dataType="char"></param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+		
+		<sql>
+<![CDATA[
+DECLARE @yyyyMm varchar(20),@currenYear VARCHAR(20),@lastYear VARCHAR(20)
+SET @yyyyMm='$yyyyMm'
+SET @yyyyMm=
+CASE @yyyyMm
+ WHEN ''  THEN 
+ CONVERT(VARCHAR(7),getdate(),120)
+ ELSE
+ CONVERT(VARCHAR(7),@yyyyMm,120)
+END
+
+IF CONVERT(VARCHAR(7),@yyyyMm,120)>=CONVERT(VARCHAR(7),CONVERT(VARCHAR(4),@yyyyMm,120)+'-09',120)
+ BEGIN 
+ SET @currenYear=CONVERT(VARCHAR(4),@yyyyMm,120)
+ SET @lastYear=CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@yyyyMm,120))-1)
+ END 
+ELSE 
+ BEGIN 
+ SET @currenYear=CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@yyyyMm,120))-1)
+ SET @lastYear=CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@yyyyMm,120))-2)
+ END;
+
+
+--当前月分组销售量
+WITH currentMonthSales AS 
+(SELECT bo.ORG_NAME city,sum(rds.BOX/100) gsales FROM RPT_DATA_SALE rds
+LEFT JOIN MDM_STORE mst ON  rds.TARGET_STORE_CODE = mst.STORE_CODE
+LEFT JOIN BASE_ORG bo ON mst.ORG_ID=bo.ORG_ID
+WHERE CONVERT(VARCHAR(7),rds.BILL_DATE,120)=@yyyyMm AND rds.TARGET_STORE_CODE IS NOT NULL  $subCode $bannerIds
+GROUP BY bo.ORG_NAME
+),
+
+--当前月总销售量
+currentMonthSalesSum AS 
+(SELECT sum(rds.BOX/100) gsales FROM RPT_DATA_SALE rds
+LEFT JOIN MDM_STORE mst ON  rds.TARGET_STORE_CODE = mst.STORE_CODE
+LEFT JOIN BASE_ORG bo ON mst.ORG_ID=bo.ORG_ID
+WHERE CONVERT(VARCHAR(7),rds.BILL_DATE,120)=@yyyyMm AND rds.TARGET_STORE_CODE IS NOT NULL  $subCode $bannerIds
+),
+
+--去年当前月分组销售量
+lastYearCurrentMonthSales AS 
+(SELECT bo.ORG_NAME city,sum(rds.BOX/100) gsales  FROM RPT_DATA_SALE rds
+LEFT JOIN MDM_STORE mst ON  rds.TARGET_STORE_CODE = mst.STORE_CODE
+LEFT JOIN BASE_ORG bo ON mst.ORG_ID=bo.ORG_ID
+WHERE CONVERT(VARCHAR(7),rds.BILL_DATE,120)=
+CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@yyyyMm,120))-1)+substring(CONVERT(VARCHAR(7),@yyyyMm,120),5,7)
+ AND rds.TARGET_STORE_CODE IS NOT NULL  $subCode $bannerIds
+GROUP BY bo.ORG_NAME
+),
+
+--去年当前月总销售量
+lastYearCurrentMonthSalesSum AS 
+(SELECT sum(rds.BOX/100) gsales  FROM RPT_DATA_SALE rds
+LEFT JOIN MDM_STORE mst ON  rds.TARGET_STORE_CODE = mst.STORE_CODE
+LEFT JOIN BASE_ORG bo ON mst.ORG_ID=bo.ORG_ID
+WHERE CONVERT(VARCHAR(7),rds.BILL_DATE,120)=
+CONVERT(VARCHAR(4), CONVERT(INT ,CONVERT(VARCHAR(4),@yyyyMm,120))-1)+substring(CONVERT(VARCHAR(7),@yyyyMm,120),5,7)
+ AND rds.TARGET_STORE_CODE IS NOT NULL  $subCode $bannerIds
+),
+--当前年分组销售量
+currentYearSales AS 
+(SELECT bo.ORG_NAME city,sum(rds.BOX/100) gsales FROM RPT_DATA_SALE rds
+LEFT JOIN MDM_STORE mst ON  rds.TARGET_STORE_CODE = mst.STORE_CODE
+LEFT JOIN BASE_ORG bo ON mst.ORG_ID=bo.ORG_ID
+WHERE CONVERT(VARCHAR(10),rds.BILL_DATE,120)>=
+ @currenYear+'-09-01'
+AND 
+CONVERT(VARCHAR(10),rds.BILL_DATE,120)<=
+CONVERT(VARCHAR(4),dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,@yyyyMm+'-01')+1, 0)),120)+
+substring(CONVERT(VARCHAR(10),dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,@yyyyMm+'-01')+1, 0)),120),5,10)
+ AND rds.TARGET_STORE_CODE IS NOT NULL  $subCode $bannerIds
+GROUP BY bo.ORG_NAME
+),
+
+--当前年总销售量
+currentYearSalesSum AS 
+(SELECT sum(rds.BOX/100) gsales FROM RPT_DATA_SALE rds
+LEFT JOIN MDM_STORE mst ON  rds.TARGET_STORE_CODE = mst.STORE_CODE
+LEFT JOIN BASE_ORG bo ON mst.ORG_ID=bo.ORG_ID
+WHERE CONVERT(VARCHAR(10),rds.BILL_DATE,120)>=
+ @currenYear+'-09-01'
+AND 
+CONVERT(VARCHAR(10),rds.BILL_DATE,120)<=
+CONVERT(VARCHAR(4),dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,@yyyyMm+'-01')+1, 0)),120)+
+substring(CONVERT(VARCHAR(10),dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,@yyyyMm+'-01')+1, 0)),120),5,10)
+ AND rds.TARGET_STORE_CODE IS NOT NULL  $subCode $bannerIds
+),
+
+--去年分组销售量
+lastYearSales AS 
+(SELECT bo.ORG_NAME city,sum(rds.BOX/100) gsales FROM RPT_DATA_SALE rds
+LEFT JOIN MDM_STORE mst ON  rds.TARGET_STORE_CODE = mst.STORE_CODE
+LEFT JOIN BASE_ORG bo ON mst.ORG_ID=bo.ORG_ID
+WHERE CONVERT(VARCHAR(10),rds.BILL_DATE,120)>=
+ @lastYear+'-09-01'
+AND 
+CONVERT(VARCHAR(10),rds.BILL_DATE,120)<=
+@currenYear+
+substring(CONVERT(VARCHAR(10),dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,@yyyyMm+'-01')+1, 0)),120),5,10)
+ AND rds.TARGET_STORE_CODE IS NOT NULL  $subCode $bannerIds
+GROUP BY bo.ORG_NAME
+),
+
+--去年总销售量
+lastYearSalesSum AS 
+(SELECT sum(rds.BOX/100) gsales FROM RPT_DATA_SALE rds
+LEFT JOIN MDM_STORE mst ON  rds.TARGET_STORE_CODE = mst.STORE_CODE
+LEFT JOIN BASE_ORG bo ON mst.ORG_ID=bo.ORG_ID
+WHERE CONVERT(VARCHAR(10),rds.BILL_DATE,120)>=
+ @lastYear+'-09-01'
+AND 
+CONVERT(VARCHAR(10),rds.BILL_DATE,120)<=
+ @currenYear+
+substring(CONVERT(VARCHAR(10),dateadd(ms,-3,DATEADD(mm, DATEDIFF(m,0,@yyyyMm+'-01')+1, 0)),120),5,10)
+ AND rds.TARGET_STORE_CODE IS NOT NULL  $subCode $bannerIds
+)
+
+(SELECT 'Grand Total',isnull(cms.city,'其他'),isnull(cms.city,'其他'),isnull(lycsm.gsales,0),isnull(cms.gsales,0),
+case when isnull(lycsm.gsales,0)=0 then '<font color=green>NEW</font>' 
+else case when charindex('-',CAST((cms.gsales-lycsm.gsales)/lycsm.gsales AS VARCHAR))=1 
+then '<font color=red>' +CAST(CAST((cms.gsales-lycsm.gsales)/lycsm.gsales*100 AS DECIMAL(10,2)) AS VARCHAR)+'%</font>' 
+else CAST(CAST((cms.gsales-lycsm.gsales)/lycsm.gsales*100 AS DECIMAL(10,2)) AS VARCHAR)+'%' end end,   
+isnull(lys.gsales,0),isnull(cys.gsales,0),
+case when isnull(lys.gsales,0)=0 then '<font color=green>NEW</font>' 
+else case when charindex('-',CAST((cys.gsales-lys.gsales)/lys.gsales AS VARCHAR))=1 
+then '<font color=red>' +CAST(CAST((cys.gsales-lys.gsales)/lys.gsales*100 AS DECIMAL(10,2)) AS VARCHAR)+'%</font>' 
+else CAST(CAST((cys.gsales-lys.gsales)/lys.gsales*100 AS DECIMAL(10,2)) AS VARCHAR)+'%' end end   
+FROM currentMonthSales cms
+LEFT JOIN lastYearCurrentMonthSales lycsm ON isnull(cms.city,-1)=isnull(lycsm.city,-1)
+LEFT JOIN currentYearSales cys ON isnull(cys.city,-1)=isnull(cms.city,-1)
+LEFT JOIN lastYearSales lys ON isnull(lys.city,-1)=isnull(cms.city,-1)
+)
+UNION ALL 
+(SELECT null,'Grand Total','Grand Total',isnull(lycsms.gsales,0),isnull(cmss.gsales,0),
+case when isnull(lycsms.gsales,0)=0 then '<font color=green>NEW</font>' 
+else case when charindex('-',CAST((cmss.gsales-lycsms.gsales)/lycsms.gsales AS VARCHAR))=1 
+then '<font color=red>' +CAST(CAST((cmss.gsales-lycsms.gsales)/lycsms.gsales*100 AS DECIMAL(10,2)) AS VARCHAR)+'%</font>' 
+else CAST(CAST((cmss.gsales-lycsms.gsales)/lycsms.gsales*100 AS DECIMAL(10,2)) AS VARCHAR)+'%' end end,   
+isnull(lyss.gsales,0),isnull(cyss.gsales,0),
+case when isnull(lyss.gsales,0)=0 then '<font color=green>NEW</font>' 
+else case when charindex('-',CAST((cyss.gsales-lyss.gsales)/lyss.gsales AS VARCHAR))=1 
+then '<font color=red>' +CAST(CAST((cyss.gsales-lyss.gsales)/lyss.gsales*100 AS DECIMAL(10,2)) AS VARCHAR)+'%</font>' 
+else CAST(CAST((cyss.gsales-lyss.gsales)/lyss.gsales*100 AS DECIMAL(10,2)) AS VARCHAR)+'%' end end 
+FROM currentMonthSalesSum cmss,lastYearCurrentMonthSalesSum lycsms,currentYearSalesSum cyss,lastYearSalesSum lyss
+)
+]]>
+		</sql>
+	</content>
+	
+</config>

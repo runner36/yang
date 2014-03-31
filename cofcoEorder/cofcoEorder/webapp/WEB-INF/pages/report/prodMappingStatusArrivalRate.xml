@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <config showSql="true" cacheTime="0" firstQuery="false" paging="true" showSort="false">
+   
+	<title>经销商产品匹配情况-到货比率子报表</title>   
+	<header>  
+		<column property="0" title="日期"  			cell="date" format="yyyy-MM-dd" sortable="false"/>
+		
+		<column property="1" title="发货数据,编码"  	sortable="false"/>
+		<column property="2" title="发货数据,名称"   sortable="false"/> 
+ 		<column property="3" title="发货数据,数量"   cell="number" format="#0" style="text-align:right" sortable="false" />
+		<column property="4" title="发货数据,单位"   sortable="false"/>
+		<column property="5" title="发货数据,单据类型"       sortable="false"/>
+		
+		<column property="6" title="收货数据,编码"   sortable="false"/>
+		<column property="7" title="收货数据,名称"   sortable="false"/>
+		<column property="8" title="收货数据,数量"   cell="number" format="#0" style="text-align:right" sortable="false"/>
+		<column property="9" title="收货数据,单位"   sortable="false"/>
+		<column property="10" title="收货数据,单据类型"  sortable="false" />
+		
+		
+		<column property="11" title="匹配后信息,产品" sortable="false"/>
+		<column property="12" title="匹配后信息,数量" cell="number" format="#0.00"  style="text-align:right" sortable="false"/>
+		<column property="13" title="匹配后信息,统计单位" sortable="false"/>
+	
+	</header>	
+	    
+	<content>	
+	
+		<param id="startDate" >$start_date$</param> 
+		<param id="endDate"  >$end_date$</param>
+		
+		<param id="prodCode" >$prodCode$</param>
+		<param id="prodName" >$prodName$</param>
+		
+		<param id="distCode" >$distCode$</param>
+		
+		<sql>
+		<![CDATA[
+					 
+					WITH ACTIVE_PRODUCT AS (
+						SELECT DISTINCT ACTIVE.PROD_CODE AS DIST_PROD_CODE,
+										ACTIVE.PROD_UNIT AS DIST_PROD_UNIT,
+										ACTIVE.PROD_NAME AS DIST_PROD_NAME,
+										DIST_CLIENT.DIST_ID
+						FROM  DMS_ACTIVE_PRODUCT ACTIVE
+						INNER JOIN DMS_CLIENT    DIST_CLIENT
+							ON  DIST_CLIENT.CLIENT_ID	= ACTIVE.CLIENT_ID
+							AND ACTIVE.PROD_CODE 		= '$prodCode$'
+							--AND ACTIVE.PROD_NAME   	 	= '$prodName$'
+							AND ISNULL(ACTIVE.STATE,'1') = '1'
+						INNER JOIN MDM_DISTRIBUTOR MD 
+							ON  MD.DIST_ID = DIST_CLIENT.DIST_ID 
+							AND MD.DIST_CODE = '$distCode$' 
+							AND ISNULL(MD.STATE,'1') = '1'
+					)
+					,PROD_MAPPING AS (
+						SELECT  DISTINCT	ACTIVE.DIST_PROD_CODE,
+											ACTIVE.DIST_PROD_UNIT,
+											ACTIVE.DIST_PROD_NAME,
+											ACTIVE.DIST_ID,
+							   				DPM.TARGET_PROD_CODE,
+							   				DPM.TARGET_PROD_UNIT,
+							   				MP.PROD_NAME AS TARGET_PROD_NAME,
+							   				MP.PROD_COUNTUNIT_ID,
+							   				PROD_COUNTUNIT.ITEM_NAME AS COUNT_UNIT_NAME,
+							   				DPM.TARGET_UNIT_ID
+						FROM ACTIVE_PRODUCT  ACTIVE
+						LEFT JOIN DMS_PROD_MAPPING  DPM
+						   	ON      ACTIVE.DIST_PROD_CODE    = DPM.DIST_PROD_CODE
+					   		AND		ACTIVE.DIST_PROD_UNIT	 = DPM.DIST_PROD_UNIT
+					   		AND     ACTIVE.DIST_PROD_NAME	 = DPM.DIST_PROD_NAME 	
+					   		AND 	ISNULL(DPM.STATE,'1') = '1'
+					   	LEFT JOIN MDM_PRODUCT MP
+					   		ON MP.PROD_CODE = DPM.TARGET_PROD_CODE
+					   	LEFT JOIN BASE_DICT_ITEM PROD_COUNTUNIT
+					   		ON  PROD_COUNTUNIT.DICT_ID = 'prodUnit'
+					   		AND PROD_COUNTUNIT.DICT_ITEM_ID=MP.PROD_COUNTUNIT_ID
+					)
+					,PURCHASE AS (
+						SELECT 		DDP.BILL_DATE AS PURCHASE_BILL_DATE,
+									DDP.PROD_CODE AS PURCHASE_PROD_CODE,
+									DDP.PROD_UNIT AS PURCHASE_PROD_UNIT,
+									DDP.PROD_NAME AS PURCHASE_PROD_NAME,
+									DDP.BILL_TYPE AS PURCHASE_BILL_TYPE,
+									SUM(DDP.PROD_QUANTITY) AS PURCHASE_QUANTITY
+						FROM 		PROD_MAPPING 
+						LEFT JOIN 	DMS_CLIENT DIST_CLIENT
+							ON  	DIST_CLIENT.DIST_ID = PROD_MAPPING.DIST_ID
+						LEFT JOIN 	DMS_DATA_PURCHASE DDP
+						 	ON  	DIST_CLIENT.CLIENT_ID = DDP.CLIENT_ID
+						   	AND		DDP.PROD_CODE   = PROD_MAPPING.DIST_PROD_CODE
+						   	AND		DDP.PROD_UNIT   = PROD_MAPPING.DIST_PROD_UNIT
+							AND     DDP.PROD_NAME   = PROD_MAPPING.DIST_PROD_NAME
+							AND 	ISNULL(DDP.STATE,'1') = '1'
+							AND     DDP.BILL_DATE >='$start_date$' 
+							AND     DDP.BILL_DATE <='$end_date$'
+						GROUP BY    DDP.BILL_DATE,DDP.PROD_CODE,DDP.PROD_UNIT,DDP.PROD_NAME,DDP.BILL_TYPE
+					)
+					,SALE AS (
+						SELECT 		DDS.BILL_DATE AS SALE_BILL_DATE,
+									DDS.PROD_CODE AS SALE_PROD_CODE,
+									DDS.PROD_UNIT AS SALE_PROD_UNIT,
+									DDS.PROD_NAME AS SALE_PROD_NAME,
+									DDS.BILL_TYPE AS SALE_BILL_TYPE,
+									SUM(DDS.PROD_QUANTITY)  AS SALE_QUANTITY
+						FROM   PROD_MAPPING
+						LEFT JOIN   DMS_DATA_SALE  DDS
+							ON  	DDS.STORE_CODE 		 = 	'$distCode$' 
+							AND     DDS.PROD_CODE =  PROD_MAPPING.TARGET_PROD_CODE
+							AND 	ISNULL(DDS.STATE,'1') = '1'
+							AND     DDS.BILL_DATE >='$start_date$' 
+							AND     DDS.BILL_DATE <='$end_date$'
+						INNER JOIN 	DMS_CLIENT SALE_CLIENT
+							ON  	SALE_CLIENT.CLIENT_ID = DDS.CLIENT_ID
+							AND 	SALE_CLIENT.CLIENT_CODE = 'principle'	
+						GROUP BY    DDS.BILL_DATE,DDS.PROD_CODE,DDS.PROD_UNIT,DDS.PROD_NAME,DDS.BILL_TYPE
+					)
+					,RESULT AS (
+						SELECT  PURCHASE.PURCHASE_BILL_DATE AS BILL_DATE
+								,NULL AS SALE_PROD_CODE
+								,NULL AS SALE_PROD_UNIT
+								,NULL AS SALE_PROD_NAME
+								,NULL AS SALE_BILL_TYPE
+								,NULL AS SALE_QUANTITY
+								,PURCHASE.PURCHASE_PROD_CODE
+								,PURCHASE.PURCHASE_PROD_UNIT
+								,PURCHASE.PURCHASE_PROD_NAME
+								,PURCHASE.PURCHASE_BILL_TYPE
+								,PURCHASE.PURCHASE_QUANTITY
+								,PROD_MAPPING.TARGET_PROD_NAME AS MAPPING_PROD_NAME
+								,PROD_MAPPING.COUNT_UNIT_NAME
+								,dbo.fn_getUnitConvById(PROD_MAPPING.TARGET_UNIT_ID,PROD_MAPPING.PROD_COUNTUNIT_ID,PROD_MAPPING.TARGET_PROD_CODE,PURCHASE.PURCHASE_QUANTITY) AS BASE_QUANTITY
+						FROM PROD_MAPPING
+						LEFT JOIN PURCHASE
+							ON  PURCHASE.PURCHASE_PROD_CODE = PROD_MAPPING.DIST_PROD_CODE
+							AND PURCHASE.PURCHASE_PROD_UNIT = PROD_MAPPING.DIST_PROD_UNIT
+							AND PURCHASE.PURCHASE_PROD_NAME = PROD_MAPPING.DIST_PROD_NAME
+						UNION ALL
+						SELECT SALE.SALE_BILL_DATE  AS BILL_DATE
+							   ,SALE.SALE_PROD_CODE
+							   ,SALE.SALE_PROD_UNIT
+							   ,SALE.SALE_PROD_NAME
+							   ,SALE.SALE_BILL_TYPE
+							   ,SALE.SALE_QUANTITY
+							   ,NULL AS PURCHASE_PROD_CODE
+							   ,NULL AS PURCHASE_PROD_UNIT
+							   ,NULL AS PURCHASE_PROD_NAME
+							   ,NULL AS PURCHASE_BILL_TYPE
+							   ,NULL AS PURCHASE_QUANTITY
+							   ,PROD_MAPPING.TARGET_PROD_NAME AS MAPPING_PROD_NAME
+							   ,PROD_MAPPING.COUNT_UNIT_NAME
+							   ,dbo.fn_getUnitConvByName(SALE.SALE_PROD_UNIT,PROD_MAPPING.COUNT_UNIT_NAME,PROD_MAPPING.TARGET_PROD_CODE,SALE.SALE_QUANTITY) AS BASE_QUANTITY
+						FROM PROD_MAPPING 
+						LEFT JOIN SALE
+							ON  SALE.SALE_PROD_CODE = PROD_MAPPING.TARGET_PROD_CODE
+					)
+					SELECT	BILL_DATE
+						   ,SALE_PROD_CODE
+						   ,SALE_PROD_NAME
+						   ,SALE_QUANTITY
+						   ,SALE_PROD_UNIT
+						   ,SALE_BILL_TYPE
+						   
+						   ,PURCHASE_PROD_CODE
+						   ,PURCHASE_PROD_NAME
+						   ,PURCHASE_QUANTITY
+						   ,PURCHASE_PROD_UNIT
+						   ,PURCHASE_BILL_TYPE
+						   
+						   ,MAPPING_PROD_NAME
+						   ,BASE_QUANTITY
+						   ,COUNT_UNIT_NAME 
+					FROM RESULT 
+					ORDER BY BILL_DATE        
+		]]>
+		</sql>
+	</content>
+
+</config>

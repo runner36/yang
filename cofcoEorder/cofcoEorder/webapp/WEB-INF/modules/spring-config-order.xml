@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+<!-- 管理后台的Spring Servlet配置文件 -->
+<beans default-autowire="byName" default-lazy-init="true">
+	<!-- orderSAP -->
+	<bean name="/order/orderSap" class="com.winchannel.order.web.OrderSapAction"/>
+   	<bean name="/order/mdmDistributorAddress" class="com.winchannel.order.web.MdmDistributorAddressAction"/>
+   	<bean name="/order/orderInfo" class="com.winchannel.order.web.OrderInfoAction"/>
+    <bean name="/order/mdmDistEmpProdgroup" class="com.winchannel.order.web.MdmDistEmpProdgroupAction"/>
+ 	<bean name="/order/orderMemberOrder" class="com.winchannel.order.web.OrderMemberOrderAction"/>
+    <bean name="/order/orderMemberOrderItem" class="com.winchannel.order.web.OrderMemberOrderItemAction"/>
+    <bean name="/order/mdmDistOrderempProdgroup" class="com.winchannel.order.web.MdmDistOrderempProdgroupAction"/>
+    <!-- 订单列表-区域  -->
+    <bean name="/order/orderInfoOrg" class="com.winchannel.order.web.OrderInfoOrgAction"/>
+    <bean name="/order/salesmanOrder" class="com.winchannel.order.web.SalesmanOrderAction"/>
+	<!-- 客户联系人  -->
+	<bean name="/order/mdmDistributorLinkman" class="com.winchannel.order.web.MdmDistributorLinkmanAction"/>
+	<bean name="/order/orderAgreementLog" class="com.winchannel.order.web.OrderAgreementLogAction"/>
+	<!-- 客户订单状态调整(管理员)  -->
+	<bean name="/order/orderSuperAbolishedLog" class="com.winchannel.order.web.OrderSuperAbolishedLogAction"/>
+	<!-- 物料组_送货日期维护  -->
+	<bean name="/order/mdmProdGroupDeliveryDays" class="com.winchannel.order.web.MdmProdGroupDeliveryDaysAction"/>
+</beans>

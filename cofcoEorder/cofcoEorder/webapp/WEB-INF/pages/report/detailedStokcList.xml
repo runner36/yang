@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>进销存明细表</title>
+	
+	<header>
+		<column property="0" title="管理大区"/>
+		<column property="1" title="管理大分区"/>
+		<column property="2" title="管理分区"/>
+		<column property="3" title="管理小分区"/>
+		<column property="4" title="管理细分区"/>
+		<column property="5" title="管理办事处"/>
+		<column property="6" title="赢销通经销商编码"/>
+		<column property="7" title="DRP经销商编码"/>
+		<column property="8" title="DRP经销商名称"/>
+		<column property="9" title="经销商简称"/>
+		<column property="10" title="赢销通商品编码"/>
+		<column property="11" title="商品编码"/>
+		<column property="12" title="助记码"/>
+		<column property="13" title="箱包换算率"/>
+		<column property="14" title="条码"/>
+		<column property="15" title="产品全称"/>
+		<column property="16" title="品牌"/>
+		<column property="17" title="类别"/>
+		<column property="18" title="品类"/>
+		<column property="19" title="表层"/>
+		<column property="20" title="配方"/>
+		<column property="21" title="形状"/>
+		<column property="22" title="厚度"/>
+		<column property="23" title="长度"/>
+		<column property="24" title="用途"/>
+		<column property="25" title="规格"/>
+		<column property="26" title="包装类型"/>
+		<column property="27" title="产品属性"/>
+		<column property="28" title="日期"/>
+		<column property="29" title="期初"/>
+		<column property="30" title="进货量"/>
+		<column property="31" title="出货量"/>
+		<column property="32" title="库存量"/>
+	</header>
+	
+	<content>
+	    <!-- 开始时间，结束时间 -->
+		<param id="startDate">$startDate$</param>
+		<param id="endDate">$endDate$</param>
+		<!-- 组织 -->
+		<param id="orgName" template="AND stock.pn7 in ($orgName$) " dataType="char">$orgName$</param>
+		<param id="distId" template="and stock.dist_id in ($distId$) ">$distId$</param>
+		<!-- 门店创建时间和结束时间 -->
+		<param id="storeStartDate" template=" and  ms.CREATED >='$storeStartDate$' ">$storeStartDate$</param> 
+		<param id="storeEndDate"   template=" and ms.CREATED &lt;= '$storeEndDate$' ">$storeEndDate$</param>
+		
+		
+		
+		<!-- 门店 -->
+		<param id="storeId" template="and  sale.STORE_NAME like '%$storeId$%' ">$storeId$</param>
+		<!-- 地理区域 -->
+		<param id="geoId" template="and  sale.GEO_ID in ($geoId$) ">$geoId$</param>
+		<!-- 渠道 -->
+		<param id="channelId" template="and   sale.CHANNEL_ID   in  ($channelId$)">$channelId$</param>
+		<!-- 商场类型  -->
+		<param id="typeId" template=" and   sale.TYPE_ID  in ($typeId$)">$typeId$</param>  
+		<param id="channelId1" template=" and  sale.CHANNEL_ID  in ($channelId1$) ">$channelId1$</param>
+		<param id="channelId2" template=" and  sale.CHANNEL_ID  in ($channelId2$) ">$channelId2$</param>
+		<param id="corpId" template=" and  sale.CORP_ID in ($corpId$) ">$corpId$</param>
+		<param id="memo4" template=" and  sale.MEMO4 in ($memo4$) ">$memo4$</param>
+		<param id="prodName" template=" and stock.prod_Name like '%$prodName$%'">$prodName$</param>
+		<param id="prodUnitName" template=" and stock.PROD_UNIT = '$prodUnitName$'">$prodUnitName$</param>
+		<sql>
+<![CDATA[
+
+
+WITH stock AS (
+	SELECT 	dds.CLIENT_ID AS CLIENT_ID, 
+	        md.DIST_ID AS DIST_ID, 
+	        md.ORG_ID AS ORG_ID, 
+	        bo.PNALL AS  PNALL, --组织经销商
+	        bo.pn2, --管理大区
+	        bo.pn3, --管理大分区
+	        bo.pn4,  --管理分区
+	        bo.pn5,  --管理小分区
+	        bo.pn6,  --管理细分区
+	        bo.pn7, --管理办事处
+	        '' AS winchannl_dist_code, -- 赢销通经销商编码
+	        MD.DIST_CODE AS dist_code, -- DRP经销商编码
+	        MD.dist_NAME AS DIST_NAME, -- DRP经销商名称
+	        MD.REMARK ,  -- 经销商简称	        
+	        '' AS winchannel_brand, --赢销通商品编码
+	        p.PROD_CODE AS PROD_CODE, --产品CODE
+	          p.PROD_PC_BARCODE, --助记码 
+	        '' AS numbers ,   -- 箱包换算率  
+	        p.PROD_BARCODE AS PROD_BARCODE, --产品条码  
+	        p.prod_Name AS prod_Name,--产品名称
+	        p.prod_min_content AS prod_min_content , --换算率（疑似）
+	        p.BRAND_ID,  --产品品牌ID
+	        p.OTHER_ID, --类别（产品线）
+	        p.TYPE_ID,  --产品品类ID
+	        p.MEMO1,    --表层
+	        p.MEMO2,    --配方
+	        p.MEMO3,    --形状
+	        p.MEMO4,    --厚度
+	        p.MEMO5,    --长度
+	        p.MEMO6,    --用途
+	        p.PROD_SPEC,--规格
+	        p.PACK_ID , --包装ID
+	        p.prod_Type ,--属性
+	        p.PROD_UNIT, --单位 
+	        dds.STOCK_DATE AS stock_date , -- 日期
+	        p.EXT_CODE AS EXT_CODE, 
+	        sum(dds.BOX) AS STOCK_BOX 
+	FROM 	RPT_DATA_STOCK dds 
+			INNER JOIN (				
+				SELECT 	dds.CLIENT_ID AS CLIENT_ID, dds.DIST_ID AS DIST_ID, 
+						dds.PROD_CODE AS PROD_CODE, min(dds.STOCK_DATE) AS STOCK_DATE
+				FROM 	RPT_DATA_STOCK dds
+				WHERE 	dds.STOCK_DATE >= '$startDate$' AND dds.STOCK_DATE <= '$endDate$'
+				GROUP BY dds.CLIENT_ID, dds.DIST_ID, dds.PROD_CODE
+				
+			) d ON dds.CLIENT_ID=d.CLIENT_ID AND dds.DIST_ID=d.DIST_ID AND dds.PROD_CODE=d.PROD_CODE AND dds.STOCK_DATE=d.STOCK_DATE
+			--关联产品
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE 
+			INNER JOIN DMS_PROD_MAPPING m ON m.DIST_PROD_CODE=dds.PROD_CODE AND dds.CLIENT_ID=m.CLIENT_ID AND dds.PROD_UNIT=m.DIST_PROD_UNIT
+			--关联经销商
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dds.DIST_ID
+			--关联组织结构
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+
+						
+	WHERE 	dds.STOCK_DATE >= '$startDate$' AND dds.STOCK_DATE <= '$endDate$'
+	GROUP BY 
+	        dds.CLIENT_ID , 
+	        dds.STOCK_DATE,
+	        md.DIST_ID , 
+	        md.ORG_ID ,
+	        bo.PNALL , --组织经销商
+	        bo.pn2 , --管理大区
+	        bo.pn3 , --管理大分区
+	        bo.pn4,  --管理分区
+	        bo.pn5,  --管理小分区
+	        bo.pn6,  --管理细分区
+	        bo.pn7,  --管理办事处
+	        MD.DIST_CODE, -- DRP经销商编码
+	        MD.dist_NAME, -- DRP经销商名称
+	        MD.REMARK ,  -- 经销商简称
+	        p.PROD_CODE , --产品CODE
+	        p.PROD_PC_BARCODE, --助记码 
+	        p.PROD_BARCODE, --产品条码  
+	        p.prod_Name ,--产品名称
+	        p.BRAND_ID,  --产品品牌ID
+	        p.OTHER_ID, --类别（产品线）
+	        p.TYPE_ID,  --产品品类ID
+	        p.MEMO1,    --表层
+	        p.MEMO2,    --配方
+	        p.MEMO3,    --形状
+	        p.MEMO4,    --厚度
+	        p.MEMO5,    --长度
+	        p.prod_min_content,
+	        p.MEMO6,    --用途
+	        p.PROD_SPEC,--规格
+	        p.PACK_ID , --包装ID
+	        p.prod_Type ,--属性
+	        p.PROD_UNIT, --单位 
+	        p.EXT_CODE
+)
+,purchase AS (
+	SELECT 	dds.CLIENT_ID AS CLIENT_ID, 
+	        md.DIST_ID AS DIST_ID, 
+	        md.dist_code AS dist_code,
+	        md.ORG_ID AS ORG_ID, 
+	        p.PROD_CODE AS PROD_CODE, 
+	        sum(dds.BOX) AS PURCHASE_BOX
+	FROM 	RPT_DATA_PURCHASE dds
+			--关联产品
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE 
+			INNER JOIN DMS_PROD_MAPPING m ON m.DIST_PROD_CODE=dds.PROD_CODE AND dds.CLIENT_ID=m.CLIENT_ID AND dds.PROD_UNIT=m.DIST_PROD_UNIT
+			--关联经销商
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dds.DIST_ID
+			--关联组织结构
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	  
+	WHERE 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$'		
+
+	GROUP BY dds.CLIENT_ID, md.DIST_ID, md.ORG_ID, p.PROD_CODE,md.dist_code 
+)
+,sale AS (
+	SELECT 	
+	        dds.CLIENT_ID,
+			md.DIST_CODE AS DIST_CODE,
+			md.DIST_NAME AS DIST_NAME, 
+			p.PROD_CODE AS PROD_CODE,
+			p.EXT_CODE AS SHORT_NAME,
+			m.RATE AS RATE,
+			p.PROD_BARCODE AS PROD_BARCODE, p.PROD_NAME AS PROD_NAME,		   
+			p.PROD_SPEC AS PROD_SPEC, 
+			p.PROD_TYPE AS PROD_TYPE, 
+			ms.CHANNEL_ID,
+			ms.TYPE_ID,
+			ms.STORE_ID,
+			ms.STORE_NAME,
+			ms.GEO_ID , --地理区域ID
+			ms.MEMO1,
+			ms.MEMO2,
+			ms.MEMO3,
+			ms.MEMO4,
+			ms.MEMO5,
+			ms.MEMO6,
+			ms.CORP_ID, --
+			sum(dds.BOX) AS SALE_BOX
+			
+	FROM 	RPT_DATA_SALE dds
+			--关联产品
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE 
+			INNER JOIN DMS_PROD_MAPPING m ON m.DIST_PROD_CODE=dds.PROD_CODE AND dds.CLIENT_ID=m.CLIENT_ID AND dds.PROD_UNIT=m.DIST_PROD_UNIT		
+			--关联门店
+			INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dds.TARGET_STORE_CODE
+			--关联经销商
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dds.DIST_ID
+			--关联组织结构
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	WHERE 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$'	
+	        $storeStartDate$  $storeEndDate$
+	  
+	
+	GROUP BY 
+			p.PROD_CODE,  dds.CLIENT_ID, p.EXT_CODE, m.RATE, 	p.PROD_TYPE ,	p.PROD_SPEC ,  p.PROD_BARCODE, p.PROD_NAME	   ,	md.DIST_CODE ,
+			md.DIST_NAME ,			ms.CHANNEL_ID,
+			ms.TYPE_ID,
+			ms.STORE_ID,
+			ms.STORE_NAME,
+			ms.MEMO1,
+			ms.MEMO2,
+			ms.MEMO3,
+			ms.MEMO4,
+			ms.MEMO5,
+			ms.MEMO6,
+			ms.CORP_ID,
+			ms.GEO_ID --地理区域ID
+)
+
+
+SELECT 
+ 
+            stock.pn2 , --管理大区
+	        stock.pn3 , --管理大分区
+	        stock.pn4,  --管理分区
+	        stock.pn5,  --管理小分区
+	        stock.pn6,  --管理细分区
+	        stock.pn7,  --管理办事处
+	        '' AS winchannl_dist_code, -- 赢销通经销商编码
+	        stock.DIST_CODE AS dist_code, -- DRP经销商编码
+	        stock.dist_NAME AS DIST_NAME, -- DRP经销商名称
+	        stock.REMARK AS  NAME1 ,  -- 经销商简称	        
+	        '' AS winchannel_brand, --赢销通商品编码
+	        stock.PROD_CODE AS PROD_CODE, --产品CODE
+	        stock.PROD_PC_BARCODE, --助记码 
+	        sale.RATE AS RATE ,   -- 箱包换算率  
+	        stock.PROD_BARCODE AS PROD_BARCODE, --产品条码  
+	        stock.prod_Name AS prod_Name,--产品名称
+	        bdi1.item_name AS BRAND_NAME,--品牌名称	      
+	        bdi3.item_name AS OTHER_NAME, --类别名称	       
+	        bdi2.item_name AS TYPE_NAME, --类型名称
+	        stock.MEMO1,    --表层
+	        stock.MEMO2,    --配方
+	        stock.MEMO3,    --形状
+	        stock.MEMO4,    --厚度
+	        stock.MEMO5,    --长度
+	        stock.MEMO6,    --用途
+	        stock.PROD_SPEC,--规格
+	        bdi4.item_name AS PACK_NAME, --包装名称
+	        stock.prod_Type ,--属性
+	        stock.stock_date, --日期
+		   (CASE WHEN  stock.STOCK_BOX IS NULL THEN '0' else  stock.STOCK_BOX END) AS  STOCK_BOX , -- 期初库存       	
+	       (CASE WHEN  purchase.PURCHASE_BOX IS NULL THEN '0' else  purchase.PURCHASE_BOX END) AS PURCHASE_BOX, --进货入库
+	       (CASE WHEN  sale.SALE_BOX IS NULL  THEN '0' else  sale.SALE_BOX END) AS SALE_BOX, --出货
+	       (CASE WHEN  stock.STOCK_BOX IS NULL THEN '0' else  stock.STOCK_BOX END)+
+	       (CASE WHEN  purchase.PURCHASE_BOX IS NULL THEN '0' else  purchase.PURCHASE_BOX END)-
+	       (CASE WHEN  sale.SALE_BOX IS NULL  THEN '0' else  sale.SALE_BOX END) AS SPL_BOX,  --库存
+	        stock.EXT_CODE AS EXT_CODE,
+	       	sale.STORE_ID, --门店ID
+	       	sale.GEO_ID , --地理区域ID
+	       	sale.TYPE_ID, --商场类型
+	       	bdi5.ITEM_NAME AS type_name , --商城名称
+	        sale.CHANNEL_ID, --渠道ID
+	        bdi6.ITEM_NAME AS CHANNEL_NAME, --渠道名称
+	        stock.dist_id,
+	        stock.OTHER_ID, --类别（产品线）
+	        stock.TYPE_ID,  --产品品类ID
+	        stock.BRAND_ID,  --产品品牌ID
+	        stock.PACK_ID , --包装ID
+	        sale.MEMO1,
+			sale.MEMO2,
+			sale.MEMO3,
+			sale.MEMO4,
+			sale.MEMO5,
+			sale.MEMO6,
+			sale.STORE_NAME,
+			sale.CORP_ID, --组织
+	        stock.PROD_UNIT --单位 
+       FROM 
+stock  left JOIN purchase ON stock.CLIENT_ID=purchase.CLIENT_ID 
+                          AND stock.PROD_CODE = purchase.PROD_CODE
+                          AND stock.dist_code  = purchase.dist_code
+       left JOIN sale     ON stock.CLIENT_ID=sale.CLIENT_ID AND purchase.CLIENT_ID = sale.CLIENT_ID 
+                         AND stock.PROD_CODE = sale.PROD_CODE AND purchase.PROD_CODE = sale.PROD_CODE
+                         AND stock.dist_code = sale.dist_code 
+                         AND purchase.dist_code = sale.dist_code
+       LEFT  JOIN BASE_DICT_ITEM  bdi1 ON stock.BRAND_ID = bdi1.DICT_ITEM_ID
+       LEFT JOIN BASE_DICT_ITEM  bdi2 ON stock.TYPE_ID = bdi2.DICT_ITEM_ID
+       LEFT JOIN BASE_DICT_ITEM  bdi3 ON stock.OTHER_ID = bdi3.DICT_ITEM_ID
+       LEFT JOIN BASE_DICT_ITEM  bdi4 ON stock.PACK_ID = bdi4.DICT_ITEM_ID
+       LEFT JOIN BASE_DICT_ITEM  bdi5 ON sale.TYPE_ID = bdi5.DICT_ITEM_ID
+       LEFT JOIN BASE_DICT_ITEM  bdi6 ON sale.CHANNEL_ID = bdi6.DICT_ITEM_ID
+       where 1=1  $orgName$ $distId$ $storeId$ $geoId$ $channelId$ $prodUnitName$ $typeId$  $prodName$  $channelId1$ $channelId2$ $corpId$ $memo4$
+         
+]]>
+		</sql>
+	</content>
+	
+</config>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="com.winchannel.order.model.OrderInfo" table="ORDER_INFO">
+        <id name="orderId" type="java.lang.Long">
+            <column name="ORDER_ID" precision="10" scale="0" />
+            <generator class="identity" />
+        </id>
+        <many-to-one name="mdmDistributor" class="com.winchannel.mdm.distributor.model.MdmDistributor" fetch="select">
+            <column name="DIST_ID" precision="10" scale="0" />
+        </many-to-one>
+        <many-to-one name="distributorAddress" class="com.winchannel.order.model.MdmDistributorAddress" fetch="select">
+            <column name="DIST_ADD_ID" precision="10" scale="0" />
+        </many-to-one>
+        <many-to-one name="mdmDistributorLinkman" class="com.winchannel.order.model.MdmDistributorLinkman" fetch="select">
+            <column name="DIST_LINK_ID" precision="10" scale="0" />
+        </many-to-one>
+         <many-to-one name="industryEmp" class="com.winchannel.base.model.BaseEmployee" fetch="select">
+            <column name="INDUSTRY_ID" precision="10" scale="0" />
+        </many-to-one>
+        <property name="orderCode" type="java.lang.String">
+            <column name="ORDER_CODE" length="200" />
+        </property>
+        <property name="orderCreateDate" type="java.util.Date">
+            <column name="ORDER_CREATEDATE" length="23" />
+        </property>
+        <property name="orderDate" type="java.util.Date">
+            <column name="ORDER_DATE" length="23" />
+        </property>
+        <property name="shiptoDate" type="java.util.Date">
+            <column name="SHIPTO_DATE" length="23" />
+        </property>
+        <property name="orderApproveDate" type="java.util.Date">
+            <column name="ORDER_APPROVEDATE" length="23" />
+        </property>
+        <property name="memo" type="java.lang.String">
+            <column name="MEMO" length="200" />
+        </property>
+        <property name="status" type="java.lang.Integer">
+            <column name="STATUS" precision="2" scale="0" />
+        </property>
+        <!-- 
+        <property name="shiptoAdd" type="java.lang.String">
+            <column name="SHIPTO_ADD" length="200" />
+        </property>
+        <list name="orderItems" lazy= "false"   cascade= "all"   inverse= "true">
+        	<key>
+        		<column name="ORDER_ID" precision="10" scale="0" />
+            </key>
+            <index column="ID"/>
+            <one-to-many class="com.winchannel.order.model.OrderItem" />
+        </list>
+        -->
+        <bag name="orderItems" cascade="all-delete-orphan" order-by="id" lazy="true">
+        	<key column="ORDER_ID"/>
+        	<one-to-many class="com.winchannel.order.model.OrderItem" />
+        </bag>
+        <many-to-one name="invoiceType" class="com.winchannel.base.model.BaseDictItem" fetch="select">
+            <column name="INVOICE_TYPE" precision="10" scale="0" />
+        </many-to-one>
+        <property name="invoiceName" type="java.lang.String">
+            <column name="INVOICE_NAME" length="128" />
+        </property>
+        <property name="custCode" type="java.lang.String">
+            <column name="CUST_CODE" length="32" />
+        </property>
+        <property name="custName" type="java.lang.String">
+            <column name="CUST_NAME" length="128" />
+        </property>
+        <property name="custLinkman" type="java.lang.String">
+            <column name="CUST_LINKMAN" length="32" />
+        </property>
+        <property name="custTell" type="java.lang.String">
+            <column name="CUST_TELL" length="32" />
+        </property>
+        <property name="shiptoCode" type="java.lang.String">
+            <column name="SHIPTO_CODE" length="32" />
+        </property>
+        <property name="shiptoName" type="java.lang.String">
+            <column name="SHIPTO_NAME" length="128" />
+        </property>
+        <property name="shiptoLinkman" type="java.lang.String">
+            <column name="SHIPTO_LINKMAN" length="32" />
+        </property>
+        <property name="shiptoTell" type="java.lang.String">
+            <column name="SHIPTO_TELL" length="32" />
+        </property>
+        <property name="industryName" type="java.lang.String">
+            <column name="INDUSTRY_NAME" length="32" />
+        </property>
+        <property name="industryMobile" type="java.lang.String">
+            <column name="INDUSTRY_MOBILE" length="32" />
+        </property>
+        <many-to-one name="prodGroup" class="com.winchannel.base.model.BaseDictItem" fetch="select">
+            <column name="GROUP_ID" precision="10" scale="0" />
+        </many-to-one>
+        <many-to-one name="paymentType" class="com.winchannel.base.model.BaseDictItem" fetch="select">
+            <column name="PAYMENT" precision="10" scale="0" />
+        </many-to-one>
+         <property name="paymentName" type="java.lang.String">
+            <column name="PAYMENT_MEMO" length="32" />
+        </property>
+        <many-to-one name="modeOfTransportType" class="com.winchannel.base.model.BaseDictItem" fetch="select">
+            <column name="MODE_OF_TRANSPORT" precision="10" scale="0" />
+        </many-to-one>
+         <property name="modeOfTransportName" type="java.lang.String">
+            <column name="MODE_OF_TRANSPORT_MEMO" length="32" />
+        </property>
+         <property name="quantity" type="java.math.BigDecimal">
+            <column name="QUANTITY" precision="38" scale="3" not-null="true" />
+        </property>
+        <property name="amount" type="java.math.BigDecimal">
+            <column name="AMOUNT" precision="38" scale="3" not-null="true" />
+        </property>
+        <property name="memoOrder" type="java.lang.String">
+            <column name="MEMO_ORDER" length="200" />
+        </property>
+         <property name="memoApp" type="java.lang.String">
+            <column name="MEMO_APP" length="200" />
+        </property>
+    </class>
+</hibernate-mapping>

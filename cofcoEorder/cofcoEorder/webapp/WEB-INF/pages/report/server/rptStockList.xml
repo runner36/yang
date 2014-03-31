@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="true">
+	<title bundle="page" key="customize.title.rptStockData">Report库存数据</title>
+	<condition title="库存日期" bundle="page" key="common.inventoryDate" property="stockDate1,stockDate2"/>
+	<condition title="更新时间" bundle="page" key="common.updatedTime" property="updateTime1,updateTime2"/>
+	<condition title="回传时间" bundle="page" key="common.returntime" property="loadTime1,loadTime2"/>
+	<header>
+		<column property="0" title="组织名称" bundle="page" key="common.orgName"/>
+		<column property="1" title="经销商名称" bundle="page" key="common.distName"/>
+		<column property="2" title="经销商编码" bundle="page" key="common.distCode"/>
+		<column property="3" title="客户端编码" bundle="page" key="common.clientCode"/>
+		<column property="18" title="客户端名称" bundle="page" key="common.clientName"/>
+		<column property="4" title="库存日期" bundle="page" key="common.inventoryDate" cell="date" format="yyyy-MM-dd"/>
+		<column property="5" title="库存地点" bundle="page" key="common.stockLocation"/>
+		<column property="6" title="经销商产品编码" bundle="page" key="common.distProdCode"/>
+		<column property="7" title="产品条码" bundle="page" key="common.productBarcode"/>
+		<column property="8" title="经销商产品名称" bundle="page" key="common.distProdName"/>
+		
+		<column property="10" title="产品标准编码" bundle="page" key="common.pordStandardCode" style="background-color:#FFF0F0" />
+		<column property="11" title="产品标准名称" bundle="page" key="common.pordStandardName" style="background-color:#FFF0F0" />
+		<column property="12" title="经销商产品数量" bundle="page" key="common.distProdQuantity" cell="number" format="0.000" style="text-align:right"/>
+		<column property="9" title="经销商产品单位" bundle="page" key="common.distProdUnit"/>
+		
+		<column property="15" title="产品标准数量" bundle="page" key="common.pordStandardQty" cell="number" format="0.000" style="text-align:right"/>
+		<column property="17" title="产品标准单位" bundle="page" key="common.pordStandardUnit"/>
+		<column property="16" title="经销商产品金额" bundle="page" key="common.distProdAmount" cell="number" format="0.000" style="text-align:right"/>
+		
+		<column property="13" title="更新时间" bundle="page" key="common.updatedTime" cell="date" format="yyyy-MM-dd HH:mm"/>
+		<column property="14" title="回传时间" bundle="page" key="common.returntime" cell="date" format="yyyy-MM-dd HH:mm"/>
+	</header>
+	
+	<content>
+		<param id="_orgAuthExp">$orgAuth$</param>
+		<param id="_empAuthExp">$empAuth$</param>
+
+		<param id="orgSubCode" template="and org.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+		<param id="distId" template="and dist.dist_id in ($distId$)">$distId$</param>
+		<param id="distCode" template="and dist.dist_code='$distCode$'">$distCode$</param>
+		<param id="stockDate1" template="and data.stock_date>='$stockDate1$'">$stockDate1$</param>
+		<param id="stockDate2" template="and data.stock_date&lt;='$stockDate2$ 23:59:59'">$stockDate2$</param>
+		<param id="updateTime1" template="and data.update_time>='$updateTime1$'">$updateTime1$</param>
+		<param id="updateTime2" template="and data.update_time&lt;='$updateTime2$ 23:59:59'">$updateTime2$</param>
+		<param id="prodName" template="and data.prod_name like '%$prodName$%'">$prodName$</param>
+		<param id="prodCode" template="and data.prod_code='$prodCode$'">$prodCode$</param>
+		<param id="prodBarcode" template="and data.prod_barcode like '%$prodBarcode$%'">$prodBarcode$</param>
+		<param id="clientId" template="and data.client_id=$clientId$">$clientId$</param>
+		<param id="loadTime1" template="and data.load_time>='$loadTime1$'">$loadTime1$</param>
+		<param id="loadTime2" template="and data.load_time&lt;='$loadTime2$ 23:59:59'">$loadTime2$</param>
+		
+		<param id="targetProdCode" template="and data.target_prod_code='$targetProdCode$'">$targetProdCode$</param>
+		<param id="prodNameCode" template="and prod.prod_name like '%$prodNameCode$%'">$prodNameCode$</param>
+		<param id="stockType" template="and data.STOCK_TYPE like '%$stockType$%' ">$stockType$</param>
+		<sql>
+<![CDATA[
+select
+	org.pnall,
+	dist.dist_name,
+	dist.dist_code,
+	client.client_code,
+	data.stock_date,
+	data.stock_type,
+	data.prod_code,
+	data.prod_barcode,
+	data.prod_name,
+	data.prod_unit,
+	data.target_prod_code,
+	prod.prod_name,
+	data.prod_quantity,
+	data.update_time,
+	data.load_time,
+	data.box,
+	data.GROSS_SALES,
+	baseDic.item_name,
+	dist.dist_name+'('+client.client_code+')'
+from rpt_data_stock data
+	inner join dms_client client on data.client_id=client.client_id
+	inner join mdm_distributor dist on client.dist_id=dist.dist_id
+	left join base_org org on dist.org_id=org.org_id
+	left join mdm_product prod on data.target_prod_code=prod.prod_code
+	left join base_dict_item baseDic on prod.prod_countunit_id=baseDic.dict_item_id 
+where 1=1 $orgAuth$ 
+$orgSubCode$ $distId$ $distCode$ $stockDate1$ $stockDate2$ 
+$updateTime1$ $updateTime2$ $prodName$ $prodCode$ $prodBarcode$ $clientId$ $loadTime1$ $loadTime2$
+$targetProdCode$ $prodNameCode$ $stockType$
+]]>
+		</sql>
+	</content>
+	
+</config>

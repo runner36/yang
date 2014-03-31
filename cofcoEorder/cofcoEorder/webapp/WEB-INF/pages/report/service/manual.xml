@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title></title>
+	
+	<header>
+	</header>
+	
+	<content>
+		<sql>
+<![CDATA[
+	--please put your sql script after this row.
+
+]]>
+		</sql>
+	</content>
+	
+</config>

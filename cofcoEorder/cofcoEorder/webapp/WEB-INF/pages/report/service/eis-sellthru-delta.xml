@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title></title>
+	
+	<header>
+		<column property="0" title="上级组织" width="300"/>
+	</header>
+	
+	<content>
+		<param id="startDate">$startDate$</param>
+		<param id="endDate">$endDate$</param>
+		<sql>
+<![CDATA[
+select 
+	REPLICATE('0',10-LEN(dist.OWNERGRP_CODE))+dist.OWNERGRP_CODE+sale.STORE_CODE as doorkey,
+	dist.OWNERGRP_CODE as ownergrpnumber,  
+	sale.STORE_CODE as storenumber,
+	mp.EXT_CODE as materialnumber,
+	convert(varchar(8),sale.BILL_DATE,112) as salesdate,
+	mp.PROD_PC_BARCODE as UPC,
+	replace(mp.PROD_CODE,mp.EXT_CODE+'-','') as size,
+	'1' as markdownindicator,  
+	'CNY' as currencycode,
+	'CN' as countrycode, 
+	'0' as permantmarkdowns,
+	cast(sum(isnull(sale.MAR_VAL,0)) as numeric(12,2)) as posmarkdown,
+	cast(SUM(case when sale.DELETE_TIME is null then ISNULL(sale.PROD_PRICE,0)*ISNULL(sale.PROD_QUANTITY,0) else 0 end) as numeric(12,2)) as amount,
+	cast(sum(case when sale.DELETE_TIME is null then ISNULL(sale.PROD_QUANTITY,0) else 0 end) as numeric(10,0)) as salesqty,
+	'0' as unitreceipts
+from DMS_DATA_SALE sale
+	inner join DMS_CLIENT client
+	on sale.CLIENT_ID=client.CLIENT_ID
+	inner join MDM_DISTRIBUTOR dist
+	on client.DIST_ID=dist.DIST_ID
+	inner join DMS_PROD_MAPPING mapping
+	on sale.PROD_CODE=mapping.DIST_PROD_CODE
+	and sale.PROD_NAME=mapping.DIST_PROD_NAME
+	and sale.PROD_UNIT=mapping.DIST_PROD_UNIT
+	and sale.CLIENT_ID=mapping.CLIENT_ID
+	left join DMS_STORE_MAPPING sm
+	on sale.STORE_CODE=sm.DIST_STORE_CODE
+	and sale.CLIENT_ID=sm.CLIENT_ID
+	inner join MDM_PRODUCT mp
+	on mapping.TARGET_PROD_CODE=mp.PROD_CODE
+where ((sale.UPLOAD_TIME>='$startDate$' and sale.UPLOAD_TIME<'$endDate$')
+	or (sale.DELETE_TIME>='$startDate$' and sale.DELETE_TIME<'$endDate$')
+	) and dist.pass_back_date is not null and mapping.TARGET_PROD_CODE!='nonike'
+	and sale.BILL_TYPE not like '%调拨%' and sale.BILL_TYPE not like '%批发%'
+	and (sm.isreturn_data!='0' or sm.isreturn_data is null)
+	and sale.bill_date>='2011-06-01' and (sale.state='1' or (sale.state='0' and sale.DELETE_TIME is not null))
+group by 
+	dist.OWNERGRP_CODE,
+	sale.STORE_CODE,
+	mp.EXT_CODE,
+	convert(varchar(8),sale.BILL_DATE,112),
+	mp.PROD_PC_BARCODE,
+	replace(mp.PROD_CODE,mp.EXT_CODE+'-','')
+]]>
+		</sql>
+	</content>
+	
+</config>

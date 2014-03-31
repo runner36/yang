@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>毛利率分析一</title>
+	
+	<header>
+		<column property="0" title="大区"/>
+		<column property="1" title="办事处"/>
+		<column property="2" title="业务单元"/>
+		<column property="3" title="经销商名称"/>
+		<column property="4" title="经销商编码"/>
+		<column property="5" title="产品编码"/>
+		<column property="6" title="产品名称"/>
+		<column property="7" title="进货成本" cell="number" format="0.00" style="text-align:right"/>
+		<column property="8" title="销售额" cell="number" format="0.00" style="text-align:right"/>
+		<column property="9" title="毛利率" cell="number" format="0.00%" style="text-align:right"/>
+	</header>
+	
+	<content>
+		<param id="_orgAuthExp" initValue="" defaultValue="">$orgAuth$</param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="orgSubCode" template="and org.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+		<param id="distId" template="and dist.dist_id in ($distId$)">$distId$</param>
+		<param id="prodName" template="and prod.prod_name like '%$prodName$%'">$prodName$</param>
+		<param id="billDate1" template="and sale.bill_date>='$billDate1$'">$billDate1$</param>
+		<param id="billDate2" template="and sale.bill_date&lt;='$billDate2$ 23:59:59'">$billDate2$</param>
+		<sql>
+<![CDATA[
+select org.pn2,org.pn3,org.pn4,dist.dist_name,dist.dist_code,prod.prod_code,prod.prod_name,sale.gross,sale.amt,
+	case when sale.amt=0 then null else round((sale.amt-sale.gross)/sale.amt,4) end
+from 
+	(
+	select sale.dist_id,sale.target_prod_code,sum(gross_sales) gross,sum(prod_amount) as amt
+	from rpt_data_sale sale
+	where 1=1 $billDate1$ $billDate2$
+	group by sale.dist_id,sale.target_prod_code
+	) sale
+	inner join mdm_distributor dist on sale.dist_id=dist.dist_id
+	inner join base_org org on dist.org_id=org.org_id
+	inner join mdm_product prod on sale.target_prod_code=prod.prod_code
+where 1=1 $orgSubCode$ $orgAuth$ $distId$ $prodName$
+]]>
+		</sql>
+	</content>
+	
+</config>

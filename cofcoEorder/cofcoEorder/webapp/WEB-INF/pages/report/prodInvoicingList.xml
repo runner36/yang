@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>进销存产品汇总</title>
+	
+	<header>
+		<column property="0" title="经销商编码" bundle="page" key="common.distCode"  align="right"/>
+		<column property="1" title="经销商名称" bundle="page" key="common.distName"  align="right"/>
+		<column property="2" title="经销商产品编码" bundle="page" key="common.distProdCode"  align="right"/>
+		<column property="3" title="经销商产品名称" bundle="page" key="common.distProdName"  align="right"/>
+		<column property="4" title="期初日期"  align="right"/>
+		<column property="5" title="期末日期"  align="right"/>
+		<column property="6" title="期初库存金额"   style="text-align:right;" cell="currency" format="#,##0.00"/>
+		<column property="7" title="期间进货金额"  style="text-align:right;" cell="currency" format="#,##0.00"/>
+		<column property="8" title="期间销售金额"  style="text-align:right;" cell="currency" format="#,##0.00"/>
+		<column property="9" title="期末库存金额"  style="text-align:right;" cell="currency" format="#,##0.00"/>
+	</header>
+	
+	<content>
+		
+        <!-- 期初日期 期末日期 -->
+        <param id="beginDate" initValue="" defaultValue="">$beginDate$</param>
+		<param id="endDate" initValue="" defaultValue="" >$endDate$</param>
+		<param id="distId" initValue="" defaultValue="" template="and dist.dist_id in ($distId$)">$distId$</param>
+		<param id="prodCode" initValue="" defaultValue="" template=" and inv.target_prod_code like '%$prodCode$%' " >$prodCode$</param>
+		<sql>
+            <![CDATA[ 
+            
+select * from (
+SELECT 
+mdist.DIST_CODE,
+mdist.DIST_NAME,
+inv.target_prod_code,
+prod.PROD_NAME,
+'$beginDate$' AS STARTDATE,
+'$endDate$' AS ENDDATE,
+
+(SELECT isnull(d.STOCK_GROSS,0)+isnull(d.INOUT_GROSS,0) FROM RPT_PRODDATE_INVOICING d WHERE d.BILL_DATE=CAST('$beginDate$' AS DATETIME)-1 AND d.DIST_ID=inv.dist_id AND d.TARGET_PROD_CODE=inv.target_prod_code)
+AS startstock
+,SUM(INV.PURCHASE_GROSS) AS  PURCHASE_GROSS
+,SUM(INV.SALE_GROSS) AS SALE_GORSS
+,(SELECT isnull(d.STOCK_GROSS,0)+isnull(d.INOUT_GROSS,0) FROM RPT_PRODDATE_INVOICING d WHERE convert(VARCHAR(20),d.BILL_DATE,23)='$endDate$' AND d.DIST_ID=inv.dist_id AND d.TARGET_PROD_CODE=inv.target_prod_code)
+ AS endstock
+ FROM RPT_PRODDATE_INVOICING inv
+ 
+ LEFT JOIN MDM_DISTRIBUTOR mdist ON mdist.DIST_ID=inv.DIST_ID
+ 
+ LEFT JOIN MDM_PRODUCT prod ON prod.PROD_CODE=inv.TARGET_PROD_CODE
+ 
+ WHERE  inv.BILL_DATE BETWEEN '$beginDate$' AND '$endDate$ 23:59:59'
+  AND (inv.STOCK_GROSS IS NOT NULL or inv.SALE_GROSS IS NOT NULL or inv.PURCHASE_GROSS IS NOT NULL or inv.INOUT_GROSS IS NOT NULL ) 
+  $prodCode$ 
+GROUP BY 
+inv.DIST_ID,
+mdist.DIST_CODE,
+mdist.DIST_NAME,
+inv.target_prod_code,
+prod.PROD_NAME
+) p 
+where 
+p.startstock IS NOT NULL 
+or p.PURCHASE_GROSS IS NOT NULL 
+or p.SALE_GORSS IS NOT NULL 
+or p.endstock IS NOT NULL
+          ]]>
+		</sql>
+	</content>
+	
+</config>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="false" cacheTime="0" firstQuery="false" paging="false">
+	<title>经销商进销存汇总</title>
+	
+	<header>
+		<column property="0" title="经销商编码" bundle="page" key="common.distCode" class="dd"  align="right" />
+		<column property="1" title="经销商名称" bundle="page" key="common.distName"  align="right"/>
+		<column property="2" title="期初日期"  align="right"/>
+		<column property="3" title="期末日期"  align="right"/>
+		<column property="4" title="已匹配产品,期初库存金额"  style="text-align:right;" cell="currency" format="0.00"/>
+		<column property="5" title="已匹配产品,初SKU数"  style="text-align:right;"  cell="currency" format="0.00" />
+		<column property="6" title="已匹配产品,期间进货金额"  style="text-align:right;" cell="currency" format="0.00"/>
+		<column property="7" title="已匹配产品,进SKU数"  style="text-align:right;" cell="currency" format="0.00" />
+		<column property="8" title="已匹配产品,期间销售金额"  style="text-align:right;" cell="currency" format="0.00"/>
+		<column property="9" title="已匹配产品,销SKU数"  style="text-align:right;" cell="currency" format="0.00" />
+		<column property="14" title="已匹配产品,销售毛利"  style="text-align:right;" cell="number" format="0.00%" />
+		<column property="10" title="已匹配产品,期末库存金额"  style="text-align:right;"  cell="currency" format="0.00"/>
+		<column property="11" title="已匹配产品,末SKU数"  style="text-align:right;" cell="currency" format="0.00" />
+		<column property="15" title="已匹配产品,销售/进货"  style="text-align:right;" cell="number" format="0.00%"/>
+		<column property="12" title="未匹配产品,期间进货金额"  style="text-align:right;" cell="currency" format="0.00"/>
+		<column property="13" title="未匹配产品,期间销售金额"  style="text-align:right;"  cell="currency" format="0.00"/>
+		<column property="16" title="厂家发货情况,Shipment金额"  style="text-align:right;" cell="currency" format="0.00"/>
+		<column property="17" title="厂家发货情况, SKU数"  style="text-align:right;" cell="currency" format="0.00" />
+		<column property="18" title="厂家发货情况,收货/发货"  style="text-align:right;" cell="number" format="0.00%"/>
+	</header>
+	
+	<content>
+        <!-- 期初日期 期末日期 -->
+        <param id="beginDate" initValue="" defaultValue="">$beginDate$</param>
+		<param id="endDate" initValue="" defaultValue="" >$endDate$</param>
+		<param id="distId" initValue="" defaultValue="" template="and dist.dist_id in ($distId$)">$distId$</param>
+		<sql>
+            <![CDATA[ 
+declare @startDate varchar(10),@endDate varchar(10)
+set @startDate='$beginDate$'
+set @endDate='$endDate$'
+
+SELECT * FROM (            
+	SELECT 
+		DIST.DIST_CODE,
+		DIST.DIST_NAME,
+		@startDate as startdate,
+		@endDate as enddate,
+		(SELECT isnull(D.STOK_GROSS,0)+isnull(D.INOUT_GROSS,0) FROM RPT_SUMDISTDATE_INVOICING D WHERE D.BILL_DATE=CAST(@startDate AS DATETIME)-1 AND D.DIST_ID=INV.DIST_ID) 
+		AS STARTSTOCDKGROSS
+		,(SELECT d.COUNT_SKU FROM RPT_SUMDISTDATE_STOCK D WHERE D.BILL_DATE=CAST(@startDate AS DATETIME)-1 AND D.DIST_ID=INV.DIST_ID) 
+		AS STARTSTOCDKGROSS_SKU
+		,SUM(isnull(INV.PURCHASE_GROSS,0)) AS PURCHASE_GROSS
+		,(SELECT count(distinct d.TARGET_PROD_CODE) FROM RPT_SUMDATE_PURCHASE d where d.BILL_DATE between @startDate and @endDate and D.DIST_ID=INV.DIST_ID and d.TARGET_PROD_CODE is not null)
+		as PURCHASE_GROSS_SKU
+		,SUM(isnull(INV.SALE_GROSS,0)) AS SALEGROSS
+		,(SELECT count(distinct d.TARGET_PROD_CODE) FROM RPT_SUMDATE_SALE d where d.BILL_DATE between @startDate and @endDate and D.DIST_ID=INV.DIST_ID and d.TARGET_PROD_CODE is not null)
+		as SALEGROSS_SKU
+		,(SELECT isnull(D.STOK_GROSS,0)+isnull(D.INOUT_GROSS,0) FROM RPT_SUMDISTDATE_INVOICING D WHERE CONVERT(VARCHAR(20),D.BILL_DATE,23)=@endDate AND D.DIST_ID=INV.DIST_ID) AS ENDSTOCKGROSS
+		,(SELECT d.COUNT_SKU FROM RPT_SUMDISTDATE_STOCK d where D.BILL_DATE=@endDate and D.DIST_ID=INV.DIST_ID)
+		as ENDSTOCKGROSS_SKU
+		,SUM(isnull(INV.PURCHASE_AMOUNT,0)) AS PURCHASEAMOUNT
+		,SUM(isnull(INV.SALE_AMOUNT,0)) AS SALEAMOUNT
+		,case when SUM(isnull(INV.SALE_GROSS,0))!=0 and SUM(ISNULL(inv.SALE_FACT_AMOUNT,0))!=0
+		then 		
+		(SUM(ISNULL(inv.SALE_FACT_AMOUNT,0))/SUM(isnull(INV.SALE_GROSS,0))-1)
+		else
+		null
+		end as gross_rate
+		,case when SUM(isnull(INV.SALE_GROSS,0))!=0 and SUM(ISNULL(inv.PURCHASE_GROSS,0))!=0
+		then 		
+		SUM(isnull(INV.SALE_GROSS,0))/SUM(ISNULL(inv.PURCHASE_GROSS,0))
+		else
+		null
+		end as p_s_rate
+		,SUM(isnull(INV.DELIVERY_GROSS,0)) AS DELIVERY_GROSS
+		,(SELECT count(distinct d.TARGET_PROD_CODE) FROM RPT_SUMDATE_DELIVERY d where d.BILL_DATE between @startDate and @endDate and D.DIST_ID=INV.DIST_ID and d.TARGET_PROD_CODE is not null)
+		as DELIVERY_COUNT_SKU
+		,case when SUM(isnull(INV.DELIVERY_GROSS,0))!=0 and SUM(ISNULL(inv.PURCHASE_GROSS,0))!=0
+		then 		
+		SUM(ISNULL(inv.PURCHASE_GROSS,0))/SUM(isnull(INV.DELIVERY_GROSS,0))
+		else
+		null
+		end as p_d_rate
+	
+	FROM RPT_SUMDISTDATE_INVOICING INV
+	LEFT JOIN MDM_DISTRIBUTOR DIST ON DIST.DIST_ID=INV.DIST_ID
+	 
+	WHERE INV.BILL_DATE BETWEEN @startDate AND @endDate
+	 $distId$
+	GROUP BY 
+	INV.DIST_ID,
+	DIST.DIST_CODE,
+	DIST.DIST_NAME
+) p 
+WHERE 
+	p.STARTSTOCDKGROSS IS NOT NULL 
+	OR p.PURCHASE_GROSS IS NOT NULL 
+	OR p.SALEGROSS IS NOT NULL 
+	OR p.ENDSTOCKGROSS IS NOT NULL 
+	OR p.PURCHASEAMOUNT IS NOT NULL 
+	OR p.SALEAMOUNT IS NOT NULL 
+          ]]>
+		</sql>
+	</content>
+	
+</config>

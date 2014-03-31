@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title></title>
+	
+	<header>
+		<column property="0" title="上级组织" width="300"/>
+	</header>
+	
+	<content>
+		<param id="startDate">$startDate$</param>
+		<param id="endDate">$endDate$</param>
+		<param id="distCode" template="and dist.dist_code='$distCode$'">$distCode$</param>
+		<sql>
+<![CDATA[
+select 
+	isnull(stock.upc,sale.upc) as upc, 
+	isnull(stock.loca_id,sale.loca_id) as loca_id, 
+	'', 
+	stock.stock_qty, 
+	'', 
+	sale.sale_qty, 
+	sale.return_qty, 
+	sale.t_sale_qty, 
+	'', 
+	'', 
+	sale.mar_val, 
+	'$endDate$' as sale_date, 
+	isnull(stock.dist_code,sale.dist_code) as dist_code,
+	isnull(stock.ownergrp_name,sale.ownergrp_name) as ownergrp_name
+from 
+	( 
+	select dist.dist_code,dist.ownergrp_name,stock.stock_type as loca_id,prod.prod_pc_barcode as upc,convert(int,sum(stock.prod_quantity+isnull(stock.road_qty,0))) as stock_qty
+	from dms_data_stock stock
+		inner join dms_client client on stock.client_id=client.client_id
+		inner join mdm_distributor dist on client.dist_id=dist.dist_id
+		inner join dms_prod_mapping pm on stock.client_id=pm.client_id and stock.prod_code=pm.dist_prod_code
+		and stock.PROD_NAME=pm.DIST_PROD_NAME and stock.PROD_UNIT=pm.DIST_PROD_UNIT
+		inner join mdm_product prod on pm.target_prod_code=prod.prod_code
+		left join dms_store_mapping dsm on dsm.client_id=stock.client_id and dsm.dist_store_code=stock.stock_type 
+	where stock.state='1' and pm.TARGET_PROD_CODE!='nonike' and dist.pass_back_date is not null and (dsm.isreturn_data !='0' or dsm.isreturn_data is null) and stock.stock_date='$endDate$'  $distCode$ 
+	group by dist.dist_code,dist.ownergrp_name,stock.stock_type,prod.prod_pc_barcode
+	) stock full join 
+	( 
+	select dist.dist_code,dist.ownergrp_name,sale.store_code as loca_id,prod.prod_pc_barcode as upc,
+		convert(int,sum(case when sale.prod_quantity>0 then sale.prod_quantity end)) as sale_qty, 
+		convert(int,sum(case when sale.prod_quantity<0 then sale.prod_quantity end)) as return_qty, 
+		convert(decimal(10,2),sum(sale.prod_quantity*sale.prod_price)) as t_sale_qty, 
+		convert(decimal(10,2),sum(isnull(sale.mar_val,0))) as mar_val 
+	from dms_data_sale sale
+		inner join dms_client client on sale.client_id=client.client_id
+		inner join mdm_distributor dist on client.dist_id=dist.dist_id
+		inner join dms_prod_mapping pm on sale.client_id=pm.client_id and sale.prod_code=pm.dist_prod_code
+		and sale.PROD_NAME=pm.DIST_PROD_NAME and sale.PROD_UNIT=pm.DIST_PROD_UNIT
+		inner join mdm_product prod on pm.target_prod_code=prod.prod_code
+		left  join dms_store_mapping dsm on dsm.client_id=client.client_id and dsm.dist_store_code=sale.store_code 
+	where sale.state='1' and pm.TARGET_PROD_CODE!='nonike' and dist.pass_back_date is not null and (dsm.isreturn_data !='0' or dsm.isreturn_data is null) and sale.bill_date between '$startDate$' and '$endDate$ 23:59:59' and sale.bill_type not like '%调拨%' and sale.bill_type not like '%批发%' $distCode$ 
+	group by dist.dist_code,dist.ownergrp_name,sale.store_code,prod.prod_pc_barcode
+	) sale on stock.dist_code=sale.dist_code and stock.loca_id=sale.loca_id and stock.upc=sale.upc 
+order by isnull(stock.dist_code,sale.dist_code)
+]]>
+		</sql>
+	</content>
+	
+</config>

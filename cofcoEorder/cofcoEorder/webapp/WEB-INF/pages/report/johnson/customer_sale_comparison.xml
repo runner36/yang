@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>新老客户销量占比</title>
+	
+	<header>
+		<column property="0" title="大区" style="text-align:left"/>
+		<column property="1" title="省" style="text-align:left"/>
+		<column property="2" title="城市" style="text-align:left"/>
+		<column property="3" title="经销商名称" style="text-align:left"/>
+		<column property="4" title="经销商编码" style="text-align:left"/>
+		<column property="5" title="客户分类" style="text-align:left" />
+		<column property="6" title="渠道" style="text-align:left" />
+		
+		<column property="7" title="销售额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="8" title="原有客户,数量" style="text-align:right" cell="number" format="#0"/>
+		<column property="9" title="原有客户,销售贡献率" style="text-align:right"/>
+		<column property="10" title="新增客户,数量" style="text-align:right" cell="number" format="#0"/>
+		<column property="11" title="新增客户,销售贡献率" style="text-align:right"/>
+		
+		<column property="12" title="年销售额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="13" title="原有客户（本年至今）,数量" style="text-align:right" cell="number" format="#0"/>
+		<column property="14" title="原有客户（本年至今）,销售贡献率" style="text-align:right"/>
+		<column property="15" title="新增客户（本年至今）,数量" style="text-align:right" cell="number" format="#0"/>
+		<column property="16" title="新增客户（本年至今）,销售贡献率" style="text-align:right"/>		
+	</header>
+	
+	<content>
+		<!-- 开始时间 结束时间 -->
+        <param id="startDate" isDisplay="1" displayName="开始时间" template="">$startDate$</param>
+		<param id="endDate" isDisplay="1" displayName="结束时间" template="">$endDate$</param>
+		<!-- 组织 -->
+		<param id="orgId" template=" and bo.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="orgName" isDisplay="1" displayName="组织" template="">$orgName$</param>
+		<!-- 渠道 -->
+		<param id="channelId" template=" and ms.CHANNEL_ID in ($channelId$) ">$channelId$</param>
+		<param id="channelName" isDisplay="1" displayName="客户销售分类"  template="">$channelName$</param>
+		<!-- 门店类型 -->
+		<param id="storeTypeId" template=" and ms.TYPE_ID in ($storeTypeId$) ">$storeTypeId$</param>
+		<param id="storeTypeName" isDisplay="1" displayName="渠道"  template="">$storeTypeName$</param>	
+		<!-- 经销商 -->
+		<param id="distId" template=" and md.DIST_ID in ($distId$) ">$distId$</param>
+		<param id="distCode" isDisplay="1" displayName="经销商编码" template=" and md.DIST_CODE like '%$distCode$%' ">$distCode$</param>
+		<param id="distName" isDisplay="1" displayName="经销商名称" template="">$distName$</param>
+				
+		<sql>
+          <![CDATA[
+--年销售额
+WITH yearSale AS (
+	SELECT  bo.ORG_ID AS ORG_ID, md.DIST_NAME AS DIST_NAME, md.DIST_CODE AS DIST_CODE, 
+			ms.TYPE_ID AS ITEM_NAME, ms.CHANNEL_ID as storeType,
+			isnull(sum((dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17),0) AS amount
+	
+	FROM 	RPT_DATA_SALE  dds
+		    INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE
+			--关联门店
+			INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dds.TARGET_STORE_CODE
+			--关联客户端、经销商
+			LEFT JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+			--关联组织
+			LEFT JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	 
+	where 	dds.BILL_DATE>=CONVERT(varchar(10), DATEADD(yy, DATEDIFF(yy,0,'$endDate$'), 0), 120) AND dds.BILL_DATE<='$endDate$'
+			$orgId$ $distId$ $distCode$ $storeTypeId$ $channelId$
+	 		AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita') 
+	GROUP BY bo.ORG_ID, md.DIST_NAME, md.DIST_CODE, ms.TYPE_ID, ms.CHANNEL_ID
+)
+--查询时间内销售额
+,selSale AS (
+	SELECT  bo.ORG_ID AS ORG_ID, md.DIST_NAME AS DIST_NAME, md.DIST_CODE AS DIST_CODE, 
+			ms.TYPE_ID AS ITEM_NAME, ms.CHANNEL_ID as storeType,
+			isnull(sum((dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17),0) AS amount
+	
+	FROM 	RPT_DATA_SALE  dds
+		    INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE
+			--关联门店
+			INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dds.TARGET_STORE_CODE
+			--关联客户端、经销商
+			LEFT JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+			--关联组织
+			LEFT JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	 
+	where 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$' 
+			$orgId$ $distId$ $distCode$ $storeTypeId$ $channelId$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita') 
+	GROUP BY bo.ORG_ID, md.DIST_NAME, md.DIST_CODE, ms.TYPE_ID, ms.CHANNEL_ID
+)
+--查询时间段内老客户金额
+,selOldTable AS (
+	SELECT  bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			ms.TYPE_ID AS ITEM_NAME, ms.CHANNEL_ID as storeType,
+			isnull(sum((dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17),0) AS amount
+			
+	FROM 	RPT_DATA_SALE  dds
+		    INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE
+			--关联门店
+			INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dds.TARGET_STORE_CODE
+			--关联客户端、经销商
+			LEFT JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+			--关联组织
+			LEFT JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+			
+	where 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$' 
+			$orgId$ $distId$ $distCode$ $storeTypeId$ $channelId$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita') 
+			AND dds.TARGET_STORE_CODE IN (
+				SELECT 	DISTINCT d.TARGET_STORE_CODE
+				FROM	RPT_DATA_SALE d 
+				WHERE 	d.BILL_DATE>=CONVERT(varchar(10), DATEADD(yy, -1, '$startDate$'), 120) AND d.BILL_DATE<'$startDate$'			
+			) 
+			
+	GROUP BY bo.ORG_ID, md.DIST_NAME, md.DIST_CODE, ms.TYPE_ID, ms.CHANNEL_ID
+)
+--查询时间段内老客户数（开始日期往前推一年发生的销售都算老客户）
+,selOldCus AS (
+	SELECT  bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			ms.TYPE_ID AS ITEM_NAME, ms.CHANNEL_ID as storeType,
+			count(DISTINCT ms.STORE_CODE) AS customerNum
+			
+	FROM 	RPT_DATA_SALE  dds
+		    INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE
+			--关联门店
+			INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dds.TARGET_STORE_CODE
+			--关联客户端、经销商
+			LEFT JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+			--关联组织
+			LEFT JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+			
+	where 	dds.BILL_DATE>=CONVERT(varchar(10), DATEADD(yy, -1, '$startDate$'), 120) AND dds.BILL_DATE<'$startDate$'
+			$orgId$ $distId$ $distCode$ $storeTypeId$ $channelId$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')  
+
+	GROUP BY bo.ORG_ID, md.DIST_NAME, md.DIST_CODE, ms.TYPE_ID, ms.CHANNEL_ID
+)
+--查询时间段内新客户、金额
+,selNewTable AS (
+	SELECT  bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			ms.TYPE_ID AS ITEM_NAME, ms.CHANNEL_ID as storeType,
+			isnull(sum((dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17),0) AS amount,
+			count(DISTINCT ms.STORE_CODE) AS customerNum
+	
+	FROM 	RPT_DATA_SALE  dds
+		    INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE
+			--关联门店
+			INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dds.TARGET_STORE_CODE
+			--关联客户端、经销商
+			LEFT JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+			--关联组织
+			LEFT JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	
+	where 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$' 
+			$orgId$ $distId$ $distCode$ $storeTypeId$ $channelId$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+			AND dds.TARGET_PROD_CODE NOT IN (
+				SELECT 	DISTINCT d.TARGET_STORE_CODE
+				FROM	RPT_DATA_SALE d  
+				WHERE 	d.BILL_DATE>=CONVERT(varchar(10), DATEADD(yy, -1, '$startDate$'), 120) AND d.BILL_DATE<'$startDate$'
+			) 
+			
+	GROUP BY bo.ORG_ID, md.DIST_NAME, md.DIST_CODE, ms.TYPE_ID, ms.CHANNEL_ID
+)
+
+--本年内老客户金额
+,yearOldTable AS (
+	SELECT  bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			ms.TYPE_ID AS ITEM_NAME, ms.CHANNEL_ID as storeType,
+			isnull(sum((dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17),0) AS amount
+			
+	FROM 	RPT_DATA_SALE  dds
+		    INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE
+			--关联门店
+			INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dds.TARGET_STORE_CODE
+			--关联客户端、经销商
+			LEFT JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+			--关联组织
+			LEFT JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+			
+	where 	dds.BILL_DATE>=CONVERT(varchar(10), DATEADD(yy, DATEDIFF(yy,0,'$endDate$'), 0), 120) AND dds.BILL_DATE<='$endDate$'
+			$orgId$ $distId$ $distCode$ $storeTypeId$ $channelId$
+			AND dds.TARGET_STORE_CODE IN (
+				SELECT 	DISTINCT d.TARGET_STORE_CODE
+				FROM	RPT_DATA_SALE d 
+				WHERE 	d.BILL_DATE>=CONVERT(varchar(10), DATEADD(yy, DATEDIFF(yy,0,'$endDate$')-1, 0), 120)
+						AND d.BILL_DATE<CONVERT(varchar(10), DATEADD(yy, DATEDIFF(yy,0,'$endDate$'), 0), 120)
+			)
+			
+	GROUP BY bo.ORG_ID, md.DIST_NAME, md.DIST_CODE, ms.TYPE_ID, ms.CHANNEL_ID
+)
+--本年内老客户数
+,yearOldCus AS (
+	SELECT  bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			ms.TYPE_ID AS ITEM_NAME, ms.CHANNEL_ID as storeType,
+			count(DISTINCT ms.STORE_CODE) AS customerNum
+			
+	FROM 	RPT_DATA_SALE  dds
+		    INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE
+			--关联门店
+			INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dds.TARGET_STORE_CODE
+			--关联客户端、经销商
+			LEFT JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+			--关联组织
+			LEFT JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+			
+	WHERE 	dds.BILL_DATE>=CONVERT(varchar(10), DATEADD(yy, DATEDIFF(yy,0,'$endDate$')-1, 0), 120) 
+			AND dds.BILL_DATE<CONVERT(varchar(10), DATEADD(yy, DATEDIFF(yy,0,'$endDate$'), 0), 120)
+			$orgId$ $distId$ $distCode$ $storeTypeId$ $channelId$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita') 
+	GROUP BY bo.ORG_ID, md.DIST_NAME, md.DIST_CODE, ms.TYPE_ID, ms.CHANNEL_ID
+)
+--本年内新客户、金额
+,yearNewTable AS (
+	SELECT  bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			ms.TYPE_ID AS ITEM_NAME, ms.CHANNEL_ID as storeType,
+			isnull(sum((dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17),0) AS amount,
+			count(DISTINCT ms.STORE_CODE) AS customerNum
+
+	FROM 	RPT_DATA_SALE  dds
+		    INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=dds.TARGET_PROD_CODE
+			--关联门店
+			INNER JOIN MDM_STORE ms ON ms.STORE_CODE = dds.TARGET_STORE_CODE
+			--关联客户端、经销商
+			LEFT JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID
+			--关联组织
+			LEFT JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID 
+			
+	where 	dds.BILL_DATE>=CONVERT(varchar(10), DATEADD(yy, DATEDIFF(yy,0,'$endDate$'), 0), 120) AND dds.BILL_DATE<='$endDate$'
+			$orgId$ $distId$ $distCode$ $storeTypeId$ $channelId$
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita') 
+			AND dds.TARGET_STORE_CODE NOT IN (
+				SELECT 	DISTINCT d.TARGET_STORE_CODE
+				FROM	RPT_DATA_SALE d 
+				WHERE 	d.BILL_DATE>=CONVERT(varchar(10), DATEADD(yy, DATEDIFF(yy,0,'$endDate$')-1, 0), 120) 
+						AND d.BILL_DATE<CONVERT(varchar(10), DATEADD(yy, DATEDIFF(yy,0,'$endDate$'), 0), 120)
+			) 
+			
+	GROUP BY bo.ORG_ID, md.DIST_NAME, md.DIST_CODE, ms.TYPE_ID, ms.CHANNEL_ID
+)
+
+
+
+SELECT 	(SELECT bo.PN2 FROM BASE_ORG bo WHERE bo.ORG_ID=ys.ORG_ID AND bo.STATE=1) AS region, 
+		(SELECT bo.PN4 FROM BASE_ORG bo WHERE bo.ORG_ID=ys.ORG_ID AND bo.STATE=1) AS province, 
+		(SELECT bo.ORG_NAME FROM BASE_ORG bo WHERE bo.ORG_ID=ys.ORG_ID AND bo.STATE=1) AS city, 
+		ys.DIST_NAME AS distName, ys.DIST_CODE AS distCode, 
+		(SELECT ITEM_NAME FROM BASE_DICT_ITEM WHERE DICT_ITEM_ID=ys.storeType AND DICT_ID='storeChannel'),
+		(SELECT ITEM_NAME FROM BASE_DICT_ITEM WHERE DICT_ITEM_ID=ys.ITEM_NAME AND DICT_ID='storeType'),
+		
+		isnull(ss.amount,0)
+		,isnull(soc.customerNum,0) 
+		,CASE WHEN ss.amount=0 THEN '0.00%' 
+			ELSE CASE WHEN isnull(sot.amount,0)=0 THEN '0.00%'
+			ELSE CAST(CAST(isnull(sot.amount,0)/ss.amount*100 AS DECIMAL(38,2)) AS VARCHAR)+'%' 
+		END END 
+		
+		,isnull(snt.customerNum,0) 
+		,CASE WHEN ss.amount=0 THEN '0.00%' 
+			ELSE CASE WHEN isnull(snt.amount,0)=0 THEN '0.00%'
+			ELSE CAST(CAST(isnull(snt.amount,0)/ss.amount*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'  
+		END END 
+		
+		,isnull(ys.amount,0)
+		,isnull(yoc.customerNum,0) 
+		,CASE WHEN ys.amount=0 THEN '0.00%' 
+			ELSE CASE WHEN isnull(yot.amount,0)=0 THEN '0.00%'
+			ELSE CAST(CAST(isnull(yot.amount,0)/ys.amount*100 AS DECIMAL(38,2)) AS VARCHAR)+'%' 
+		END END 
+		
+		,isnull(ynt.customerNum,0) 
+		,CASE WHEN ys.amount=0 THEN '0.00%' 
+			ELSE CASE WHEN isnull(ynt.amount,0)=0 THEN '0.00%'
+			ELSE CAST(CAST(isnull(ynt.amount,0)/ys.amount*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'  
+		END END
+		
+		
+FROM 	yearSale ys
+	 	LEFT JOIN selOldTable sot ON sot.ORG_ID=ys.ORG_ID AND sot.DIST_CODE=ys.DIST_CODE AND sot.ITEM_NAME=ys.ITEM_NAME AND sot.storeType=ys.storeType 
+	 	LEFT JOIN selNewTable snt ON snt.ORG_ID=ys.ORG_ID AND snt.DIST_CODE=ys.DIST_CODE AND snt.ITEM_NAME=ys.ITEM_NAME AND snt.storeType=ys.storeType
+		LEFT JOIN selSale ss on ss.ORG_ID=ys.ORG_ID AND ss.DIST_CODE=ys.DIST_CODE AND ss.ITEM_NAME=ys.ITEM_NAME AND ss.storeType=ys.storeType
+	 	LEFT JOIN yearOldTable yot ON yot.ORG_ID=ys.ORG_ID AND yot.DIST_CODE=ys.DIST_CODE AND yot.ITEM_NAME=ys.ITEM_NAME AND yot.storeType=ys.storeType 
+	 	LEFT JOIN yearNewTable ynt ON ynt.ORG_ID=ys.ORG_ID AND ynt.DIST_CODE=ys.DIST_CODE AND ynt.ITEM_NAME=ys.ITEM_NAME AND ynt.storeType=ys.storeType
+		
+		LEFT JOIN selOldCus soc ON soc.ORG_ID=ys.ORG_ID AND soc.DIST_CODE=ys.DIST_CODE AND soc.ITEM_NAME=ys.ITEM_NAME AND soc.storeType=ys.storeType
+		LEFT JOIN yearOldCus yoc ON yoc.ORG_ID=ys.ORG_ID AND yoc.DIST_CODE=ys.DIST_CODE AND yoc.ITEM_NAME=ys.ITEM_NAME AND yoc.storeType=ys.storeType 
+
+UNION ALL
+
+
+
+SELECT 	'合计：','','','','','',''
+		
+		,isnull(sum(ss.amount),0)
+		,isnull(sum(soc.customerNum),0) 
+		,CASE WHEN sum(ss.amount)=0 THEN '0.00%' 
+			ELSE CASE WHEN isnull(sum(sot.amount),0)=0 THEN '0.00%'
+			ELSE CAST(CAST(isnull(sum(sot.amount),0)/sum(ss.amount)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%' 
+		END END 
+		
+		,isnull(sum(snt.customerNum),0) 
+		,CASE WHEN sum(ss.amount)=0 THEN '0.00%' 
+			ELSE CASE WHEN isnull(sum(snt.amount),0)=0 THEN '0.00%'
+			ELSE CAST(CAST(isnull(sum(snt.amount),0)/sum(ss.amount)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'  
+		END END 
+		
+		,isnull(sum(ys.amount),0)
+		,isnull(sum(yoc.customerNum),0) 
+		,CASE WHEN sum(ys.amount)=0 THEN '0.00%' 
+			ELSE CASE WHEN isnull(sum(yot.amount),0)=0 THEN '0.00%'
+			ELSE CAST(CAST(isnull(sum(yot.amount),0)/sum(ys.amount)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%' 
+		END END 
+		
+		,isnull(sum(ynt.customerNum),0) 
+		,CASE WHEN sum(ys.amount)=0 THEN '0.00%' 
+			ELSE CASE WHEN isnull(sum(ynt.amount),0)=0 THEN '0.00%'
+			ELSE CAST(CAST(isnull(sum(ynt.amount),0)/sum(ys.amount)*100 AS DECIMAL(38,2)) AS VARCHAR)+'%'  
+		END END
+		
+		
+FROM 	yearSale ys
+	 	LEFT JOIN selOldTable sot ON sot.ORG_ID=ys.ORG_ID AND sot.DIST_CODE=ys.DIST_CODE AND sot.ITEM_NAME=ys.ITEM_NAME AND sot.storeType=ys.storeType 
+	 	LEFT JOIN selNewTable snt ON snt.ORG_ID=ys.ORG_ID AND snt.DIST_CODE=ys.DIST_CODE AND snt.ITEM_NAME=ys.ITEM_NAME AND snt.storeType=ys.storeType
+		LEFT JOIN selSale ss on ss.ORG_ID=ys.ORG_ID AND ss.DIST_CODE=ys.DIST_CODE AND ss.ITEM_NAME=ys.ITEM_NAME AND ss.storeType=ys.storeType
+	 	LEFT JOIN yearOldTable yot ON yot.ORG_ID=ys.ORG_ID AND yot.DIST_CODE=ys.DIST_CODE AND yot.ITEM_NAME=ys.ITEM_NAME AND yot.storeType=ys.storeType 
+	 	LEFT JOIN yearNewTable ynt ON ynt.ORG_ID=ys.ORG_ID AND ynt.DIST_CODE=ys.DIST_CODE AND ynt.ITEM_NAME=ys.ITEM_NAME AND ynt.storeType=ys.storeType
+
+		LEFT JOIN selOldCus soc ON soc.ORG_ID=ys.ORG_ID AND soc.DIST_CODE=ys.DIST_CODE AND soc.ITEM_NAME=ys.ITEM_NAME AND soc.storeType=ys.storeType
+		LEFT JOIN yearOldCus yoc ON yoc.ORG_ID=ys.ORG_ID AND yoc.DIST_CODE=ys.DIST_CODE AND yoc.ITEM_NAME=ys.ITEM_NAME AND yoc.storeType=ys.storeType 
+		
+		
+          ]]>
+		</sql>
+	</content>
+	
+</config>

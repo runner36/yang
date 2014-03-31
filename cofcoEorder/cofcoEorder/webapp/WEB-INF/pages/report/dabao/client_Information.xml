@@ -1,0 +1,175 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>门店资料报表</title>
+	
+	<header>
+		<column property="0" title="大区" style="text-align:left"/>
+		<column property="1" title="区域" style="text-align:left"/>
+		<column property="2" title="省" style="text-align:left"/>
+		<column property="3" title="城市" style="text-align:left"/>
+		<column property="4" title="城市类别" style="text-align:left"/>
+		<column property="5" title="经销商编码" style="text-align:left"/>
+		<column property="6" title="经销商名称" style="text-align:left"/>
+		<column property="7" title="经销商客户代码" style="text-align:left"/>
+		<column property="8" title="经销商客户名称" style="text-align:left"/>
+		<column property="9" title="JDES II客户代码" style="text-align:left"/>
+		<column property="10" title="JDES II客户名称" style="text-align:left"/>
+		<column property="11" title="大宝客户代码" style="text-align:right" />
+		<column property="12" title="大宝客户名称" style="text-align:right" />		
+		<column property="13" title="详细地址(街道)" style="text-align:left" />
+		<column property="14" title="电话" style="text-align:left" />
+		<column property="15" title="销售人员" style="text-align:left" />
+		<column property="16" title="联系人" style="text-align:left" />		
+		<column property="17" title="渠道" style="text-align:right" />
+		<column property="18" title="客户分类" style="text-align:right" />
+		<column property="19" title="门店状态" style="text-align:right" />
+		<column property="20" title="门店所在城市区号" style="text-align:right" />
+		<column property="21" title="销售人员(DSR)" style="text-align:right" />
+		<column property="22" title="所属集团客户" style="text-align:right" />
+		<column property="23" title="创建时间" style="text-align:right" />
+		<column property="24" title="修改时间" style="text-align:right" />
+		<column property="25" title="首次交易日期" style="text-align:right"/>	
+		<column property="26" title="最近一次交易日期" style="text-align:right" />
+		<column property="27" title="备注" style="text-align:right" />
+	</header>
+	
+	<content>
+
+		<!-- 组织 -->
+		<param id="orgId" template=" and o.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="orgName" isDisplay="1" displayName="组织" template="">$orgName$</param>
+		<!-- 渠道 -->
+		<param id="channelId" template=" and ms.CHANNEL_ID in ($channelId$) ">$channelId$</param>
+		<param id="channelName" isDisplay="1" displayName="渠道" template="">$channelName$</param>
+		<!-- 门店类型 -->
+		<param id="storeTypeId" template=" and ms.TYPE_ID in ($storeTypeId$) ">$storeTypeId$</param>
+		<param id="storeTypeName" isDisplay="1" displayName="门店类型" template="">$storeTypeName$</param>
+		<!-- 客户名称 客户编码 -->
+		<param id="customerCode" isDisplay="1" displayName="大宝客户代码" template=" and ms.STORE_CODE like '%$customerCode$%' ">$customerCode$</param>
+		<param id="customerName" isDisplay="1" displayName="大宝客户名称"  template=" and ms.STORE_NAME like '%$customerName$%' ">$customerName$</param>
+		<!-- 经销商 -->
+		<param id="distId"  template=" and md.DIST_ID in ($distId$) ">$distId$</param>
+		<param id="distCode" isDisplay="1" displayName="经销商编码" template=" and md.DIST_CODE like '%$distCode$%' ">$distCode$</param>
+		<param id="distName" isDisplay="1" displayName="经销商名称" template="">$distName$</param>		
+		<sql>
+          <![CDATA[			
+
+WITH START_TIME AS (
+
+	SELECT 	min(dds.BILL_DATE) AS sTime, ms.STORE_ID, dc.client_id
+	FROM 	DMS_DATA_SALE dds
+			--关联门店
+			LEFT JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE AND dds.CLIENT_ID=dsm.CLIENT_ID
+			LEFT JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code 
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			--INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			--INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+			
+	WHERE 	dds.STATE=1
+			
+	GROUP BY ms.STORE_ID, dc.client_id
+	
+),END_TIME AS (
+
+	SELECT 	MAX(dds.BILL_DATE) AS eTime, ms.STORE_ID, dc.client_id
+	FROM 	DMS_DATA_SALE dds
+			--关联门店
+			LEFT JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE AND dds.CLIENT_ID=dsm.CLIENT_ID
+			LEFT JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code 
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			--INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			--INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+			
+	WHERE 	dds.STATE=1
+	GROUP BY ms.STORE_ID, dc.client_id
+	
+),base AS (
+
+	SELECT 	
+			isnull(o.pn1,'') AS PN1,--大区
+			isnull('','') AS PN4,--区域
+			isnull(o.pn2,'') AS PN2,--省份
+			isnull(o.pn3,'') AS PN3,--城市
+			bdi1.item_alias AS item_alias, 
+			md.DIST_CODE AS DIST_CODE,--经销商代码 
+			md.DIST_NAME AS DIST_NAME,--经销商名称
+			dds.store_CODE AS STORE_CODE,--经销商客户代码
+			dds.store_name AS STORE_NAME,--经销商客户名称
+			ms.store_id AS STORE_ID,
+			dc.CLIENT_ID AS CLIENT_ID,
+			isnull(ms.STORE_CODE,'') AS STORECODE,--JDES II客户代码
+			isnull(ms.STORE_NAME,'') AS STORENAME,--JDES II客户名称
+			isnull(dds1.store_addr,'') AS STORE_ADDR,--详细地址(街道)
+			isnull(dds1.tel,'') AS STORE_TEL,--电话 
+			isnull(ms.memo4,'') AS PEOPLE,--销售人员
+			isnull(dds1.contact,'') AS CONTACT,--联系人
+			isnull(bdi.ITEM_NAME,'') AS CHANNEL,--渠道
+			isnull(bdi2.ITEM_NAME,'') as TYPE,
+			CASE WHEN dds1.state='1' THEN '有效' ELSE '无效' END AS STORE_STATE,--门店状态
+			ms.memo1,--大宝客户代码 
+			ms.memo2,--大宝客户名称
+			ms.memo3,
+			ms.memo4,
+			ms.memo5,
+			dds1.CREATE_TIME AS create_time,--创建时间
+			dds1.UPDATE_TIME AS update_time,--修改时间
+			isnull(dds1.REMARK,'') AS remark--备注
+	FROM 	DMS_ACTIVE_STORE dds 
+			LEFT JOIN DMS_DATA_STORE dds1 ON dds.CLIENT_ID = dds1.CLIENT_ID AND dds.STORE_CODE=dds1.STORE_CODE AND dds.STORE_NAME = DDS1.STORE_NAME  	
+			--关联门店
+			LEFT JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE AND dds.CLIENT_ID=dsm.CLIENT_ID AND dds.STORE_NAME = DSM.DIST_STORE_NAME 
+			LEFT JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code 
+			LEFT JOIN BASE_DICT_ITEM bdi ON bdi.DICT_ITEM_ID=ms.TYPE_ID AND bdi.DICT_ID='storeType'  
+			LEFT JOIN BASE_DICT_ITEM bdi2 ON bdi2.DICT_ITEM_ID=ms.CHANNEL_ID AND bdi2.DICT_ID='storeChannel'  
+			--关联客户端、经销商
+			LEFT JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID and dc.CLIENT_ID is not null 
+			LEFT JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.DIST_ID is not null 
+			--关联组织
+			LEFT JOIN BASE_ORG o ON o.ORG_ID = md.ORG_ID
+			LEFT JOIN base_dict_item bdi1 ON bdi1.DICT_ITEM_ID = MD.GEO_ID AND bdi1.DICT_ID='geography' 
+	WHERE 	dds.STATE=1 $orgId$	$storeTypeId$ $channelId$ $customerCode$ $customerName$ $distId$ $distCode$
+
+)
+
+
+	SELECT  
+			s.pn1,--大区
+			s.pn4,--区域
+			s.pn2,--省份
+			s.pn3,--城市 
+			isnull(s.item_alias,''),--城市类别
+			s.DIST_CODE,--经销商代码 
+			s.DIST_NAME,--经销商名称
+			s.store_CODE,--经销商客户代码
+			s.store_name,--经销商客户名称
+			s.STORECODE,--JDES II客户代码(大宝客户代码) 
+			s.STORENAME,--JDES II客户名称(大宝客户名称)
+			s.memo1,--大宝客户代码
+			s.memo2,--大宝客户名称
+			s.STORE_ADDR,--详细地址(街道)
+			s.STORE_TEL,--电话 
+			s.PEOPLE,--销售人员
+			s.CONTACT,--联系人
+			s.CHANNEL,--渠道
+			s.TYPE,
+			s.STORE_STATE,--门店状态
+			s.memo3,
+			s.memo4,
+			s.memo5,
+			isnull(CONVERT(VARCHAR(10), s.create_time, 120 ),''),--创建时间
+			isnull(CONVERT(VARCHAR(10), s.update_time, 120 ),''),--修改时间		
+			isnull(CONVERT(VARCHAR(10), st.sTime, 120 ),''),--首次交易日期,
+			isnull(CONVERT(VARCHAR(10), et.eTime, 120 ),''),--最近一次交易日期
+			s.REMARK AS remark --备注
+	FROM 	base s 
+			LEFT JOIN START_TIME st ON st.STORE_ID = s.STORE_ID AND st.CLIENT_ID = s.CLIENT_ID
+			LEFT JOIN end_time et ON et.STORE_ID = s.STORE_ID AND et.CLIENT_ID = s.CLIENT_ID
+          ]]>
+		</sql>
+	</content>
+	
+</config>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>经销商产品毛利分析</title>
+	
+	<header>
+		<column property="0" title="大区" style="text-align:left"/>
+		<column property="1" title="省" style="text-align:left"/>
+		<column property="2" title="城市" style="text-align:left"/>
+		<column property="3" title="经销商编码" style="text-align:left"/>
+		<column property="4" title="经销商名称" style="text-align:left"/>
+		<column property="5" title="品牌" style="text-align:left" />
+		<column property="6" title="产品代码" style="text-align:left" />
+		<column property="7" title="产品名称" style="text-align:left" />
+		
+		<column property="8" title="净销售金额" style="text-align:right" cell="number" format="#0.00"/>
+		<column property="9" title="成本" style="text-align:right" cell="number" format="#0.00"/>
+
+		<column property="10" title="毛利额" style="text-align:right" />	
+		<column property="11" title="毛利率" style="text-align:right" />
+		<column property="12" title="毛利贡献率" style="text-align:right" />		
+	</header>
+	
+	<content>
+		<!-- 开始时间 结束时间 -->
+        <param id="startDate" isDisplay="1" displayName="开始时间" template="">$startDate$</param>
+		<param id="endDate" isDisplay="1" displayName="结束时间" template="">$endDate$</param>
+		<!-- 组织 -->
+		<param id="orgId"  template=" and bo.ORG_ID in ($orgId$) ">$orgId$</param>
+		<param id="orgName" isDisplay="1" displayName="组织" template="">$orgName$</param>
+		<!-- 渠道 -->
+		<param id="channelId"  template=" and ms.CHANNEL_ID in ($channelId$) ">$channelId$</param>
+		<param id="channelName" isDisplay="1" displayName="客户销售分类"  template="">$channelName$</param>
+		<!-- 门店类型 -->
+		<param id="storeTypeId"  template=" and ms.TYPE_ID in ($storeTypeId$) ">$storeTypeId$</param>
+		<param id="storeTypeName" isDisplay="1" displayName="渠道"  template="">$storeTypeName$</param>
+		<!-- 经销商 -->
+		<param id="distId"  template=" and md.DIST_ID in ($distId$) ">$distId$</param>
+		<param id="distCode" isDisplay="1" displayName="经销商编码" template=" and md.DIST_CODE like '%$distCode$%' ">$distCode$</param>
+		<param id="distName" isDisplay="1" displayName="经销商名称" template="">$distName$</param>
+		<!-- 产品品牌 -->
+		<param id="prodBrandId"  template=" and p.BRAND_ID in ($prodBrandId$) ">$prodBrandId$</param>
+		<param id="prodBrandName" isDisplay="1" displayName="产品品牌" template="">$prodBrandName$</param>
+		<!-- 产品品类 -->
+		<param id="prodTypeId"  template=" and p.TYPE_ID in ($prodTypeId$) ">$prodTypeId$</param>
+		<param id="prodTypeName" isDisplay="1" displayName="产品品类" template="">$prodTypeName$</param>
+		<!-- 产品名称 产品编码 -->
+		<param id="prodId"  template=" and p.PROD_NAME like '%$prodId$%' ">$prodId$</param>
+		<param id="prodCode" isDisplay="1" displayName="产品代码" template=" and p.PROD_CODE like '%$prodCode$%' ">$prodCode$</param>
+		<param id="prodName" isDisplay="1" displayName="产品名称" template="">$prodName$</param>
+				
+		<sql>
+          <![CDATA[
+ 
+--定义变量，用于计算%列的值
+DECLARE @totalRate DECIMAL(18,8)
+SET @totalRate=0;
+
+WITH a AS (
+	SELECT 	isnull((dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17,0) AS totalAmount,
+			dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY)*p.PROD_PRICE AS costAmount
+			
+	FROM 	DMS_DATA_SALE dds
+			INNER JOIN DMS_PROD_MAPPING mp ON dds.PROD_CODE=mp.DIST_PROD_CODE AND dds.CLIENT_ID=mp.CLIENT_ID AND dds.PROD_UNIT=mp.DIST_PROD_UNIT AND dds.PROD_NAME=mp.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE  
+			LEFT JOIN BASE_DICT_ITEM item ON p.BRAND_ID = item.DICT_ITEM_ID
+			--关联门店
+			LEFT JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE AND dds.CLIENT_ID=dsm.CLIENT_ID
+			LEFT JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	
+	WHERE 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$' and dds.STATE=1 
+			$orgId$ $distId$ $distCode$ $channelId$ $prodId$ $prodCode$ $storeTypeId$ $prodBrandId$ $prodTypeId$
+			AND (dds.PROD_QUANTITY*dds.PROD_PRICE) <> 0 AND dds.PROD_QUANTITY <> 0 AND p.PROD_CODE <> 'qita'
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+)
+SELECT @totalRate=sum(totalAmount-costAmount) FROM a;
+
+
+WITH sale AS (
+	SELECT 	bo.ORG_ID AS ORG_ID, md.DIST_CODE AS DIST_CODE, md.DIST_NAME AS DIST_NAME, 
+			item.ITEM_NAME AS ITEM_NAME, p.PROD_CODE AS PROD_CODE, p.PROD_NAME AS PROD_NAME, 
+			sum(isnull((dds.PROD_QUANTITY*dds.PROD_PRICE)/1.17,0)) AS totalAmount,
+			sum(dbo.fn_getUnitConvById(mp.TARGET_UNIT_ID, p.PROD_COUNTUNIT_ID, mp.TARGET_PROD_CODE, dds.PROD_QUANTITY)*p.PROD_PRICE) AS costAmount
+			
+	FROM 	DMS_DATA_SALE dds
+			INNER JOIN DMS_PROD_MAPPING mp ON dds.PROD_CODE=mp.DIST_PROD_CODE AND dds.CLIENT_ID=mp.CLIENT_ID AND dds.PROD_UNIT=mp.DIST_PROD_UNIT AND dds.PROD_NAME=mp.DIST_PROD_NAME
+			INNER JOIN MDM_PRODUCT p ON p.PROD_CODE=mp.TARGET_PROD_CODE 
+			LEFT JOIN BASE_DICT_ITEM item ON p.BRAND_ID = item.DICT_ITEM_ID
+			--关联门店
+			LEFT JOIN DMS_STORE_MAPPING dsm ON dds.STORE_CODE = dsm.DIST_STORE_CODE AND dds.CLIENT_ID=dsm.CLIENT_ID
+			LEFT JOIN MDM_STORE ms ON ms.STORE_CODE = dsm.target_store_code
+			--关联客户端、经销商
+			INNER JOIN DMS_CLIENT dc ON dds.CLIENT_ID = dc.CLIENT_ID
+			INNER JOIN MDM_DISTRIBUTOR md ON md.DIST_ID = dc.DIST_ID and md.CHECK_DATE IS NOT NULL 
+			--关联组织
+			INNER JOIN BASE_ORG bo ON bo.ORG_ID = md.ORG_ID
+	
+	WHERE 	dds.BILL_DATE >= '$startDate$' AND dds.BILL_DATE <= '$endDate$' and dds.STATE=1
+			$orgId$ $distId$ $distCode$ $channelId$ $prodId$ $prodCode$ $storeTypeId$ $prodBrandId$ $prodTypeId$
+			AND (dds.PROD_QUANTITY*dds.PROD_PRICE) <> 0 AND dds.PROD_QUANTITY <> 0 AND p.PROD_CODE <> 'qita'
+			AND p.PROD_CODE NOT IN ('zengpin','tingchan','qita')
+			
+	GROUP BY bo.ORG_ID, md.DIST_CODE, md.DIST_NAME, item.ITEM_NAME, p.PROD_CODE, p.PROD_NAME
+)
+
+SELECT 	(SELECT bo.PN2 FROM BASE_ORG bo WHERE bo.ORG_ID=sale.ORG_ID AND bo.STATE=1), 
+ 		(SELECT bo.PN4 FROM BASE_ORG bo WHERE bo.ORG_ID=sale.ORG_ID AND bo.STATE=1), 
+	 	(SELECT bo.ORG_NAME FROM BASE_ORG bo WHERE bo.ORG_ID=sale.ORG_ID AND bo.STATE=1), 
+		DIST_CODE, DIST_NAME, ITEM_NAME, PROD_CODE, PROD_NAME, 
+		CAST(totalAmount AS DECIMAL(38,2)), 
+		CAST(costAmount AS DECIMAL(38,2)), 
+		CAST(totalAmount-costAmount AS DECIMAL(38,2)),
+		CASE WHEN (totalAmount-costAmount)=0 THEN '0'
+			ELSE CASE WHEN costAmount=0 THEN '0'
+			ELSE CAST(CAST((totalAmount-costAmount)/costAmount*100 AS DECIMAL(38,3)) AS VARCHAR)+'%'
+		END END,
+		
+		CASE WHEN (totalAmount-costAmount)=0 THEN '0'
+			ELSE CASE WHEN @totalRate=0 THEN '0'
+			ELSE CAST(CAST((totalAmount-costAmount)/@totalRate*100 AS DECIMAL(38,3)) AS VARCHAR)+'%'
+		END END 
+			
+FROM 	sale
+
+UNION ALL 
+
+SELECT 	'','','','','',ITEM_NAME,'','',
+		sum(totalAmount), sum(costAmount), sum(totalAmount-costAmount),
+
+		CASE WHEN sum(totalAmount-costAmount)=0 THEN '0'
+			ELSE CASE WHEN sum(costAmount)=0 THEN '0'
+			ELSE CAST(CAST(sum(totalAmount-costAmount)/sum(costAmount)*100 AS DECIMAL(38,3)) AS VARCHAR)+'%'
+		END END,
+		
+		CASE WHEN sum(totalAmount-costAmount)=0 THEN '0'
+			ELSE CASE WHEN @totalRate=0 THEN '0'
+			ELSE CAST(CAST(sum(totalAmount-costAmount)/@totalRate*100 AS DECIMAL(38,3)) AS VARCHAR)+'%'
+		END END 
+		
+FROM 	sale
+GROUP BY ITEM_NAME
+
+UNION ALL 
+
+SELECT 	'合计：','','','','','','','',
+		sum(totalAmount), sum(costAmount), sum(totalAmount-costAmount),
+
+		CASE WHEN sum(totalAmount-costAmount)=0 THEN '0'
+			ELSE CASE WHEN sum(costAmount)=0 THEN '0'
+			ELSE CAST(CAST(sum(totalAmount-costAmount)/sum(costAmount)*100 AS DECIMAL(38,3)) AS VARCHAR)+'%'
+		END END,
+		''
+		
+FROM 	sale
+ 
+          ]]>
+		</sql>
+	</content>
+	
+</config>

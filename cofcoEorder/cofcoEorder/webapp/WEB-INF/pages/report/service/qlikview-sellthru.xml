@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false" sortable="true">
+	<title></title>
+	
+	<header>
+		<column property="0" title="上级组织" width="300"/>
+	</header>
+	
+	<content>
+		<param id="startDate">$startDate$</param>
+		<param id="endDate">$endDate$</param>
+		<sql>
+<![CDATA[
+select dist.OWNERGRP_NAME as ownergroupname,
+	sale.STORE_CODE as storenumber,
+	dict.ITEM_CODE as citycode,
+	convert(varchar(10),sale.BILL_DATE,120) as sellmonth,
+	left(mapping.TARGET_PROD_CODE,10) as materialnumber,
+	sum(ISNULL(sale.PROD_QUANTITY,0)) as quantity,
+	SUM(ISNULL(sale.PROD_PRICE,0)*ISNULL(sale.PROD_QUANTITY,0)) as amount,
+	CONVERT(varchar(10),GETDATE(),120) as upload_time,
+	CONVERT(varchar(6),sale.BILL_DATE,112) as monthly
+from DMS_DATA_SALE sale
+	inner join DMS_CLIENT client on sale.CLIENT_ID=client.CLIENT_ID
+	inner join MDM_DISTRIBUTOR dist	on client.DIST_ID=dist.DIST_ID
+	inner join DMS_PROD_MAPPING mapping	on sale.PROD_CODE=mapping.DIST_PROD_CODE and sale.PROD_NAME=mapping.DIST_PROD_NAME and sale.PROD_UNIT=mapping.DIST_PROD_UNIT and sale.CLIENT_ID=mapping.CLIENT_ID
+	left join DMS_STORE_MAPPING sm on sale.STORE_CODE=sm.DIST_STORE_CODE and sm.client_id=sale.client_id
+	left join BASE_DICT_ITEM dict on dict.DICT_ID='geography' and sm.GEO_ID=dict.DICT_ITEM_ID
+where sale.BILL_DATE>='$startDate$' and sale.BILL_DATE<'$endDate$' and mapping.TARGET_PROD_CODE!='nonike'
+	and sale.STATE='1' and (sm.isreturn_data!='0' or sm.isreturn_data is null) and dist.pass_back_date is not null 
+	and sale.BILL_TYPE not like '%调拨%' and sale.BILL_TYPE not like '%批发%'
+group by dist.OWNERGRP_NAME,sale.STORE_CODE,dict.ITEM_CODE,convert(varchar(10),sale.BILL_DATE,120),left(mapping.TARGET_PROD_CODE,10),CONVERT(varchar(6),sale.BILL_DATE,112)
+order by CONVERT(varchar(6),sale.BILL_DATE,112)
+]]>
+		</sql>
+	</content>
+	
+</config>

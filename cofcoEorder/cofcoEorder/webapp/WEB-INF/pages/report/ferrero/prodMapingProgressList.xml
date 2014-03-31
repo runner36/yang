@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>产品匹配进度</title>
+	
+	<header>
+		<column title="组织结构" width="300" align="right"/>
+		<column  title="分销SKU数" width="100" align="right"/>
+		<column  title="采集SKU总数" width="100" align="right"/>
+		<column title="已匹配SKU总数" width="100" align="right" cell="number"/>
+		<column title="匹配进度1" width="100" align="right" cell="number"/>
+		<column title="匹配进度2" width="100" align="right" cell="number"/>
+		<column title="匹配进度3" width="100" align="right" cell="number"/>
+		<column title="今日匹配SKU数" width="100" align="right" cell="number"/>
+		<column title="本周匹配SKU数" width="100" align="right" cell="number"/>
+		<column title="未匹配SKU数" width="100" align="right" cell="number"/>
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH -->
+		<param id="_orgAuthExp" initValue="" defaultValue="" valueList="" dataType="char"></param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<!-- 组织机构 经销商 -->
+		<param id="orgName" initValue="" defaultValue="">$orgName$</param>
+		<param id="orgId" initValue="" defaultValue="" template="and dist.org_id=$orgId$">$orgId$</param>
+		
+		<param id="distName" initValue="" defaultValue="">$distName$</param>
+		<param id="distId" initValue="" defaultValue="" template="and dist.dist_id=$distId$">$distId$</param>
+		
+		<!-- 销量计算期间 -->
+        <param id="beginDate" initValue="" defaultValue="">$beginDate$</param>
+		<param id="endDate" initValue="" defaultValue="" >$endDate$</param>
+		<sql>
+          <![CDATA[
+            
+            ----所选的组织和经销商列表
+                   WITH orgDistList AS
+                   (
+                         select (case when t.flag='1' then t.parent_org_id else t.org_id end) as parent_org_id,
+                               (case when t.flag='1' then CAST(t.orgid AS varchar(300)) else t.dist_Code+CAST(t.dist_id AS varchar(300)) end) as self_org_id,
+                                t.orgid,
+                                (case when t.org_name is null then t.dist_name else t.org_name end) as org_name
+                                ,
+                                t.org_code,t.levelCode,t.sort,t.dist_Code,t.dist_name,t.org_id,t.dist_id 
+                                 from 
+                                   (  
+                                      select '1' as flag,b.parent_org_id,b.org_id as orgid,b.org_name,b.org_code,b.level_code as levelCode,b.sort as sort,null as dist_Code,null as dist_name,null as org_id,null as dist_id from BASE_ORG b WHERE b.STATE='1'
+                                      union all 
+                                      select '2' as flag,null,null,null,null,dist.level_code as levelCode,dist.sort as sort,dist.dist_code as distCode,dist.dist_name,dist.org_id,dist.dist_id  from MDM_DISTRIBUTOR dist where dist.STATE='1'
+                                   ) as t 
+                   ),
+                  ----采集SKU总数,只从DMS_ACTIVE_PRODUCT表去经销商的产品数量，和时间没关系
+                   activeProduct AS
+                   (
+                       select distinct dist.dist_code as activeCode,active.client_id,count(active.PROD_CODE) over(partition by dist.DIST_CODE) as totleSKU
+                       FROM DMS_ACTIVE_PRODUCT active,MDM_DISTRIBUTOR dist,DMS_CLIENT client where  active.client_id=client.client_id and client.dist_id=dist.dist_id and dist.STATE='1' and active.STATE='1'
+                       $orgId$ $distId$
+                   ),
+                   ----已匹配SKU总数，从DMS_PROD_MAPPING里找按照经销商来找
+                   prodMapping AS
+                   (
+                       select distinct dist.dist_code as mappedCode,count(mapping.DIST_PROD_CODE) over(partition by dist.DIST_CODE) as mappedSKU
+                       FROM DMS_PROD_MAPPING mapping,MDM_DISTRIBUTOR dist,DMS_CLIENT client where  mapping.client_id=client.client_id and client.dist_id=dist.dist_id and dist.STATE='1' and mapping.STATE='1'
+                       $orgId$ $distId$      
+                   ),
+                   ----分销SKU总数
+                   distr AS
+                   (
+                     select distinct dist.dist_code as distrCode ,count(distr.prod_code) over(partition by dist.DIST_CODE) as totleDistrSKU
+                     FROM MDM_DISTRIBUTION distr,MDM_DISTRIBUTOR dist where  distr.DIST_CODE=dist.DIST_CODE and dist.STATE='1'
+                     $orgId$ $distId$ 
+                   ),
+                   ----今日匹配SKU数，CREATED，UPDATED
+                   todyMapping AS
+                   (
+                       select  distinct dist.dist_code as todyMappedCode,count(mapping.DIST_PROD_CODE) over(partition by dist.DIST_CODE) as todyMappSKU
+                       FROM DMS_PROD_MAPPING mapping,MDM_DISTRIBUTOR dist,DMS_CLIENT client where  mapping.client_id=client.client_id and client.dist_id=dist.dist_id and dist.STATE='1' and mapping.STATE='1'
+                       and Convert(char(10),mapping.UPDATED,21)>=Convert(char(10),getDate(),21) and Convert(char(10),mapping.UPDATED,21)<=Convert(char(10),getDate(),21)
+                       $orgId$ $distId$
+                   ),
+                  ----本周匹配SKU数，CREATED，UPDATED
+                  weekMapping AS
+                   (
+                      select distinct dist.dist_code as weekMappedCode,count(mapping.DIST_PROD_CODE) over(partition by dist.DIST_CODE) as weekSKU
+                      FROM DMS_PROD_MAPPING mapping,MDM_DISTRIBUTOR dist,DMS_CLIENT client where  mapping.client_id=client.client_id and client.dist_id=dist.dist_id and dist.STATE='1' and mapping.STATE='1'
+                      and Convert(char(10),mapping.UPDATED,21)>= Convert(char(10),(SELECT DATEADD(wk, DATEDIFF(wk, 0, getdate()), 0) as ben),21) and Convert(char(10),mapping.UPDATED,21)<=Convert(char(10),(SELECT DATEADD(wk, DATEDIFF(wk, 0, getdate()), 6) as endl),21)
+                      $orgId$ $distId$
+                   ),
+                   ----已匹配分销SKU数,匹配进度1是=已匹配分销SKU数/分销SKU总数
+                   distrMapping AS
+                   (
+                     select  distinct dist.dist_code as distrMappedCode,count(mapping.DIST_PROD_CODE) over(partition by dist.DIST_CODE) as distrSKU
+                     FROM DMS_PROD_MAPPING mapping,MDM_DISTRIBUTION distr,MDM_DISTRIBUTOR dist,DMS_CLIENT client where  mapping.client_id=client.client_id  and client.dist_id=dist.dist_id and distr.DIST_CODE=dist.DIST_CODE and distr.PROD_CODE=mapping.DIST_PROD_CODE and dist.STATE='1' and mapping.STATE='1'
+                     and dist.org_id=1 and dist.dist_id=1 
+                   ),
+                   ----全部抽取产品销量的金额
+                   prodRate AS
+                   (
+                       select distinct dist.dist_code as prodSaleCode ,sum(sale.PROD_AMOUNT) over(partition by dist.dist_code) as prodRate
+                       FROM DMS_ACTIVE_PRODUCT active,DMS_DATA_SALE sale,MDM_DISTRIBUTOR dist,DMS_CLIENT client where  active.client_id=client.client_id and client.dist_id=dist.dist_id and sale.client_id=client.client_id and sale.prod_code=active.prod_code and dist.STATE='1' and active.STATE='1'
+                       and Convert(char(10),active.create_time,21)>='$beginDate$' and Convert(char(10),active.create_time,21)<='$endDate$'
+                       $orgId$ $distId$
+                   ),
+                   ----已匹配产品销量（金额）
+                   prodeDRate AS  
+                   (
+                       select distinct dist.dist_code as prodeDRateRate ,sum(sale.PROD_AMOUNT) over(partition by dist.dist_code) as prodRate
+                       FROM DMS_PROD_MAPPING mapping,DMS_DATA_SALE sale,MDM_DISTRIBUTOR dist,DMS_CLIENT client where  mapping.client_id=client.client_id and client.dist_id=dist.dist_id and sale.client_id=client.client_id and sale.prod_code=mapping.DIST_PROD_CODE and dist.STATE='1' and mapping.STATE='1'
+                       and Convert(char(10),mapping.UPDATED,21)>='$beginDate$' and Convert(char(10),mapping.UPDATED,21)<='$endDate$'
+                       $orgId$ $distId$
+                   )
+
+                  select t.parent_org_id,t.self_org_id,t.org_name,t1.totleDistrSKU,t2.totleSKU,t3.mappedSKU,
+                   (cast(cast(t4.distrSKU as float)/t1.totleDistrSKU as decimal(10,3))) as rate1,
+                   (cast(cast(t3.mappedSKU as float)/t2.totleSKU as decimal(10,3))) as rate2,
+                   (cast((cast(t7.prodRate as float)-cast(t8.prodRate as float))/t7.prodRate as decimal(10,3))) as rate3,
+                    t5.todyMappSKU,t6.weekSKU,
+                    
+                   cast(cast(t2.totleSKU as float)-cast(t3.mappedSKU as float) as decimal(10,0)) as rate3
+                  
+                  from orgDistList as t left join distr as t1 on t.dist_Code=t1.distrCode 
+                   left join activeProduct as t2 on t.dist_Code=t2.activeCode 
+                   left join prodMapping as t3 on t.dist_Code=t3.mappedCode
+                   left join distrMapping as t4 on t.dist_Code=t4.distrMappedCode
+                   left join todyMapping as t5 on t.dist_Code=t5.todyMappedCode 
+                   left join weekMapping as t6 on t.dist_Code=t6.weekMappedCode
+                   
+                   left join prodRate as t7 on t.dist_Code=t7.prodSaleCode    
+                   left join prodeDRate as t8 on t.dist_Code=t8.prodeDRateRate    
+
+                   ORDER BY t.levelCode asc, t.sort asc
+       
+          ]]>
+		</sql>
+	</content>
+	
+</config>

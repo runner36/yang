@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>Ex-Distributor Analysis (By Brand)</title>
+	
+	<header>
+		<column title="SKU" width="350"/>
+		<column title="September,2008" width="50"  align="center"/>
+		<column title="September,2009" width="50" align="center"/>
+		<column title="September,%" width="50" align="center"/>
+		<column title="October,2008" width="50" align="center"/>
+		<column title="October,2009" width="50" align="center"/>
+		<column title="October,%" width="50" align="center"/>
+		<column title="November,2008" width="50" align="center"/>
+		<column title="November,2009" width="50" align="center"/>
+		<column title="November,%" width="50" align="center"/>
+		<column title="December,2008" width="50" align="center"/>
+		<column title="December,2009" width="50" align="center"/>
+		<column title="December,%" width="50" align="center"/>
+		<column title="January,2009" width="50" align="center"/>
+		<column title="January,2010" width="50" align="center"/>
+		<column title="January,%" width="50" align="center"/>	
+		<column title="Feburary,2009" width="50" align="center"/>
+		<column title="Feburary,2010" width="50" align="center"/>
+		<column title="Feburary,%" width="50" align="center"/>
+		<column title="March,2009" width="50" align="center"/>
+		<column title="March,2010" width="50" align="center"/>
+		<column title="March,%" width="50" align="center"/>
+		<column title="April,2009" width="50" align="center"/>
+		<column title="April,2010" width="50" align="center"/>
+		<column title="April,%" width="50" align="center"/>
+		<column title="May,2009" width="50" align="center"/>
+		<column title="May,2010" width="50" align="center"/>
+		<column title="May,%" width="50" align="center"/>
+		<column title="YTD(同期),2008" width="50" align="center"/>
+		<column title="YTD(同期),2009" width="50" align="center"/>
+		<column title="YTD(同期),%" width="50" align="center"/>
+		<column title="Shard,0910" width="50" align="center"/>				
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH -->
+		<param id="brand" initValue="" defaultValue="" template="and (brand like '%$brand$%' or sku like '%$brand$%') ">$brand$</param>
+		
+		<sql>
+<![CDATA[
+
+SELECT [Brand]
+      ,[SKU]
+      ,[SKU]
+      ,[9_2008]
+      ,[9_2009]
+      ,'9_result'= case when charindex('N',[9_result])=1 then '<font color=green>NEW</font>' 
+       				else case when charindex('-',[9_result])=1 then '<font color=red>' +[9_result]+'%</font>' else [9_result]+'%' end end    
+      ,[10_2008]
+      ,[10_2009]
+      ,'10_result'= case when charindex('N',[10_result])=1 then '<font color=green>NEW</font>' 
+       				else case when charindex('-',[10_result])=1 then '<font color=red>' +[10_result]+'%</font>' else [10_result]+'%' end end    
+      ,[11_2008]
+      ,[11_2009]
+     ,'11_result'= case when charindex('N',[11_result])=1 then '<font color=green>NEW</font>' 
+       				else case when charindex('-',[11_result])=1 then '<font color=red>' +[11_result]+'%</font>' else [11_result]+'%' end end    
+      ,[12_2008]
+      ,[12_2009]
+      ,'12_result'= case when charindex('N',[12_result])=1 then '<font color=green>NEW</font>' 
+       				else case when charindex('-',[12_result])=1 then '<font color=red>' +[12_result]+'%</font>' else [12_result]+'%' end end    
+     ,[1_2008]
+      ,[1_2009]
+      ,'1_result'= case when charindex('N',[1_result])=1 then '<font color=green>NEW</font>' 
+       				else case when charindex('-',[1_result])=1 then '<font color=red>' +[1_result]+'%</font>' else [1_result]+'%' end end    
+     ,[2_2008]
+      ,[2_2009]
+      ,'2_result'= case when charindex('N',[2_result])=1 then '<font color=green>NEW</font>' 
+       				else case when charindex('-',[2_result])=1 then '<font color=red>' +[2_result]+'%</font>' else [2_result]+'%' end end    
+     ,[3_2008]
+      ,[3_2009]
+      ,'3_result'= case when charindex('N',[3_result])=1 then '<font color=green>NEW</font>' 
+       				else case when charindex('-',[3_result])=1 then '<font color=red>' +[3_result]+'%</font>' else [3_result]+'%' end end    
+      ,[4_2008]
+      ,[4_2009]
+      ,'4_result'= case when charindex('N',[4_result])=1 then '<font color=green>NEW</font>' 
+       				else case when charindex('-',[4_result])=1 then '<font color=red>' +[4_result]+'%</font>' else [4_result]+'%' end end    
+       ,[5_2008]
+      ,[5_2009]
+      ,'5_result'= case when charindex('N',[5_result])=1 then '<font color=green>NEW</font>' 
+       				else case when charindex('-',[5_result])=1 then '<font color=red>' +[5_result]+'%</font>' else [5_result]+'%' end end    
+      
+      ,[YTD_2008]
+      ,[YTD_2009]
+      ,'YTD_result'= case when charindex('N',[YTD_result])=1 then '<font color=green>NEW</font>' 
+       				else case when charindex('-',[YTD_result])=1 then '<font color=red>' +[YTD_result]+'%</font>' else [YTD_result]+'%' end end    
+     ,Share+'%'
+  FROM TMP_BY_BRAND
+  where 1=1 $brand$ 
+]]>
+		</sql>
+	</content>
+	
+</config>

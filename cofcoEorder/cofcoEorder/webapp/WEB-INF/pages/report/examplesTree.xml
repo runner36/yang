@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+使用说明：
+config：
+	showSql：是否在日志记录SQL 
+	cacheTime：cache的有效时间，为0则不使用cache，单位为毫秒（对List报表不适用）
+	firstQuery：首次进入页面是否查询
+	paging：是否分页查询
+	
+title：报表的标题
+
+header：column：表格的列定义
+	bundle：国际化中资源文件的名称（变量）
+	key：国际化中资源的key值
+	
+	...... 其它属性请参考ecTable
+
+content：
+	param：参数定义（其中有两个系统参数，用于数据权限控制，值为控制数据权限的SQL语句，_orgAuthExp的别名为org，_empAuthExp的别名为emp）
+		id：参数的唯一标识，和页面中查询条件的名称一一对应
+		initValue：参数的初始值，可以直接定义，也可使用系统变量
+			_TODAY, 
+			_YESTERDAY, 
+			_FIRST_DAY_OF_LAST_MONTH, 
+			_FIRST_DAY_OF_MONTH, 
+			_FIRST_DAY_OF_CURR_MONTH, 
+			_FIRST_DAY_OF_WEEK,
+			_FIRST_DAY_OF_CURR_WEEK
+		offset：设置initValue的偏移量，主要用以日期（单位，天）。
+		defaultValue：参数的默认值，在参数为空时将使用默认值
+		dataType：如果为char 则会为参数的值加上''
+		template：可以直接使用模板作为参数的值
+		
+-->
+<config showSql="false" cacheTime="0" firstQuery="true" paging="false">
+	<title>员工报表</title>
+	
+	<header>
+		<column title="员工,员工姓名" width="300"/>
+		<column title="员工,员工ID" width="100" align="right" cell="number" format="0.00"/>
+		<column title="创建时间" bundle="page" key="common.createdTime" width="200" cell="date" format="yyyy-MM-dd HH:mm"/>
+	</header>
+	
+	<content>
+		<!-- initValue变量: _TODAY, _YESTERDAY, _FIRST_DAY_OF_MONTH, _FIRST_DAY_OF_CURR_MONTH, _FIRST_DAY_OF_WEEK -->
+		<param id="_orgAuthExp" initValue="" defaultValue=""></param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="empName" initValue="" offset="" defaultValue="%">$empName$</param>
+		<param id="empId" initValue="" offset="" defaultValue="" template="and emp.emp_id=$empId$">$empId$</param>
+		<sql>
+<![CDATA[
+select emp.parent_emp_id, emp.emp_id, emp.emp_name, emp.emp_id, emp.created
+from base_employee emp 
+where emp.emp_name like '$empName$' $empId$ 
+order by level_code
+]]>
+		</sql>
+	</content>
+	
+</config>

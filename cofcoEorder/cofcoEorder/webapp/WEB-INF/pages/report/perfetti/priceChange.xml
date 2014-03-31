@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="false">
+	<title>价格异动报告</title>
+	
+	<header>
+		<column property="0" title="大区"/>
+		<column property="1" title="办事处"/>
+		<column property="2" title="业务单元"/>
+		<column property="3" title="经销商编码"/>
+		<column property="4" title="经销商名称"/>
+		
+		<column property="5" title="单据编码"/>
+		<column property="6" title="单据类型"/>
+		<column property="7" title="单据日期" cell="date" format="yyyy-MM-dd"/>
+		<column property="8" title="客户名称"/>
+		<column property="9" title="客户编码" />
+		<column property="10" title="产品名称" />
+		<column property="11" title="产品编码" />
+		<column property="12" title="产品数量" cell="number" format="0.00" style="text-align:right"/>
+		<column property="13" title="产品单位" />
+		<column property="14" title="产品单价" cell="number" format="0.00" style="text-align:right"/>
+		<column property="15" title="出厂价" cell="number" format="0.00" style="text-align:right" />
+	    <column property="16" title="  价格异动率  "  cell="number" format="0.00%" style="text-align:right" styleClass="color_green,color_red;0.3"/>
+		<column property="17" title="上传时间" cell="date" format="yyyy-MM-dd"/>
+	</header>
+	
+	<content>
+		<param id="_orgAuthExp" initValue="" defaultValue="">$orgAuth$</param>
+		<param id="_empAuthExp" initValue="" defaultValue=""></param>
+
+		<param id="orgSubCode" template="and org.sub_code like '$orgSubCode$%'">$orgSubCode$</param>
+		<param id="distId" template="and dist.dist_id in ($distId$)">$distId$</param>
+		<param id="prodName" template="and prod.prod_name like '%$prodName$%'">$prodName$</param>
+		<param id="prodCode" template="and prod.prod_code like '%$prodCode$%'">$prodCode$</param>
+		<!-- 
+		<param id="lastDate1" template="and sale.lastDate>='$lastDate1$'">$lastDate1$</param>
+		<param id="lastDate2" template="and sale.lastDate&lt;='$lastDate2$ 23:59:59'">$lastDate2$</param>
+		 -->
+		<sql>
+<![CDATA[
+
+SELECT  
+   org.PN2, org.PN3, org.PN4,
+	dist.dist_code,dist.dist_name,data.bill_code,data.bill_type,data.bill_date,
+	data.store_name,
+	sm.target_store_code,	
+    prod.prod_name,	pm.target_prod_code,
+	convert(decimal(12,6),dbo.fn_getUnitConvById(pm.TARGET_UNIT_ID,prod.PROD_COUNTUNIT_ID,pm.TARGET_PROD_CODE,data.prod_quantity)),
+	prod.PROD_UNIT,
+	CASE WHEN (convert(decimal(12,6),dbo.fn_getUnitConvById(pm.TARGET_UNIT_ID,prod.PROD_COUNTUNIT_ID,pm.TARGET_PROD_CODE,data.prod_quantity)))!=0 THEN 
+	       	abs(data.prod_amount/(convert(decimal(12,6),dbo.fn_getUnitConvById(pm.TARGET_UNIT_ID,prod.PROD_COUNTUNIT_ID,pm.TARGET_PROD_CODE,data.prod_quantity))))
+	ELSE
+	   0
+	END
+	,prod.prod_price
+    , CASE WHEN prod.prod_price!=0 THEN
+    	CASE WHEN ((convert(decimal(12,6),abs(dbo.fn_getUnitConvById(pm.TARGET_UNIT_ID,prod.PROD_COUNTUNIT_ID,pm.TARGET_PROD_CODE,data.prod_quantity)))))!=0 THEN 
+    		CASE WHEN prod.prod_price!=0 THEN    
+    		(abs(data.prod_amount)/(convert(decimal(12,6),abs(dbo.fn_getUnitConvById(pm.TARGET_UNIT_ID,prod.PROD_COUNTUNIT_ID,pm.TARGET_PROD_CODE,data.prod_quantity))))-prod.prod_price)/prod.prod_price
+    		END    
+    	ELSE
+      		0   
+    	END 
+      ELSE
+    	0 
+      END  
+     AS val 
+     ,data.UPDATE_TIME   
+from dms_data_sale data
+	inner join dms_client client on data.client_id=client.client_id
+	inner join mdm_distributor dist on client.dist_id=dist.dist_id
+	inner join base_org org on dist.org_id=org.org_id
+	inner join dms_prod_mapping pm on data.client_id=pm.client_id and data.prod_code=pm.dist_prod_code and data.prod_unit=pm.dist_prod_unit
+	inner join mdm_product prod on pm.target_prod_code=prod.prod_code
+	inner join dms_store_mapping sm on data.client_id=sm.client_id and data.store_code=sm.dist_store_code
+	inner join mdm_store store on sm.target_store_code=store.store_code 
+	
+where data.state='1' AND data.prod_quantity!=0 
+$orgSubCode$ $distId$ $prodName$ $prodCode$
+ ORDER BY val  desc
+
+
+]]>
+		</sql>
+	</content>
+	
+</config>

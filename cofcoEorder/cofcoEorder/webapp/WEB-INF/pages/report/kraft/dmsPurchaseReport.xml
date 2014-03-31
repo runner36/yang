@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<config showSql="true" cacheTime="0" firstQuery="false" paging="true">
+	<title>经销商进货明细报表</title>
+
+	<header>
+		<column property="0"  title="管理大区"/>
+		<column property="1"  title="管理地区"/>
+		<column property="2"  title="管理单元"/>
+		<column property="3"  title="经销商省份"/>
+		<column property="4"  title="经销商地级市"/>
+		<column property="5"  title="经销商县级市"/>
+		<column property="6"  title="经销商代码"/>
+		<column property="7"  title="经销商名称"/>
+		<column property="8"  title="产品代码"/>
+		<column property="9"  title="产品名称"/>
+		<column property="10"  title="产品品类"/>
+		<column property="11"  title="产品品牌"/>
+		<column property="12"  title="日　期" cell="date" format="yyyy-MM-dd"/>
+		<column property="13"  title="箱　数" cell="number" format="0.0000" style="text-align:right"/>
+		<column property="14"  title="吨　数" cell="number" format="0.0000" style="text-align:right"/>
+        <column property="15"  title="卡夫毛销售额" cell="number" format="0.0000" style="text-align:right"/>
+	</header>
+
+	<content>
+		<param id="ge_billDate" template=" and data.BILL_DATE >= '$ge_billDate$'">$ge_billDate$</param>
+		<param id="le_billDate" template=" and data.BILL_DATE &lt;= '$le_billDate$'">$le_billDate$</param>
+		<!-- 组织架构日期 -->
+		<param id="billDates"   template=" and data.BILL_DATE = '$billDates$'">$billDates$</param>
+		<!-- 管理组织 -->
+		<param id="orgId"       template=" and distOrg.ORG_ID in ($orgId$)  ">$orgId$</param>
+		<!-- 省   份 -->
+		<param id="geoId"       template=" and dist.GEO_ID in ($geoId$) ">$geoId$</param>
+		<!-- 经销商名称 -->
+		<param id="distId"      template=" and dist.DIST_ID in ($distId$) ">$distId$</param>
+		<!-- 经销商代码 -->
+		<param id="distCode"    template=" and dist.DIST_CODE like '%$distCode$%' ">$distCode$</param>
+		<!-- 产品描述 -->
+		<param id="prodName"    template=" and prod.PROD_NAME like '%$prodName$%' ">$prodName$</param>
+		<!-- 产品代码 -->
+		<param id="prodCode"    template=" and prod.PROD_CODE like '%$prodCode$%' ">$prodCode$</param>
+		<!-- 产品品类 -->
+		<param id="categoryId"  template=" and prod.TYPE_ID in ($categoryId$) ">$categoryId$</param>
+		<!-- 品牌 -->
+		<param id="brandId"     template=" and prod.BRAND_ID in ($brandId$) ">$brandId$</param>
+		
+		<sql>
+			<![CDATA[
+
+			SELECT 	distOrg.pn2, distOrg.pn3, distOrg.pn4, 
+					geo.PN2, geo.PN3, geo.PN4,
+					dist.DIST_CODE, dist.DIST_NAME, 
+					prod.PROD_CODE, prod.PROD_NAME, prodType.ITEM_NAME, prodBrand.ITEM_NAME,
+					data.BILL_DATE, data.BOX, data.TON, data.GROSS_SALES
+				
+			FROM  	RPT_DATA_PURCHASE data
+					inner join dms_client client on data.CLIENT_ID=client.CLIENT_ID
+					inner join mdm_distributor dist on client.DIST_ID=dist.DIST_ID
+					left join base_org distOrg on distOrg.ORG_ID=dist.ORG_ID
+					left join base_dict_item geo ON geo.DICT_ITEM_ID=dist.GEO_ID AND geo.DICT_ID='geography'
+					
+					inner join mdm_product prod ON prod.PROD_CODE=data.TARGET_PROD_CODE  
+					left join base_dict_item prodType on prod.TYPE_ID=prodType.DICT_ITEM_ID AND prodType.DICT_ID='prodType'
+					left join base_dict_item prodBrand on prod.BRAND_ID=prodBrand.DICT_ITEM_ID AND prodBrand.DICT_ID='prodBrand'
+			
+			WHERE 	1=1 $ge_billDate$ $le_billDate$ $orgId$ $geoId$ 
+					$distId$ $distCode$ $prodName$ $prodCode$ $categoryId$ $brandId$  
+
+			]]>
+		</sql>
+	</content>
+</config>
