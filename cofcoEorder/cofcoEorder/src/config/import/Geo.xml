@@ -27,13 +27,13 @@ _uuid       : String
 -->
 <table class="com.winchannel.base.model.BaseDictItem" key="itemCode" startRow="2"  template-name="地理信息导入模板">
 	<columns>
-		<column name="1" code="baseDictItem.itemCode" title="上级编码" filter="baseDict.dictId='prodBrand'" type="char"   length="32"  format="" required="true" />
+		<column name="1" code="baseDictItem.itemCode" title="上级编码" filter="baseDict.dictId='prodSTRU'" type="char"   length="32"  format="" required="true" />
 		<column name="2" code="" title="上级名称" type="char"   length="100"  format=""  mask="" />
-		<column name="3" code="itemCode" title="编码" type="char"  filter="baseDict.dictId='prodBrand'" length="32"  format=""      required="true"/>
+		<column name="3" code="itemCode" title="编码" type="char"  filter="baseDict.dictId='prodSTRU'" length="32"  format=""      required="true"/>
 		<column name="4" code="itemName" title="名称" type="char" length="100"  format=""       required="true"   mask=""/>
 		<column name="5" code="itemAlias" title="别称" type="char" length="100"  format=""       mask=""/>
 		<column name="6" code="memo1" title="区号" type="char" length="100"  format=""       mask=""/>
-		<column name="" code="baseDict.dictId" title="" type="char"   length="100" value="prodBrand"/>
+		<column name="" code="baseDict.dictId" title="" type="char"   length="100" value="prodSTRU"/>
 		<column name="" code="state" title="" type="char"   length="100" value="1"/>
 		<column code="createdBy"     title=""    type="char"     length="50"   format=""  value="${_emp.empName}"/>
 		<column code="created"       title=""    type="date"     length="23"   format=""  value="${_currTime}"/>

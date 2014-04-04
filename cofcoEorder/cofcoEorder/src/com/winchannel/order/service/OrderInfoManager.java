@@ -357,7 +357,7 @@ public class OrderInfoManager extends HibernateEntityDao<OrderInfo> {
 		sql.append(" MDM_DIST_ORDEREMP_PRODGROUP dpo ");
 		sql.append(" INNER JOIN BASE_ORG o ON o.ORG_ID=dpo.ORG_ID");
 		sql.append(" and ((dpo.EFFECTIVE_TIME<=getdate() and dpo.EXPIRY_TIME is null) or (dpo.EFFECTIVE_TIME<=getdate() and dpo.EXPIRY_TIME>getdate()))"); 
-		sql.append(" ) dpo ON  org.SUB_CODE  LIKE dpo.SUB_CODE+'%'  AND dpo.DICT_ITEM_ID = o.GROUP_ID AND mop.groupId = dpo.dict_item_id");
+		sql.append(" ) dpo ON  org.SUB_CODE  LIKE dpo.SUB_CODE+'%'  AND dpo.DICT_ITEM_ID = o.GROUP_ID ");// AND mop.groupId = dpo.dict_item_id
 		sql.append(" where o.STATUS='20' ");
 		sql.append(" and  dpo.EMP_ID=" + orderEmpId);
 		System.out.println("qryWaitToDealOrderCount:"+sql.toString());
@@ -389,7 +389,7 @@ public class OrderInfoManager extends HibernateEntityDao<OrderInfo> {
 		sql.append(" MDM_DIST_ORDEREMP_PRODGROUP dpo ");
 		sql.append(" INNER JOIN BASE_ORG o ON o.ORG_ID=dpo.ORG_ID");
 		sql.append(" and ((dpo.EFFECTIVE_TIME<=getdate() and dpo.EXPIRY_TIME is null) or (dpo.EFFECTIVE_TIME<=getdate() and dpo.EXPIRY_TIME>getdate()))"); 
-		sql.append(" ) dpo ON  org.SUB_CODE  LIKE dpo.SUB_CODE+'%'  AND dpo.DICT_ITEM_ID = o.GROUP_ID  AND mop.groupId = dpo.dict_item_id  AND mop.groupId = dpo.dict_item_id ");
+		sql.append(" ) dpo ON  org.SUB_CODE  LIKE dpo.SUB_CODE+'%'  AND dpo.DICT_ITEM_ID = o.GROUP_ID    "); //--AND mop.groupId = dpo.dict_item_id
 		sql.append(" where o.STATUS<>'10' ");
 		
 		sql.append(" and  dpo.EMP_ID=" + page.get("empId"));

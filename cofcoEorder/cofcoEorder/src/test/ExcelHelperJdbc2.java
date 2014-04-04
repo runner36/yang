@@ -53,22 +53,22 @@ public class ExcelHelperJdbc2 {
 
 
 	
-//	public static Map<String,String> getOrgCodesByJdbc(){
-//		
-//	    ApplicationContext	ac =new  ClassPathXmlApplicationContext("classpath:spring/**/*.xml");
-//		System.out.println(ac.containsBean("aa"));
-//		Map<String,String> rs = new HashMap<String, String>();
-//		
-//		SessionFactory session = (SessionFactory) ac.getBean("sessionFactory");
-//		List baseorgs = session.openSession().createCriteria(BaseOrg.class).list();
-//		for (int i = 0; i < baseorgs.size(); i++) {
-//			BaseOrg o = (BaseOrg) baseorgs.get(i);
-//			rs.put(o.getOrgCode(), o.getOrgCode());
-//		}
-//		
-//		return rs;
-//		
-//	}
+	public static Map<String,String> getOrgCodesByJdbc(){
+		
+	    ApplicationContext	ac =new  ClassPathXmlApplicationContext("classpath:spring/**/*.xml");
+		System.out.println(ac.containsBean("aa"));
+		Map<String,String> rs = new HashMap<String, String>();
+		
+		SessionFactory session = (SessionFactory) ac.getBean("sessionFactory");
+		List baseorgs = session.openSession().createCriteria(BaseOrg.class).list();
+		for (int i = 0; i < baseorgs.size(); i++) {
+			BaseOrg o = (BaseOrg) baseorgs.get(i);
+			rs.put(o.getOrgCode(), o.getOrgCode());
+		}
+		
+		return rs;
+		
+	}
 	
 	public static Map<String,String> getOrgCodes(){
 		

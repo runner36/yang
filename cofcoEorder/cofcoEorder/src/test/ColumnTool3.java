@@ -5,8 +5,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -14,54 +16,34 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.hibernate.SessionFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class ColumnTool2 {
+import com.winchannel.base.model.BaseOrg;
+
+public class ColumnTool3 {
 	
 	public static void main(String[] args) {
 		
 		File orgFile = new File(
-				"E:/git/yangjunshuai/cofcoEorder/cofcoEorder/src/test/2014年-新版组织架构2014-3-26.xlsx");
-		File outFile = new File("d:/tmp/test2014"+System.currentTimeMillis()+".xls");
-		
+				"D:/work_yxt/working/中粮订单系统/哈哈哈/工作表 在 Basis (1).xlsx");
+		File outFile = new File("D:/work_yxt/working/中粮订单系统/哈哈哈/out_"+System.currentTimeMillis()+".xls");
 		dealOrg(orgFile,outFile);
 	}
 	
-	
-
-	public static void dealOrg(File orgFile,File outFile,DealFounction dealInfo){
-		InputStream in;
-		try {
-			in = new FileInputStream(orgFile);
-			Workbook wb = WorkbookFactory.create(in);
-			int count = 0;
-			Sheet out = wb.createSheet("theout2");
-			Sheet se = wb.getSheetAt(0);//厨房
-			count = deal(out,se,count); //处理并写入到 the out 输出页
-//			count = deal(out,wb.getSheetAt(1),count);
-//			count = deal(out,wb.getSheetAt(2),count);
-//			count = deal(out,wb.getSheetAt(3),count);
-//			count = deal(out,wb.getSheetAt(4),count);
-//			count = deal(out,wb.getSheetAt(5),count);
-		System.out.println("count = "+count);
-			
-		FileOutputStream toFile = new FileOutputStream(outFile);
-//		wb.removeSheetAt(0);
-//		wb.removeSheetAt(1);
-//		wb.removeSheetAt(2);
-//		
-		wb.write(toFile);
-		toFile.close();
-		org.apache.commons.io.IOUtils.closeQuietly(in);
-		org.apache.commons.io.IOUtils.closeQuietly(toFile);
-		
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-	}
-	
-	
 	public static void dealOrg(File orgFile,File outFile){
+		dealOrg(orgFile,outFile,null);
+	}
+	
+	
+	/**
+	 * 引入策略方法dealInf
+	 * @param orgFile
+	 * @param outFile
+	 * @param dealInfo
+	 */
+	public static void dealOrg(File orgFile,File outFile,DealFounction dealInf){
 		InputStream in;
 		try {
 			in = new FileInputStream(orgFile);
@@ -70,18 +52,9 @@ public class ColumnTool2 {
 			Sheet out = wb.createSheet("theout2");
 			Sheet se = wb.getSheetAt(0);//厨房
 			count = deal(out,se,count); //处理并写入到 the out 输出页
-//			count = deal(out,wb.getSheetAt(1),count);
-//			count = deal(out,wb.getSheetAt(2),count);
-//			count = deal(out,wb.getSheetAt(3),count);
-//			count = deal(out,wb.getSheetAt(4),count);
-//			count = deal(out,wb.getSheetAt(5),count);
 		System.out.println("count = "+count);
 			
 		FileOutputStream toFile = new FileOutputStream(outFile);
-//		wb.removeSheetAt(0);
-//		wb.removeSheetAt(1);
-//		wb.removeSheetAt(2);
-//		
 		wb.write(toFile);
 		toFile.close();
 		org.apache.commons.io.IOUtils.closeQuietly(in);
@@ -92,11 +65,17 @@ public class ColumnTool2 {
 		}
 		
 	}
+	
+	
 	
 	
 	static int deal(final Sheet out,final Sheet se,int count){
+
 		Map<String,String> map = dealFile(se);
+		
 		Iterator<String> keys = map.keySet().iterator();
+		
+		
 		while(keys.hasNext()){
 			String key = keys.next();
 			String name = map.get(key);

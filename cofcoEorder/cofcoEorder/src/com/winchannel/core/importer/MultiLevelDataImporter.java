@@ -120,7 +120,7 @@ public class MultiLevelDataImporter extends AbstractHibernateImporter {
 		super.persister.save(object);
 		super.persister.flush();
 		
-		if (name != null) {
+		if (name != null) { 
 			super.persister.makeParentInfo(conf.getEntityClass(), object, name);
 		}
 		super.persister.evict(object);

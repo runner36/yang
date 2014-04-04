@@ -1,3 +1,5 @@
+/com
+/config
 /database
 /i18n
 /orderAgreementLog.txt
@@ -6,5 +8,3 @@
 /test
 /version.txt
 /vssver2.scc
-/com
-/config

@@ -132,6 +132,7 @@
 				{ 
 					if(checkboxs[i].checked==true){
 						if(checkboxs[i].getAttribute("orderState")!='请订单中心接收'){
+							
 							alert("该批次选择中含有已审批过的订单，请重新选择！");
 							return "";
 						}
@@ -314,7 +315,7 @@
 										<ec:column property="0" width="1%" title="<input type='checkbox' value='' name='checkboxAll'  id='checkAll'/>"
 											sortable="false" viewsDenied="xls,csv">
 											<center>
-												<input type="checkbox" value="${item[0]}" name="checkboxItem"  orderState="${item[9]}"/>
+												<input type="checkbox" value="${item[0]}" name="checkboxItem"  orderState="${item[11]}"/>
 											</center>
 										</ec:column>								
 									

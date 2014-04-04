@@ -45,21 +45,14 @@ public class ImportMdmDistOrderProdgroupEventHandler extends ImpEventHandler{
 		String effectiveTime=row.get("4");
 		String expiryTime=row.get("5");
 		Date now = DateUtility.strToDate(DateUtility.getCurrentDate());
-		String effect[] = effectiveTime.split("/");
-		Date eff = DateUtility.strToDate(effect[2]+"-"+effect[1]+"-"+effect[0]);
-		if(effectiveTime!=null){
+		Date eff = DateUtility.strToDate(effectiveTime);
+		if(StringUtils.isNotEmpty(effectiveTime)){
 			if(now.getTime()-eff.getTime()>0){
 				throw new BusinessException("生效日期必须大于等于当前日期!  生效日期"+effectiveTime);
-			}else{
-				row.put("4", DateUtility.dateToStr(eff));
 			}
-		}else{
-			row.put("4", null);
 		}
-		if(expiryTime!=null){
-			String expiry[] = expiryTime.split("/");
-			Date exp = DateUtility.strToDate(expiry[2]+"-"+expiry[1]+"-"+expiry[0]);
-//			Date exp = DateUtility.strToDate(expiryTime);
+		if(StringUtils.isNotEmpty(expiryTime)){
+			Date exp = DateUtility.strToDate(expiryTime);
 			if(exp.getTime()-eff.getTime()<=0){
 				throw new BusinessException("失效时间必须大于生效时间! 生效日期"+effectiveTime+"失效日期"+expiryTime);
 			}else{
