@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+
+<beans  default-autowire="byName" default-lazy-init="true">
+	<!-- smsManager -->
+	<bean id="smsSendManager" class="com.winchannel.task.service.SmsSendManager">
+		<property  name="smstemplate"> 
+			<map>
+				<entry  key="20"
+					value="#salesName您好，#custName #orderCode订单已提报，订货总数#orderNumber箱，谢谢！【中国食品】" />
+				<entry key="30"
+					value="尊敬的#custName，您的订单 #orderCode已收到，我们将尽快为您安排发货，谢谢！【中国食品】"/>
+				<entry key="40"
+					value="尊敬的#custName，您的订单 #orderCode未通过订单中心审核，请重新下单，谢谢！【中国食品】"/>
+			</map>
+		</property>
+	</bean>
+
+
+
+
+</beans>

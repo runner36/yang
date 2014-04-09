@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+table :
+	class    : 实体类的类名
+	key      : 可以指定某一列的code为key，可以指定多个，中间用逗号分隔；如果指定，系统会根据key的值来决定数据的存储方式，新增或是修改
+	startRow : 从数据文件中的第几行开始读取数据(1...)
+column :
+	id       : 列号（1...）
+	code     : 实体类中的属性名
+	type     : 数据类型 char|number|date 
+	length   : 数据最大长度，如果是数值，则包括小数点及正负号
+	format   : 在数据类型为 number|date 时有效；date类型时也可不输入，系统会自动尝试所有格式；如果是number类型，则必须输入，以便区分或转换为long和double
+	required : 值是否必须
+	mask     : 使用正则表达式验证
+	value    : 可直接指定列的的值，如：value="123"; 也可加入系统变量或当前变量，如：value="${0}-${_emp.empName}-${sort}" , 结果："001-系统管理员-1";
+	
+目前系统支持的变量：
+
+_user       : BaseUser
+_emp        : BaseEmployee
+		
+_currDate   : String
+_currTime   : String
+_currMillis : String
+_uuid       : String
+
+-->
+<table class="com.winchannel.base.model.BaseDictItem" key="itemName" startRow="2" template-name="产品品牌导入模版">
+	<columns>
+		<column name="1" code="" title="RegionID" type="number" format="0"   length="50" />
+		<column name="2" code="" title="RegionName" type="char"   length="100" value="" />
+		<column name="3" code="" title="UPC" type="char"   length="100" value="" />
+		<column name="4" code=""  title="StyleNumber" type="char"   length="50"  format=""   />
+		<column name="5" code=""  title="ColorNumber" type="char"  length="50"   format=""   />
+		<column name="6" code=""  title="StyleName" type="char" length="255"      mask="" />
+		<column name="7" code="" title="ColorDescription" type="char"   length="255" value="" />
+		<column name="8" code="" title="ColorShortDescription" type="char"   length="50" value="" />
+		<column name="9" code="" title="PrimaryColor" type="char"   length="150" value=""/>
+		<column name="10" code="" title="SecondaryColor" type="char"   length="100" value=""/>
+		<column name="11" code="" title="TertiaryColor" type="char"   length="100" value=""/>
+		<column name="12" code="" title="LogoColor" type="char"   length="100" value=""/>
+		<column name="13" code="" title="SeasonCode" type="char"   length="50" value=""/>
+		<column name="14" code="" title="SeasonYear" type="char"   length="50" value=""/>
+		<column name="15" code="" title="DeliverySeason" type="char"   length="50" value=""/>
+		<column name="16" code="" title="CarryoverFlag" type="char"   length="50" value=""/>
+		<column name="17" code="" title="Lifecycle" type="char"   length="50" value=""/>
+		<column name="18" code="" title="TypeGroup" type="char"   length="50" value=""/>
+		<column name="19" code="" title="GenderAge" type="char"   length="50" value=""/>
+		<column name="20" code="" title="Gender" type="char"   length="50" value=""/>
+		<column name="21" code="" title="GenderAgeSummary" type="char"   length="50" value=""/>
+		<column name="22" code="" title="BusinessOrg" type="char"   length="50" value=""/>
+		<column name="23" code="" title="CBOGender" type="char"   length="50" value=""/>
+		<column name="24" code="" title="Category"   type="char"   length="50" />
+		<column name="25" code="itemName"  title="SubCategory" type="char" filter="baseDict.dictId='prodBrand'"  length="50"  allow-skip="true" required="true" />
+		<column name="26" code="" title="SportActivity" type="char"   length="50" value=""/>
+		<column name="27" code="" title="SegmentName" type="char"   length="50" value=""/>
+		<column name="28" code="" title="SilhouetteType" type="char"   length="50" value=""/>
+		<column name="29" code="" title="SilhouetteDesc" type="char"   length="50" value=""/>
+		<column name="30" code="" title="PrimaryMaterialContentDesc" type="char"   length="50" value=""/>
+		<column name="31" code="" title="SizeDesc" type="char"   length="50" value=""  />
+		<column name="32" code="" title="SizeSequenceNumber" type="char"   length="50" value=""/>
+		<column name="33" code="" title="MasterGridNumber" type="char"   length="50" value=""/>
+		<column name="34" code="" title="PricePerUnit" type="number" length="12"  format="0.00"  />
+		<column name="35" code="" title="WholeSalePricePerUnit" type="number" length="12" format="0.00"/>
+		<column name="36" code="" title="FirstOfferDate" type="date"  mask="" format="MM/dd/yyyy"    length="23" />
+		<column name="37" code="" title="Propofferenddate" type="date"  format="MM/dd/yyyy"   length="23"/>
+		<column name="38" code="" title="Futureofferenddate" type="date" format="MM/dd/yyyy"    length="23" />
+		<column name="39" code="" title="GlobalCategorySummary" type="char"   length="100" value="" />
+		<column name="40" code="" title="GlobalCategoryCoreFocus" type="char"   length="100" value=""/>
+		<column name="41" code="" title="AutoreplenishFlag" type="char"   length="100" value=""/>
+		<column name="42" code="" title="ReplenishBeginDate" type="date"   length="23" value=""/>
+		<column name="43" code="" title="ReplenishEndDate" type="date"   length="23" value=""/>
+		<column name="44" code="" title="LaunchIndicator" type="char"   length="100" value=""/>
+		<column name="45" code="" title="LaunchEffectiveDate" type="date"   length="23" value=""/>
+		<column name="46" code="" title="KeyTechnology" type="char"   length="100" value=""/>
+		<column name="47" code="" title="EquipmentBSSAFlag" type="char"   length="100" value=""/>
+		<column name="48" code="" title="FootwearSilo" type="char"   length="100" value=""/>
+		<column name="49" code=""  title="Product" type="char"   length="100" />
+		
+		<column name="50" code="" title="MSC1" type="char"   length="100" value=""/>
+		<column name="51" code="" title="MSC2" type="char"   length="100" value=""/>
+		<column name="52" code="" title="MSC3" type="char"   length="100" value=""/>
+		<column name="53" code="" title="Fabrication" type="char"   length="100" value=""/>
+		<column name="54" code="" title="Construction" type="char"   length="100" value=""/>
+		<column name="55" code="" title="Sublabel" type="char"   length="100" value=""/>
+		
+		<column name="" code="itemCode" title="" type="char"   length="100" value="${25}"/>
+		<column name="" code="baseDict.dictId" title="" type="char"   length="100" value="prodBrand"/>
+		<column name="" code="state" title="" type="char"   length="100" value="1"/>
+		
+		<column code="createdBy"     title=""    type="char"     length="50"   format=""  value="${_emp.empName}"/>
+		<column code="created"       title=""    type="date"     length="23"   format=""  value="${_currTime}"/>
+		<column code="updatedBy"     title=""    type="char"     length="50"   format=""  value="${_emp.empName}"/>
+		<column code="updated"       title=""    type="date"     length="23"   format=""  value="${_currTime}"/>
+	</columns>
+</table>
+

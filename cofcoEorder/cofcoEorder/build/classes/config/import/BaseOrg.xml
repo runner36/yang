@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+table :
+	class    : 实体类的类名
+	key      : 可以指定某一列的code为key，可以指定多个，中间用逗号分隔；如果指定，系统会根据key的值来决定数据的存储方式，新增或是修改
+	startRow : 从数据文件中的第几行开始读取数据(1...)
+column :
+	id       : 列号（1...）
+	code     : 实体类中的属性名
+	type     : 数据类型 char|number|date 
+	length   : 数据最大长度，如果是数值，则包括小数点及正负号
+	format   : 在数据类型为 number|date 时有效；date类型时也可不输入，系统会自动尝试所有格式；如果是number类型，则必须输入，以便区分或转换为long和double
+	required : 值是否必须
+	mask     : 使用正则表达式验证
+	value    : 可直接指定列的的值，如：value="123"; 也可加入系统变量或当前变量，如：value="${0}-${_emp.empName}-${sort}" , 结果："001-系统管理员-1";
+	
+目前系统支持的变量：
+
+_user       : BaseUser
+_emp        : BaseEmployee
+		
+_currDate   : String
+_currTime   : String
+_currMillis : String
+_uuid       : String
+
+-->
+<table class="com.winchannel.base.model.BaseOrg" key="orgCode" startRow="2"  eventHandler="com.winchannel.base.service.ImportBaseOrgEventHandler"  template-name="组织_导入模板">
+	<columns>
+		<column name="1" code="baseOrg.orgCode" title="上级组织(编码)" type="char"   length="32"  format="" required="true" />
+		<column name="2" code="" title="上级组织(名称)" type="char"   length="100"  format=""  mask=""/>
+		<column name="3" code="orgCode" title="组织(编码)" type="char"   length="32"  format=""      required="true"/>
+		<column name="4" code="orgName" title="组织(名称)" type="char" length="100"  format=""   required="true"   mask=""/>
+		<column name="5" code="orgAlias" title="组织简称" type="char" length="100"  format=""  required="true"  mask=""/>
+		<column name="6" code="" title="组织层级" type="number"   length="10"  format="0"      />
+		<column name="7" code="extCode" title="外部编码" type="char"   length="50"  format=""      required=""/>
+		<column name="8" code="baseDictItem.itemName" title="组织类型(名称)" type="char"   length="50"  format=""  required=""/>
+		<column name="9" code="orgNameEn" title="英文名称" type="char"   length="50"  format=""  required=""/>
+		<column name="10" code="baseEmployee.empName" title="负责人(名称)" type="char"   length="50"  format=""    required=""/>
+		<column name="11" code="phone" title="电话" type="char"   length="32"  format=""      required=""/>
+		<column name="12" code="email" title="邮箱" type="char"   length="32"  format=""      required=""/>
+		<column name="13" code="fax" title="传真" type="char"   length="32"  format=""      required=""/>
+		<column name="14" code="orgAddr" title="地址" type="char"   length="60"  format=""      required=""/>
+		<column name="15" code="postCode" title="邮编" type="char"   length="32"  format=""      required=""/>
+		<column name="16" code="website" title="网站" type="char"   length="32"  format=""      required=""/>
+		<column name="17" code="state" title="状态" type="char"   length="4"  format=""    />
+		<column name="18" code="sort" title="排序" type="number"   length="10"  format="0"      required=""/>
+		<column name="19" code="memo1" title="备注一" type="char"   length="100"  format=""      required=""/>
+		<column name="20" code="memo2" title="备注二" type="char"   length="100"  format=""      required=""/>
+		<column name="21" code="memo3" title="备注三" type="char"   length="100"  format=""      required=""/>
+		<column name="22" code="" title="地理区域编码(逗号分隔)" type="char"   length="100"  format=""    required=""/>
+		<column code="createdBy"     title=""    type="char"     length="50"   format=""  value="${_emp.empName}"/>
+		<column code="created"       title=""    type="date"     length="23"   format=""  value="${_currTime}"/>
+		<column code="updatedBy"     title=""    type="char"     length="50"   format=""  value="${_emp.empName}"/>
+		<column code="updated"       title=""    type="date"     length="23"   format=""  value="${_currTime}"/>
+	</columns>
+</table>
+

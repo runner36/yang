@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+<beans default-autowire="byName" default-lazy-init="true">
+	<bean id="mdmProductManager" class="com.winchannel.mdm.product.service.MdmProductManager"/>
+	<bean id="mdmDistributorManager" class="com.winchannel.mdm.distributor.service.MdmDistributorManager"/>
+	<bean id="mdmStoreManager" class="com.winchannel.mdm.store.service.MdmStoreManager"/>
+	<bean id="mdmCalendarManager" class="com.winchannel.mdm.calendar.service.MdmCalendarManager"/>
+	<bean id="mdmConversionManager" class="com.winchannel.mdm.conversion.service.MdmConversionManager"/>
+	<bean id="mdmAfsProductManager" class="com.winchannel.mdm.product.service.MdmAfsProductManager"/>
+	<bean id="mdmAfsLocationManager" class="com.winchannel.mdm.location.service.MdmAfsLocationManager"/>
+</beans>

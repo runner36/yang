@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN 2.0//EN" "http://www.springframework.org/dtd/spring-beans-2.0.dtd">
+<beans default-autowire="byName" default-lazy-init="true">
+
+	<!-- 数据源定义,使用Apache DBCP 连接池 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		 
+		<property name="validationQuery" value="SELECT getdate()"/> 
+		<property name="maxActive" value="500"/>  
+     	<property name="minIdle" value="10"/>  
+     	<property name="maxIdle" value="20"/>  
+     	<property name="initialSize" value="150"/> 
+	</bean>
+	<!--MSM jdbc begin -->
+	<bean id="smsDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<!-- <property name="driverClassName" value="${sms.driverClassName}" />
+		<property name="url" value="${sms.url}" />
+		<property name="username" value="${sms.username}" />
+		<property name="password" value="${sms.password}" /> -->
+		
+		<property name="driverClassName"><value>${sms.driverClassName}</value></property>
+		<property name="url" ><value>${sms.url}</value></property>
+		<property name="username"><value>${sms.username}</value></property>
+		<property name="password"><value>${sms.password}</value></property>
+		
+		<property name="validationQuery" value="SELECT getdate()"/> 
+		<property name="maxActive" value="500"/>  
+     	<property name="minIdle" value="10"/>  
+     	<property name="maxIdle" value="20"/>  
+     	<property name="initialSize" value="150"/> 
+	</bean>
+	<bean id="smsTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource">
+			<ref local="smsDataSource"></ref>
+		</property>
+	</bean>
+	<!--MSM jdbc end -->
+	<!--Hibernate SessionFatory -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="hibernateProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.SQLServerDialect</prop>
+				<!-- <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop> 
+					<prop key="hibernate.hbm2ddl.auto">update</prop> -->
+				<prop key="hibernate.show_sql">false</prop>
+				<!-- 打开二级缓存      -->
+				<prop key="hibernate.cache.use_second_level_cache">true</prop>
+				<prop key="hibernate.cache.use_query_cache">true</prop>
+				<prop key="hibernate.cache.provider_class">org.hibernate.cache.EhCacheProvider</prop>
+				<prop key="hibernate.cache.provider_configuration_file_resource_path">/config/ehcache-hibernate.xml</prop>
+			</props>
+		</property>
+		<property name="mappingLocations">
+			<list>
+				<value>classpath*:/com/winchannel/base/model/BaseAuth.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseDataAuth.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseDataLog.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseDept.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseDict.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseDictItem.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseEmployee.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseEmployeeLog.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseJob.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseJobLog.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseLog.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseMenu.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseOrg.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseOrgGeo.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseOrgLog.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseResource.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseRole.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseUser.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseUserRole.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseMenuI18n.hbm.xml</value>
+				<value>classpath*:/com/winchannel/base/model/BaseMessRes.hbm.xml</value>
+
+				<!-- mdm model -->
+				<value>classpath*:/com/winchannel/mdm/product/model/MdmProduct.hbm.xml</value>
+				<value>classpath*:/com/winchannel/mdm/distributor/model/MdmDistributor.hbm.xml</value>
+				<value>classpath*:/com/winchannel/mdm/conversion/model/MdmUnitConversion.hbm.xml</value>
+				<value>classpath*:/com/winchannel/mdm/store/model/MdmStore.hbm.xml</value>
+				<value>classpath*:/com/winchannel/mdm/distributor/model/MdmDistributorLog.hbm.xml</value>
+				<!-- SAP order model-->
+				<value>classpath*:/com/winchannel/order/model/OrderSap.hbm.xml</value>
+				<value>classpath*:/com/winchannel/order/model/MdmDistEmpProdgroup.hbm.xml</value>
+				<value>classpath*:/com/winchannel/order/model/MdmDistOrderempProdgroup.hbm.xml</value>
+				<value>classpath*:/com/winchannel/order/model/MdmDistributorAddress.hbm.xml</value>		
+				<value>classpath*:/com/winchannel/order/model/OrderInfo.hbm.xml</value>
+				<value>classpath*:/com/winchannel/order/model/OrderItem.hbm.xml</value>
+				<value>classpath*:/com/winchannel/order/model/MdmDistributorLinkman.hbm.xml</value>
+				<value>classpath*:/com/winchannel/order/model/OrderAgreementLog.hbm.xml</value>	
+				<value>classpath*:/com/winchannel/order/model/OrderSuperAbolishedLog.hbm.xml</value>
+				<value>classpath*:/com/winchannel/order/model/MdmProdGroupDeliveryDays.hbm.xml</value>
+				<!-- Message -->
+				<value>classpath*:/com/winchannel/message/model/BaseAuthoritys.hbm.xml</value>
+				<value>classpath*:/com/winchannel/message/model/BaseFileItem.hbm.xml</value>
+				<value>classpath*:/com/winchannel/message/model/BaseMessages.hbm.xml</value>
+				<value>classpath*:/com/winchannel/message/model/BaseOpinions.hbm.xml</value>				
+				<!-- interfaceLog -->
+				<value>classpath*:/com/winchannel/task/model/InterfaceLog.hbm.xml</value>
+			</list> 
+		</property>		
+	</bean>
+
+	<!--Hibernate TransactionManager -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+
+</beans>

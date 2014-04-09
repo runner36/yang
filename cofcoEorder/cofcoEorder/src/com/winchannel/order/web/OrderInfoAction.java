@@ -252,12 +252,17 @@ public class OrderInfoAction extends StrutsEntityAction<OrderInfo, OrderInfoMana
 		BaseDictItem groupItem = orderInfoManager.findUniqueEntity(BaseDictItem.class, "from BaseDictItem where dictItemId = ? ", Long.valueOf(brandId));
 
 		//根据订单品类，找到对应    组织  品类下的经销商（针对多个经销商用户使用 同一账号，进行的调整）
-		List<MdmDistributor> mdists = mdmDistributorManager.find("from MdmDistributor where distCode like ?", mdist.getDistCode()+"%");
+		List<MdmDistributor> mdists = mdmDistributorManager.find("from MdmDistributor where distCode like ?", mdist.getDistCode().substring(0,8)+"%");
+		
+		String pis = mdist.getBaseOrg().getPi1()+"_"+mdist.getBaseOrg().getPi2()+"_"+mdist.getBaseOrg().getPi3();
+		
+		
 		for (int i = 0; i < mdists.size(); i++) {
 			if(mdists.get(i).getBaseOrg()!=null){
 				if(mdists.get(i).getBaseOrg().getBaseOrg()!=null){
-					String name = mdists.get(i).getBaseOrg().getBaseOrg().getOrgName();
-					if(name.contains(groupItem.getItemName()))
+					String name = mdists.get(i).getBaseOrg().getPn4();
+					String pis2 = mdists.get(i).getBaseOrg().getPi1()+"_"+mdists.get(i).getBaseOrg().getPi2()+"_"+mdists.get(i).getBaseOrg().getPi3();
+					if(name!=null && name.contains(groupItem.getItemName()) && pis2.equals(pis)) 
 						mdist = mdists.get(i);
 				}
 			}
@@ -837,7 +842,11 @@ public class OrderInfoAction extends StrutsEntityAction<OrderInfo, OrderInfoMana
 			doMessage(request, "您无权访问！");
 			return getForward(mapping, request, "listSp");
 		}
-		request.setAttribute("dist", mdist);
+		
+		
+
+		
+		
 		// 送货地址信息
 		String shiptoId = request.getParameter("shiptoId");
 		MdmDistributorAddress address = mdmDistributorAddressManager.findUniqueEntity("from MdmDistributorAddress where id = ? ", Long.valueOf(shiptoId));
@@ -848,6 +857,27 @@ public class OrderInfoAction extends StrutsEntityAction<OrderInfo, OrderInfoMana
 			return getForward(mapping, request, "listSp");
 		}
 		request.setAttribute("itemBrandId", brandId);
+		
+		// 产品组、物料组选择
+		BaseDictItem groupItem = orderInfoManager.findUniqueEntity(BaseDictItem.class, "from BaseDictItem where dictItemId = ? ", Long.valueOf(brandId));
+
+		
+		//根据订单品类，找到对应    组织  品类下的经销商（针对多个经销商用户使用 同一账号，进行的调整）
+		List<MdmDistributor> mdists = mdmDistributorManager.find("from MdmDistributor where distCode like ?", mdist.getDistCode().substring(0,8)+"%");
+		
+		String pis = mdist.getBaseOrg().getPi1()+"_"+mdist.getBaseOrg().getPi2()+"_"+mdist.getBaseOrg().getPi3();
+		for (int i = 0; i < mdists.size(); i++) {
+			if(mdists.get(i).getBaseOrg()!=null){
+				if(mdists.get(i).getBaseOrg().getBaseOrg()!=null){
+					String name = mdists.get(i).getBaseOrg().getPn4();
+					String pis2 = mdists.get(i).getBaseOrg().getPi1()+"_"+mdists.get(i).getBaseOrg().getPi2()+"_"+mdists.get(i).getBaseOrg().getPi3();
+					if(name!=null && name.contains(groupItem.getItemName()) && pis2.equals(pis)) 
+						mdist = mdists.get(i);
+				}
+			}
+		}
+		
+		request.setAttribute("dist", mdist);
 		
 		
 		// 发票类型
@@ -1037,7 +1067,7 @@ public class OrderInfoAction extends StrutsEntityAction<OrderInfo, OrderInfoMana
 		}
 
 		// 产品组、物料组选择
-		BaseDictItem groupItem = orderInfoManager.findUniqueEntity(BaseDictItem.class, "from BaseDictItem where dictItemId = ? ", Long.valueOf(brandId));
+//		BaseDictItem groupItem = orderInfoManager.findUniqueEntity(BaseDictItem.class, "from BaseDictItem where dictItemId = ? ", Long.valueOf(brandId));
 		orderInfo.setProdGroup(groupItem);
 
 		// save();

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+table :
+	class    : 实体类的类名
+	key      : 可以指定某一列的code为key，可以指定多个，中间用逗号分隔；如果指定，系统会根据key的值来决定数据的存储方式，新增或是修改
+	startRow : 从数据文件中的第几行开始读取数据(1...)
+column :
+	id       : 列号（1...）
+	code     : 实体类中的属性名
+	type     : 数据类型 char|number|date 
+	length   : 数据最大长度，如果是数值，则包括小数点及正负号
+	format   : 在数据类型为 number|date 时有效；date类型时也可不输入，系统会自动尝试所有格式；如果是number类型，则必须输入，以便区分或转换为long和double
+	required : 值是否必须
+	mask     : 使用正则表达式验证
+	value    : 可直接指定列的的值，如：value="123"; 也可加入系统变量或当前变量，如：value="${0}-${_emp.empName}-${sort}" , 结果："001-系统管理员-1";
+	
+目前系统支持的变量：
+
+_user       : BaseUser
+_emp        : BaseEmployee
+		
+_currDate   : String
+_currTime   : String
+_currMillis : String
+_uuid       : String
+
+-->
+<table class="com.winchannel.mdm.product.model.MdmProduct" key="prodCode" startRow="2" template-name="物料主数据_导入模版">
+	<columns>
+		<column name="1" code="prodCode"   title="产品(编码)" type="char" length="50"  required="true"   mask="" />
+		<column name="2" code="prodName"   title="产品(名称)" type="char" length="200"     required="true" mask="" />
+		<column name="3" code="itemBrand.itemCode"  filter="baseDict.dictId='prodBrand'"  title="产品品牌(编码)" required="true" type="char"     length="50" />
+		<column name="4" code="prodSTRU.itemCode"  filter="baseDict.dictId='prodSTRU'" title="产品结构(编码)" type="char" length="255"   required="true"  mask="" />
+		<column name="5" code="prodCountUnit.itemCode"    filter="baseDict.dictId='prodUnit'"  title="统计单位(编码)"    type="char"  required="true"  length="50"   format=""  />
+		<column name="6" code="prodPrice"    title="产品价格" type="number" length="12" format="0.00"  mask="" />		
+		<column name="7" code="itemPack.itemName"  title="产品包装(名称)" type="char" length="50"     mask="" />
+		<column name="8" code="memo1.itemName" filter="baseDict.dictId='prodAttr1'"   title="产品级别(名称)" type="char" length="50"   mask="" />		
+		<column name="9" code="memo2.itemName" filter="baseDict.dictId='prodAttr2'"   title="种类口味(名称)" type="char" length="50"   mask="" />		
+		<column name="10" code="memo4.itemName" filter="baseDict.dictId='prodAttr4'"   title="物料组(名称)" type="char" length="50"   mask="" />
+		<column name="11" code="prodWeight"  title="重量" type="number" length="12" format="0.00"    mask="" />
+		<column name="12" code="prodweightUnit.itemName" filter="baseDict.dictId='prodUnit'"   title="重量单位(名称)" type="char" length="12"   mask="" />
+		<column name="13" code="prodVolum"  title="体积" type="number" length="12" format="0.00"    mask="" />
+		<column name="14" code="prodVolehUnit.itemName" filter="baseDict.dictId='prodUnit'"   title="体积单位(名称)" type="char" length="12"   mask="" />		
+		<column name="15" code="prodNameEn" title="英文名称" type="char" length="200"     mask="" />
+		<column name="16" code="prodAlias"  title="产品别称" type="char" length="200"     mask="" />		
+		<column name="17" code="extCode"    title="外部编码" type="char" length="255"     mask="" />
+		<column name="18" code="itemType.itemName" filter="baseDict.dictId='prodType'"     title="产品品系(名称)"   type="char"   length="50" />
+		<column name="19" code="dictProdType.itemName"  title="产品类型(名称)" filter="baseDict.dictId='productType'"  type="char" length="50"     mask="" />		
+		<column name="20" code="itemOther.itemName" filter="baseDict.dictId='prodOther'"  title="产品线(名称)"  type="char"   length="100" />		
+		<column name="21" code="prodPriceUnit.itemName"   filter="baseDict.dictId='prodUnit'"  title="价格单位(名称)"    type="char"  length="50"   format=""  />		
+		<column name="22" code="prodBaseUnit.itemName"     filter="baseDict.dictId='prodUnit'"  title="基本单位(名称)"    type="char"  length="50"   format=""  />
+		<column name="23" code="memo3.itemName" filter="baseDict.dictId='prodAttr3'"   title="属性3(名称)" type="char" length="50"   mask="" />		
+		<column name="24" code="memo5.itemName" filter="baseDict.dictId='prodAttr5'"   title="属性5(名称)" type="char" length="50"   mask="" />		
+		<column name="25" code="memo6.itemName" filter="baseDict.dictId='prodAttr6'"   title="属性6(名称)" type="char" length="50"   mask="" />
+		<column name="26" code="prodBarcode"  title="产品条码" type="char" length="255"     mask="" />
+		<column name="27" code="prodPcBarcode"  title="产品PC条码" type="char" length="255"     mask="" />
+		<column name="28" code="prodSpec"  title="产品规格" type="char" length="255"     mask="" />
+		<column name="29" code="prodMinWeight"  title="最小计量单位重量(g)" type="number" length="12" format="0.00"     mask="" />
+		<column name="30" code="prodContent"  title="过渡包装数" type="number" length="12" format="0.00"     mask="" />
+		<column name="31" code="prodMinContent"  title="最小包装数" type="number" length="12" format="0.00"    mask="" />
+		<column code="state" 		 title="" 	type="char"  length="2" format="" value="1" />
+		<column code="createdBy"     title=""    type="char"     length="50"   format=""  value="${_emp.empName}"/>
+		<column code="created"       title=""    type="date"     length="23"   format=""  value="${_currTime}"/>
+		<column code="updatedBy"     title=""    type="char"     length="50"   format=""  value="${_emp.empName}"/>
+		<column code="updated"       title=""    type="date"     length="23"   format=""  value="${_currTime}"/>
+	</columns>
+</table>
+
