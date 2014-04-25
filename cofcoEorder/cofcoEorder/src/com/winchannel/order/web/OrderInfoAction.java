@@ -258,7 +258,7 @@ public class OrderInfoAction extends StrutsEntityAction<OrderInfo, OrderInfoMana
 		
 		
 		for (int i = 0; i < mdists.size(); i++) {
-			if(mdists.get(i).getBaseOrg()!=null){
+			if(mdists.get(i).getState().equals("1") && mdists.get(i).getBaseOrg()!=null){
 				if(mdists.get(i).getBaseOrg().getBaseOrg()!=null){
 					String name = mdists.get(i).getBaseOrg().getPn4();
 					String pis2 = mdists.get(i).getBaseOrg().getPi1()+"_"+mdists.get(i).getBaseOrg().getPi2()+"_"+mdists.get(i).getBaseOrg().getPi3();
@@ -550,20 +550,21 @@ public class OrderInfoAction extends StrutsEntityAction<OrderInfo, OrderInfoMana
 		
 		
 		//根据订单品类，找到对应    组织  品类下的经销商（针对多个经销商用户使用 同一账号，进行的调整）
-		List<MdmDistributor> mdists = mdmDistributorManager.find("from MdmDistributor where distCode like ?", mdist.getDistCode()+"%");
+		//增加，跨分公司，品类重叠的处理时的处理（各分公司分别一个账号）
+		List<MdmDistributor> mdists = mdmDistributorManager.find("from MdmDistributor where distCode like ?", mdist.getDistCode().substring(0,8)+"%");
 		List<String> mdistIds = new ArrayList<String>();
-		for(MdmDistributor m:mdists){
-			mdistIds.add(m.getDistId().toString());
+		
+		String pis = mdist.getBaseOrg().getPi1()+"_"+mdist.getBaseOrg().getPi2()+"_"+mdist.getBaseOrg().getPi3();
+		for (int i = 0; i < mdists.size(); i++) {
+			if(mdists.get(i).getBaseOrg()!=null){
+				if(mdists.get(i).getBaseOrg().getBaseOrg()!=null){
+					String pis2 = mdists.get(i).getBaseOrg().getPi1()+"_"+mdists.get(i).getBaseOrg().getPi2()+"_"+mdists.get(i).getBaseOrg().getPi3();
+					if(pis2.equals(pis)) 
+						mdistIds.add(mdists.get(i).getDistId().toString());
+				}
+			}
 		}
-//				for (int i = 0; i < mdists.size(); i++) {
-//					if(mdists.get(i).getBaseOrg()!=null){
-//						if(mdists.get(i).getBaseOrg().getBaseOrg()!=null){
-//							String name = mdists.get(i).getBaseOrg().getBaseOrg().getOrgName();
-//							if(name.contains(groupItem.getItemName()))
-//								mdist = mdists.get(i);
-//						}
-//					}
-//				}
+		
 
 		List list = null;
 		if (!isFirstQuery() && "1".equals(request.getParameter("first"))) {
@@ -844,9 +845,6 @@ public class OrderInfoAction extends StrutsEntityAction<OrderInfo, OrderInfoMana
 		}
 		
 		
-
-		
-		
 		// 送货地址信息
 		String shiptoId = request.getParameter("shiptoId");
 		MdmDistributorAddress address = mdmDistributorAddressManager.findUniqueEntity("from MdmDistributorAddress where id = ? ", Long.valueOf(shiptoId));
@@ -867,12 +865,14 @@ public class OrderInfoAction extends StrutsEntityAction<OrderInfo, OrderInfoMana
 		
 		String pis = mdist.getBaseOrg().getPi1()+"_"+mdist.getBaseOrg().getPi2()+"_"+mdist.getBaseOrg().getPi3();
 		for (int i = 0; i < mdists.size(); i++) {
-			if(mdists.get(i).getBaseOrg()!=null){
+			if(mdists.get(i).getState().equals("1") && mdists.get(i).getBaseOrg()!=null){
 				if(mdists.get(i).getBaseOrg().getBaseOrg()!=null){
 					String name = mdists.get(i).getBaseOrg().getPn4();
 					String pis2 = mdists.get(i).getBaseOrg().getPi1()+"_"+mdists.get(i).getBaseOrg().getPi2()+"_"+mdists.get(i).getBaseOrg().getPi3();
-					if(name!=null && name.contains(groupItem.getItemName()) && pis2.equals(pis)) 
+					if(name!=null && name.contains(groupItem.getItemName()) && pis2.equals(pis)) {
 						mdist = mdists.get(i);
+						break;
+					}
 				}
 			}
 		}

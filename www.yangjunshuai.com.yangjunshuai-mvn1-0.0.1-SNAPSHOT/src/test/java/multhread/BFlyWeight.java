@@ -11,5 +11,6 @@ public class BFlyWeight implements FlyWeight{
 	public void getMsg() {
 		System.out.println("B 的 状态是"+state);
 	}
+	
 
 }

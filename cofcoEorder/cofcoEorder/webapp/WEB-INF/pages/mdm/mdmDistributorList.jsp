@@ -87,7 +87,7 @@
 									<tr>
 										<td width="1%">客户编码</td>
 										<td width="1%"><html:text name="ec"
-												property="$eq_distCode" /></td>
+												property="$lk_distCode" /></td>
 
 										<td width="1%">客户名称</td>
 										<td width="1%"><html:text name="ec"
