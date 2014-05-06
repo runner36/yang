@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service;
 import com.example.bean.User;
 
 @Service
-public interface LoginService {
+public class LoginServiceImpl implements LoginService {
 
 	
-	public boolean login(User u);
+	public boolean login(User u){
+		return true;
+	}
 }

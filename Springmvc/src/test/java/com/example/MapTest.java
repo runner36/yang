@@ -14,8 +14,6 @@ public class MapTest implements ITest {
 		super();
 		this.tmap = new TreeMap();
 		this.hmap = new HashMap();
-		
-		
 	}
 	@Override
 	public void putT(int len) {

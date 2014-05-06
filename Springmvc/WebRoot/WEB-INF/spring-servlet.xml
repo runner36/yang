@@ -19,5 +19,27 @@
 	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver" p:prefix="/jsp/" p:suffix=".jsp" />
 	
 		<!-- 测试Service -->
-	<bean id="loginService" class="com.example.service.LoginService"></bean>
+	<bean id="loginServiceImpl" class="com.example.service.LoginServiceImpl"></bean>
+	
+	
+	<bean id="loginInterceptor" class=" com.example.service.LoginInterceptor" />  
+  
+    <bean id="loginService"  
+        class="org.springframework.aop.framework.ProxyFactoryBean">  
+      <!-- 代理接口 -->  
+        <property name="proxyInterfaces">  
+            <value>com.example.service.LoginService</value>  
+        </property>  
+       <!-- 目标实现类 -->  
+        <property name="target">  
+            <ref local="loginServiceImpl" />   
+      </property>  
+        <!-- 拦截器 -->  
+        <property name="interceptorNames">  
+            <list>  
+                <value>loginInterceptor</value>  
+            </list>  
+        </property>  
+    </bean>  
+  
 </beans>

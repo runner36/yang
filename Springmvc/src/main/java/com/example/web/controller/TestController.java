@@ -13,39 +13,35 @@ import org.springframework.web.servlet.view.RedirectView;
 import com.example.bean.User;
 import com.example.service.LoginService;
 
-@Controller  //ÀàËÆStrutsµÄAction
+@Controller  //ç»«è®³æŠ€Strutsé¨å‡™ction
 
 public class TestController {
 
-	@RequestMapping("test/login.do")  // ÇëÇóurlµØÖ·Ó³Éä£¬ÀàËÆStrutsµÄaction-mapping
+	@RequestMapping("test/login.do")  // ç’‡é”‹çœ°urlé¦æ¿æ½ƒé„çŠ²çš é”›å²€è¢«æµ¼ç³trutsé¨åˆŸction-mapping
 	@ResponseBody
 	public String testLogin(@RequestParam(value="username")String username, String password, HttpServletRequest request) {
-		// @RequestParamÊÇÖ¸ÇëÇóurlµØÖ·Ó³ÉäÖĞ±ØĞëº¬ÓĞµÄ²ÎÊı(³ı·ÇÊôĞÔrequired=false)
-		// @RequestParam¿É¼òĞ´Îª£º@RequestParam("username")
+		// @RequestParamé„îˆ›å¯šç’‡é”‹çœ°urlé¦æ¿æ½ƒé„çŠ²çš æ¶“î…ç¹€æ¤¤è¯²æƒˆéˆå¤Œæ®‘é™å‚›æšŸ(é—„ã‚‰æ½ªçç‚´ï¿½required=false)
+		// @RequestParamé™îˆœç•éæ¬è´Ÿé”›æ¬¯RequestParam("username")
 		if (!"admin".equals(username) || !"admin".equals(password)) {
-			return "loginError"; // Ìø×ªÒ³ÃæÂ·¾¶£¨Ä¬ÈÏÎª×ª·¢£©£¬¸ÃÂ·¾¶²»ĞèÒª°üº¬spring-servletÅäÖÃÎÄ¼şÖĞÅäÖÃµÄÇ°×ººÍºó×º
-		}
-		
-		
+			return "loginError"; // ç’ºå® æµ†æ¤¤ç”¸æ½°ç’ºîˆšç·é”›å ¥ç²¯ç’ã‚„è´Ÿæî„€å½‚é”›å¤›ç´ç’‡ãƒ¨çŸ¾å¯°å‹ªç¬‰é—‡ï¿½îœ…é–å‘­æƒˆspring-servleté–°å¶‡ç–†é‚å›¦æ¬¢æ¶“î…¢å¤ç¼ƒî†¾æ®‘é“å¶‡ç´‘éœå±½æ‚—ç¼‚ï¿½		
+			}
 		return "loginSuccess";
 	}
 
 	@RequestMapping("/test/login2.do")
 	public ModelAndView testLogin2(String username, String password, int age){
-		// requestºÍresponse²»±Ø·ÇÒª³öÏÖÔÚ·½·¨ÖĞ£¬Èç¹ûÓÃ²»ÉÏµÄ»°¿ÉÒÔÈ¥µô
-		// ²ÎÊıµÄÃû³ÆÊÇÓëÒ³Ãæ¿Ø¼şµÄnameÏàÆ¥Åä£¬²ÎÊıÀàĞÍ»á×Ô¶¯±»×ª»»
+		// requestéœå®ºesponseæ¶“å¶…ç¹€é—ˆç‚¶îœ…é‘è™¹å¹‡é¦ã„¦æŸŸå¨‰æ›šè…‘é”›å±½îœ†é‹æ»…æ•¤æ¶“å¶„ç¬‚é¨å‹®ç˜½é™îˆ™äº’é˜ç»˜å¸€
+		// é™å‚›æšŸé¨å‹«æ‚•ç»‰ç‰ˆæ§¸æ¶“åº¨ã€‰é—ˆãˆ¡å¸¶æµ å‰æ®‘nameé©ç¨¿å°®é–°å¶ç´é™å‚›æšŸç»«è¯²ç€·æµ¼æ°³åšœé”ã„¨î–†æî„å´²
 		
 		if (!"admin".equals(username) || !"admin".equals(password) || age < 5) {
-			return new ModelAndView("loginError"); // ÊÖ¶¯ÊµÀı»¯ModelAndViewÍê³ÉÌø×ªÒ³Ãæ£¨×ª·¢£©£¬Ğ§¹ûµÈÍ¬ÓÚÉÏÃæµÄ·½·¨·µ»Ø×Ö·û´®
+			return new ModelAndView("loginError"); // éµå¬ªå§©ç€¹ç‚°ç·¥é–æœšodelAndViewç€¹å±¾åšç’ºå® æµ†æ¤¤ç”¸æ½°é”›å £æµ†é™æˆ¯ç´šé”›å±¾æ™¥é‹æ»…ç“‘éšå±¼ç°¬æ¶“å©‡æ½°é¨å‹¬æŸŸå¨‰æ›¡ç¹‘é¥ç‚²ç“§ç»—ï¸¿è¦†
 		}
-		return new ModelAndView(new RedirectView("../index.jsp"));  // ²ÉÓÃÖØ¶¨Ïò·½Ê½Ìø×ªÒ³Ãæ
-		// ÖØ¶¨Ïò»¹ÓĞÒ»ÖÖ¼òµ¥Ğ´·¨
-		// return new ModelAndView("redirect:../index.jsp");
+		return new ModelAndView(new RedirectView("../index.jsp"));  // é–²å›©æ•¤é–²å¶…ç•¾éšæˆæŸŸå¯®å¿šçƒ¦æî„„ã€‰é—ˆï¿½		// é–²å¶…ç•¾éšæˆ£ç¹•éˆå¤‰ç«´ç»‰å¶‡ç•é—æ›å•“å¨‰ï¿½		// return new ModelAndView("redirect:../index.jsp");
 	}
 
 	@RequestMapping("/test/login3.do")
 	public ModelAndView testLogin3(User user) {
-		// Í¬ÑùÖ§³Ö²ÎÊıÎª±íµ¥¶ÔÏó£¬ÀàËÆÓÚStrutsµÄActionForm£¬User²»ĞèÒªÈÎºÎÅäÖÃ£¬Ö±½ÓĞ´¼´¿É
+		// éšå±¾ç‰±é€îˆ›å¯”é™å‚›æšŸæ¶“é¸¿ã€ƒé—æ›î‡®ç’â˜…ç´ç»«è®³æŠ€æµœå¶´trutsé¨å‡™ctionFormé”›å­¶seræ¶“å¶‰æ¸¶ç‘•ä½·æ¢æµ£æ›¢å¤ç¼ƒî‡†ç´é©å­˜å¸´éæ¬åµ†é™ï¿½		
 		String username = user.getUsername();
 		String password = user.getPassword();
 		int age = user.getAge();
@@ -56,9 +52,10 @@ public class TestController {
 		return new ModelAndView("loginSuccess");
 	}
 
-	@Resource(name = "loginService")  // »ñÈ¡applicationContext.xmlÖĞbeanµÄidÎªloginServiceµÄ£¬²¢×¢Èë
-	private LoginService loginService;  //µÈ¼ÛÓÚspring´«Í³×¢Èë·½Ê½Ğ´getºÍset·½·¨£¬ÕâÑùµÄºÃ´¦ÊÇ¼ò½à¹¤Õû£¬Ê¡È¥ÁË²»±ØÒªµÃ´úÂë
-
+	@Resource(name = "loginService")  // é‘¾å³°å½‡applicationContext.xmlæ¶“ç’ªeané¨åˆ¬dæ¶“ç°‚oginServiceé¨å‹¶ç´éªèˆµæ•éï¿½	
+	private LoginService loginService;  //ç»›å¤‰ç¯æµœå·—pringæµ¼çŠµç²ºå¨‰ã„¥å†é‚ç‘°ç´¡éæªŠetéœå®»eté‚è§„ç¡¶é”›å²ƒç¹–éé£æ®‘æ¿‚è—‰î˜µé„îˆœç•å¨²ä½¸ä¼éè¾¾ç´éªä½¸å¹“æµœå—•ç¬‰è¹‡å‘°îœ…å¯°æ¤¾å”¬é®ï¿½
+	
+	
 	@RequestMapping("/test/login4.do")
 	public String testLogin4(User user) {
 		if (loginService.login(user) == false) {
