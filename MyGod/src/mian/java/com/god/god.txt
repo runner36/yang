@@ -1,0 +1,11 @@
+--step1 
+  spring 容器集成
+  
+  spring-mvc 集成
+  
+  redis 存儲構建
+  
+  freemarker 使用
+  
+  
+	
