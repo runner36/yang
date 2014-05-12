@@ -9,49 +9,22 @@ import java.util.List;
 
 import com.god.article.bean.ArticleBean;
 import com.god.redis.impl.RedisPool;
+import com.god.util.SerializeUtil;
 
 public class ArticleServiceImpl implements ArticleService {
 
 	@Override
 	public String add(ArticleBean bean) {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ObjectOutputStream oos;
-		try {
-			oos = new ObjectOutputStream(out);
-			oos.writeObject(bean);
-			oos.flush();
-			oos.close();
-		RedisPool.getResource().set(bean.getName().getBytes(),out.toByteArray());
-		out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		RedisPool.getResource().set(bean.getName().getBytes(),
+				SerializeUtil.serialize(bean));
 		return bean.getName();
 	}
 
 	@Override
 	public ArticleBean find(String key) {
-		ObjectInputStream ois = null;
-		ByteArrayInputStream bi = null;
 		ArticleBean bean = null;
-		try {
-			byte[] b = RedisPool.getResource().get(key.getBytes());
-			bi = new ByteArrayInputStream(b,0,b.length);
-			ois = new ObjectInputStream(bi);
-			bean = (ArticleBean) ois.readObject();
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} finally{
-			try {
-				bi.close();
-				ois.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		byte[] b = RedisPool.getResource().get(key.getBytes());
+		bean = (ArticleBean) SerializeUtil.unserialize(b);
 		return bean;
 	}
 
@@ -60,14 +33,13 @@ public class ArticleServiceImpl implements ArticleService {
 		return null;
 	}
 
-	
 	public static void main(String[] args) {
 		ArticleServiceImpl a = new ArticleServiceImpl();
 		ArticleBean b = new ArticleBean();
 		b.setContent("aaaaa");
 		b.setName("johnsa");
 		b.setUrl("bbbbb");
-		a.add(b );
+		a.add(b);
 		System.out.println(a.find("johnsa").getName());
 	}
 }

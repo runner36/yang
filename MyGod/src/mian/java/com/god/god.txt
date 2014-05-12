@@ -4,6 +4,29 @@
   spring-mvc 集成
   
   redis 存儲構建
+		序列化工具SerializeUtil  
+		redis 对于列表数据的处理
+		删除指定位置元素（根据存储对象的某一属性，进行）
+		修改指定位置元素（）
+		根据某列进行排序（）
+		
+		一个大的文件SortedSet列表,存储所有的 文章
+		同时维护各人自己的SortedSet列表，
+		Person { name, articles:setId4redis}
+		以此来构建关系型的组合表示。
+		先取个人信息，再取其文章信息。
+		
+		Article{name,author:hashId4redis,content}
+		
+		出现循环依赖时，会有影响吗？ 不会吧，每次读取都是实时的。
+		但是redis集群的话，如何考虑，衍生的问题。一致性问题。
+		
+		
+		问题点，如果再增加新的维度，怎么维护？
+		
+		对于复杂的组合查询处理，redis，暂时难以满足吧？
+		
+  mysql 
   
   freemarker 使用
   
