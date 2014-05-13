@@ -30,5 +30,7 @@
   
   freemarker 使用
   
+  http://search.maven.org/
+  
   
 	

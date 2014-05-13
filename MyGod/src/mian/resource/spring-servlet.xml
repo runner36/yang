@@ -1,21 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"     
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"     
-        xmlns:context="http://www.springframework.org/schema/context"     
-   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd   
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd   
        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd   
        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd   
        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
 	<!-- 启用spring mvc 注解 -->
 	<context:annotation-config />
+	
+	
+	<bean id="config"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location">
+			<value>classpath:config/db.properties</value>
+		</property>
+	</bean>
+
+	<bean id="dataSource" class="org.apache.tomcat.dbcp.dbcp.BasicDataSource">
+		<property name="username" value="${connection.username}"></property>
+		<property name="password" value="${connection.password}"></property>
+		<property name="url" value="${connection.url}"></property>
+		<property name="driverClassName" value="${connection.driverClassName}"></property>
+		<!-- <property name="initialSize" value="${connection.initialSize}"></property> -->
+		<property name="maxActive" value="${connection.maxActive}"></property>
+		<property name="maxIdle" value="${connection.maxIdle}"></property>
+		<property name="minIdle" value="${connection.minIdle}"></property>
+		<property name="maxWait" value="${connection.maxWait}"></property>
+		<property name="removeAbandoned" value="${connection.removeAbandoned}"></property>
+		<property name="removeAbandonedTimeout" value="${connection.removeAbandonedTimeout}"></property>
+		<property name="logAbandoned" value="${connection.logAbandoned}"></property>
+	</bean>
+
 	<!-- 设置使用注解的类所在的jar包 -->
 	<context:component-scan base-package="com.god"></context:component-scan>
 
 	<!-- 完成请求和注解POJO的映射 -->
-	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter" />
+	<bean
+		class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter" />
 
 	<!-- 对转向页面的路径解析。prefix：前缀， suffix：后缀 -->
-	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver" p:prefix="/" p:suffix=".jsp" />
-  
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver"
+		p:prefix="/" p:suffix=".jsp" />
+
+
+
+
 </beans>
