@@ -35,7 +35,64 @@ public class ImportBaseOrgEventHandler extends ImpEventHandler{
 //		}else{
 //			baseOrg.setState("1");
 //		}
-	
+		if(baseOrg!=null){
+			BaseOrg porg = baseOrg.getBaseOrg();
+				while(porg!=null){
+					switch (porg.getLevelCode().intValue()) {
+						case 4:
+							baseOrg.setPn4(porg.getOrgName());
+							baseOrg.setPi4(porg.getOrgId());
+							break;
+						case 3:
+							baseOrg.setPn3(porg.getOrgName());
+							baseOrg.setPi3(porg.getOrgId());
+							break;
+						case 2:
+							baseOrg.setPn2(porg.getOrgName());
+							baseOrg.setPi2(porg.getOrgId());
+							break;
+						case 1:
+							baseOrg.setPn1(porg.getOrgName());
+							baseOrg.setPi1(porg.getOrgId());
+							break;
+						default:
+							break;
+					}
+					porg = porg.getBaseOrg();
+				}
+				
+				switch (baseOrg.getLevelCode().intValue()) {
+					case 5:
+						baseOrg.setPn5(baseOrg.getOrgName());
+						baseOrg.setPi5(baseOrg.getOrgId());
+						baseOrg.setPnall(baseOrg.getPn1()+"-"+baseOrg.getPn2()+"-"+baseOrg.getPn3()+"-"+baseOrg.getPn4()+"-"+baseOrg.getPn5());
+						break;
+					case 4:
+						baseOrg.setPn4(baseOrg.getOrgName());
+						baseOrg.setPi4(baseOrg.getOrgId());
+						baseOrg.setPnall(baseOrg.getPn1()+"-"+baseOrg.getPn2()+"-"+baseOrg.getPn3()+"-"+baseOrg.getPn4());
+						break;
+					case 3:
+						baseOrg.setPn3(baseOrg.getOrgName());
+						baseOrg.setPi3(baseOrg.getOrgId());
+						baseOrg.setPnall(baseOrg.getPn1()+"-"+baseOrg.getPn2()+"-"+baseOrg.getPn3());
+						break;
+					case 2:
+						baseOrg.setPn2(baseOrg.getOrgName());
+						baseOrg.setPi2(baseOrg.getOrgId());
+						baseOrg.setPnall(baseOrg.getPn1()+"-"+baseOrg.getPn2());
+						break;
+					case 1:
+						baseOrg.setPn1(baseOrg.getOrgName());
+						baseOrg.setPi1(baseOrg.getOrgId());
+						baseOrg.setPnall(baseOrg.getPn1());
+						break;
+					default:
+						break;
+				}
+		}
+		this.getPersister().save(baseOrg);
+		
 		if(geoIds!=null && geoIds.length()>0 && baseOrg!=null)
 		{
 			//删除之前保存的记录

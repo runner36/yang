@@ -152,6 +152,7 @@
 										
 										<ec:column property="prodSTRU.itemName" title="${mr['page.common.prodStructure']}" alias="prodSTRUName"/>
 										<ec:column property="prodCountUnit.itemName" title="${mr['page.common.prodStaticsUnit']}" alias="prodCountUnitName"/>
+										<ec:column property="state" title="产品状态"/>
 										<%-- <ec:column property="prodNameEn" title="${mr['page.common.mastProdEngName']}"/>
 										<ec:column property="prodAlias" title="${mr['page.common.mastProdAlias']}"/> --%>										
 										<%-- <ec:column property="extCode" escapeAutoFormat="true" title="${mr['page.common.externalCode']}"/> --%>

@@ -42,10 +42,10 @@ public class ImportMdmDistEmpGroupEventHandler extends ImpEventHandler{
 	}
 	@Override
 	public void startRow(Map<String, String> row) {
-		String effectiveTime=row.get("4");
+		String effectiveTime=row.get("4"); 
 		String expiryTime=row.get("5");
 		Date now = DateUtility.strToDate(DateUtility.getCurrentDate());
-		String effect[] = effectiveTime.split("/");
+		String effect[] =  effectiveTime.indexOf("/")>0?effectiveTime.split("/"):effectiveTime.split("-");
 		Date eff = DateUtility.strToDate(effect[2]+"-"+effect[1]+"-"+effect[0]);
 //		Date eff = DateUtility.strToDate(effectiveTime);
 		if(effectiveTime!=null){
